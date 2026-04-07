@@ -19,6 +19,10 @@ func (r *CountedLock) Lock() {
 
 // Unlock unlocks the mutex
 func (r *CountedLock) Unlock() {
+	// 先检查计数，避免重复解锁导致 panic
+	if atomic.LoadInt32(&r.numLocks) <= 0 {
+		return
+	}
 	atomic.AddInt32(&r.numLocks, -1)
 	r.core.Unlock()
 }

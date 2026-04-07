@@ -1,4 +1,4 @@
-package mgm
+package kfm
 
 import (
 	"cmp"

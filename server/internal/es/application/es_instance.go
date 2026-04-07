@@ -40,7 +40,6 @@ var _ Instance = &instanceAppImpl{}
 
 var poolGroup = pool.NewPoolGroup[*esi.EsConn]()
 
-
 type instanceAppImpl struct {
 	base.AppImpl[*entity.EsInstance, repository.EsInstance]
 

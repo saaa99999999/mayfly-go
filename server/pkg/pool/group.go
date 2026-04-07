@@ -3,6 +3,7 @@ package pool
 import (
 	"fmt"
 	"mayfly-go/pkg/logx"
+	"mayfly-go/pkg/utils/collx"
 	"runtime"
 	"sync"
 	"time"
@@ -11,8 +12,7 @@ import (
 )
 
 type PoolGroup[T Conn] struct {
-	mu          sync.RWMutex
-	poolGroup   map[string]Pool[T]
+	poolGroup   collx.SM[string, Pool[T]]
 	createGroup singleflight.Group
 	closingWg   sync.WaitGroup
 	closingMu   sync.Mutex
@@ -21,7 +21,6 @@ type PoolGroup[T Conn] struct {
 
 func NewPoolGroup[T Conn]() *PoolGroup[T] {
 	return &PoolGroup[T]{
-		poolGroup:   make(map[string]Pool[T]),
 		createGroup: singleflight.Group{},
 		closingCh:   make(chan struct{}),
 	}
@@ -33,31 +32,22 @@ func (pg *PoolGroup[T]) GetOrCreate(
 	opts ...Option[T],
 ) (Pool[T], error) {
 	// 先尝试读锁获取
-	pg.mu.RLock()
-	if p, ok := pg.poolGroup[key]; ok {
-		pg.mu.RUnlock()
+	if p, ok := pg.poolGroup.Load(key); ok {
 		return p, nil
 	}
-	pg.mu.RUnlock()
-
 	// 使用 singleflight 确保并发安全
 	v, err, _ := pg.createGroup.Do(key, func() (any, error) {
 		// 再次检查，避免在等待期间其他 goroutine 已创建
-		pg.mu.RLock()
-		if p, ok := pg.poolGroup[key]; ok {
-			pg.mu.RUnlock()
+		if p, ok := pg.poolGroup.Load(key); ok {
 			return p, nil
 		}
-		pg.mu.RUnlock()
 
 		// 创建新池
 		logx.Infof("pool group - create pool, key: %s", key)
 		p := poolFactory()
 
 		// 写入时加写锁
-		pg.mu.Lock()
-		pg.poolGroup[key] = p
-		pg.mu.Unlock()
+		pg.poolGroup.Store(key, p)
 
 		return p, nil
 	})
@@ -93,12 +83,7 @@ func (pg *PoolGroup[T]) GetCachePool(key string, factory func() (T, error), opts
 
 // Get 获取指定 key 的连接池
 func (pg *PoolGroup[T]) Get(key string) (Pool[T], bool) {
-	pg.mu.RLock()
-	defer pg.mu.RUnlock()
-	if p, ok := pg.poolGroup[key]; ok {
-		return p, true
-	}
-	return nil, false
+	return pg.poolGroup.Load(key)
 }
 
 // 添加一个异步关闭的辅助函数
@@ -136,32 +121,21 @@ func (pg *PoolGroup[T]) asyncClose(pool Pool[T], key string) {
 }
 
 func (pg *PoolGroup[T]) Close(key string) error {
-	pg.mu.Lock()
-	if p, ok := pg.poolGroup[key]; ok {
+	if p, ok := pg.poolGroup.Load(key); ok {
 		logx.Infof("pool group - closing pool, key: %s", key)
 		pg.createGroup.Forget(key)
-		delete(pg.poolGroup, key)
-		pg.mu.Unlock()
+		pg.poolGroup.Delete(key)
 		pg.asyncClose(p, key)
 		return nil
 	}
-	pg.mu.Unlock()
 	return nil
 }
 
 func (pg *PoolGroup[T]) CloseAll() {
-	pg.mu.Lock()
-	pools := make(map[string]Pool[T], len(pg.poolGroup))
-	for k, v := range pg.poolGroup {
-		pools[k] = v
-	}
-	pg.poolGroup = make(map[string]Pool[T])
-	pg.mu.Unlock()
-
-	// 异步关闭所有池
-	for key, pool := range pools {
-		pg.asyncClose(pool, key)
-	}
+	pg.poolGroup.Range(func(k string, v Pool[T]) bool {
+		pg.asyncClose(v, k)
+		return true
+	})
 }
 
 // 添加一个用于监控连接池关闭状态的方法
@@ -181,22 +155,12 @@ func (pg *PoolGroup[T]) WaitForClose(timeout time.Duration) error {
 		return nil
 	case <-time.After(timeout):
 		// 在超时时打印当前状态
-		pg.mu.RLock()
-		remainingPools := len(pg.poolGroup)
-		pg.mu.RUnlock()
+		remainingPools := len(pg.poolGroup.Values())
 		logx.Errorf("pool group - close timeout, remaining pools: %d", remainingPools)
 		return fmt.Errorf("wait for pool group close timeout after %v", timeout)
 	}
 }
 
-func (pg *PoolGroup[T]) AllPool() map[string]Pool[T] {
-	pg.mu.RLock()
-	defer pg.mu.RUnlock()
-
-	// 返回 map 的副本，避免外部修改
-	pools := make(map[string]Pool[T], len(pg.poolGroup))
-	for k, v := range pg.poolGroup {
-		pools[k] = v
-	}
-	return pools
+func (pg *PoolGroup[T]) AllPool() []Pool[T] {
+	return pg.poolGroup.Values()
 }

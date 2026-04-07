@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"mayfly-go/internal/mq/kafka/mgm"
+	"mayfly-go/internal/mq/kafka/kfm"
 	"mayfly-go/pkg/model"
 	"mayfly-go/pkg/utils/structx"
 )
@@ -19,8 +19,8 @@ type Kafka struct {
 }
 
 // 转换为kafkaInfo进行连接
-func (k *Kafka) ToKafkaInfo() *mgm.KafkaInfo {
-	mongoInfo := new(mgm.KafkaInfo)
+func (k *Kafka) ToKafkaInfo() *kfm.KafkaInfo {
+	mongoInfo := new(kfm.KafkaInfo)
 	_ = structx.Copy(mongoInfo, k)
 	return mongoInfo
 }

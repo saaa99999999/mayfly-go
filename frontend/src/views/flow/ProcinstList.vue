@@ -66,7 +66,7 @@ import { useUserInfo } from '@/store/userInfo';
 
 const { t } = useI18n();
 
-const ProcinstEdit = defineAsyncComponent(() => import('@/views/flow/ProcinstEdit.vue'));
+const ProcinstEdit = defineAsyncComponent(() => import('@/views/flow/ProcInstEdit.vue'));
 
 const searchItems = [
     SearchItem.select('status', 'common.status').withEnum(ProcinstStatus),

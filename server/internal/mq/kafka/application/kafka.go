@@ -5,7 +5,7 @@ import (
 	"mayfly-go/internal/mq/kafka/domain/entity"
 	"mayfly-go/internal/mq/kafka/domain/repository"
 	"mayfly-go/internal/mq/kafka/imsg"
-	"mayfly-go/internal/mq/kafka/mgm"
+	"mayfly-go/internal/mq/kafka/kfm"
 	tagapp "mayfly-go/internal/tag/application"
 	tagdto "mayfly-go/internal/tag/application/dto"
 	tagentity "mayfly-go/internal/tag/domain/entity"
@@ -30,7 +30,7 @@ type Kafka interface {
 
 	// 获取Kafka连接实例
 	//  -  id Kafka id
-	GetKafkaConn(ctx context.Context, id uint64) (*mgm.KafkaConn, error)
+	GetKafkaConn(ctx context.Context, id uint64) (*kfm.KafkaConn, error)
 }
 
 type kafkaAppImpl struct {
@@ -52,7 +52,7 @@ func (d *kafkaAppImpl) Delete(ctx context.Context, id uint64) error {
 		return errorx.NewBiz("kafka not found")
 	}
 
-	mgm.CloseConn(id)
+	kfm.CloseConn(id)
 	return d.Tx(ctx,
 		func(ctx context.Context) error {
 			return d.DeleteById(ctx, id)
@@ -109,7 +109,7 @@ func (d *kafkaAppImpl) SaveKafka(ctx context.Context, m *entity.Kafka, tagCodePa
 	}
 
 	// 先关闭连接
-	mgm.CloseConn(m.Id)
+	kfm.CloseConn(m.Id)
 	m.Code = ""
 	return d.Tx(ctx, func(ctx context.Context) error {
 		return d.UpdateById(ctx, m)
@@ -130,8 +130,8 @@ func (d *kafkaAppImpl) SaveKafka(ctx context.Context, m *entity.Kafka, tagCodePa
 	})
 }
 
-func (d *kafkaAppImpl) GetKafkaConn(ctx context.Context, id uint64) (*mgm.KafkaConn, error) {
-	return mgm.GetKafkaConn(ctx, id, func() (*mgm.KafkaInfo, error) {
+func (d *kafkaAppImpl) GetKafkaConn(ctx context.Context, id uint64) (*kfm.KafkaConn, error) {
+	return kfm.GetKafkaConn(ctx, id, func() (*kfm.KafkaInfo, error) {
 		me, err := d.GetById(id)
 		if err != nil {
 			return nil, errorx.NewBiz("kafka not found")

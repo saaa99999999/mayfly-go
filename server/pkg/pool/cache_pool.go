@@ -5,22 +5,21 @@ import (
 	"math/rand"
 	"mayfly-go/pkg/gox"
 	"mayfly-go/pkg/logx"
+	"mayfly-go/pkg/utils/collx"
 	"mayfly-go/pkg/utils/stringx"
-	"sync"
 	"time"
 )
 
 // 缓存条目
 type cacheEntry[T Conn] struct {
-	conn       T // 连接
+	conn       T         // 连接
 	lastActive time.Time // 最后活跃时间
 }
 
 type CachePool[T Conn] struct {
-	factory func() (T, error) // 创建连接的工厂方法
-	mu      sync.RWMutex
-	cache   map[string]*cacheEntry[T] // 使用字符串键的缓存
-	config  PoolConfig[T] // 池配置
+	factory func() (T, error)                // 创建连接的工厂方法
+	cache   collx.SM[string, *cacheEntry[T]] // 使用字符串键的缓存
+	config  PoolConfig[T]                    // 池配置
 	closeCh chan struct{}
 	closed  bool
 }
@@ -40,7 +39,6 @@ func NewCachePool[T Conn](factory func() (T, error), opts ...Option[T]) *CachePo
 
 	p := &CachePool[T]{
 		factory: factory,
-		cache:   make(map[string]*cacheEntry[T]),
 		config:  config,
 		closeCh: make(chan struct{}),
 	}
@@ -48,7 +46,7 @@ func NewCachePool[T Conn](factory func() (T, error), opts ...Option[T]) *CachePo
 	gox.Go(func() {
 		p.backgroundMaintenance()
 	})
-	
+
 	return p
 }
 
@@ -61,42 +59,39 @@ func (p *CachePool[T]) Get(ctx context.Context, opts ...GetOption) (T, error) {
 		apply(&options)
 	}
 
-	// 先尝试加读锁，仅用于查找可用连接
-	p.mu.RLock()
-	if len(p.cache) >= p.config.MaxConns {
-		keys := make([]string, 0, len(p.cache))
-		for k := range p.cache {
+	// 尝试查找可用连接
+	if p.cache.Len() >= p.config.MaxConns {
+		keys := make([]string, 0, p.cache.Len())
+
+		p.cache.Range(func(k string, v *cacheEntry[T]) bool {
 			keys = append(keys, k)
-		}
+			return true
+		})
 
 		randomKey := keys[rand.Intn(len(keys))]
-		entry := p.cache[randomKey]
+		entry, _ := p.cache.Load(randomKey)
 		conn := entry.conn
 
 		if options.updateLastActive {
 			// 更新最后活跃时间
 			entry.lastActive = time.Now()
 		}
-		p.mu.RUnlock()
 		return conn, nil
 	}
-	p.mu.RUnlock()
 
 	if !options.newConn {
 		return zero, ErrNoAvailableConn
 	}
 
 	// 没有找到可用连接，升级为写锁进行创建
-	p.mu.Lock()
-	defer p.mu.Unlock()
 
 	if p.closed {
 		return zero, ErrPoolClosed
 	}
 
 	// 再次检查是否已创建（防止并发）
-	if len(p.cache) >= p.config.MaxConns {
-		for _, entry := range p.cache {
+	if p.cache.Len() >= p.config.MaxConns {
+		for _, entry := range p.cache.Values() {
 			if options.updateLastActive {
 				// 更新最后活跃时间
 				entry.lastActive = time.Now()
@@ -111,10 +106,10 @@ func (p *CachePool[T]) Get(ctx context.Context, opts ...GetOption) (T, error) {
 		return zero, err
 	}
 
-	p.cache[generateCacheKey()] = &cacheEntry[T]{
+	p.cache.Store(generateCacheKey(), &cacheEntry[T]{
 		conn:       conn,
 		lastActive: time.Now(),
-	}
+	})
 
 	return conn, nil
 }
@@ -129,23 +124,21 @@ func (p *CachePool[T]) Put(conn T) error {
 func (p *CachePool[T]) removeOldest() {
 	var oldestKey string
 	var oldestTime time.Time
-
-	for key, entry := range p.cache {
+	p.cache.Range(func(key string, entry *cacheEntry[T]) bool {
 		if oldestKey == "" || entry.lastActive.Before(oldestTime) {
 			oldestKey = key
 			oldestTime = entry.lastActive
 		}
-	}
-
+		return true
+	})
 	if oldestKey != "" {
-		p.closeConn(oldestKey, p.cache[oldestKey], true)
+		load, _ := p.cache.Load(oldestKey)
+		p.closeConn(oldestKey, load, true)
 	}
 }
 
 // Close 关闭连接池
 func (p *CachePool[T]) Close() {
-	p.mu.Lock()
-	defer p.mu.Unlock()
 
 	if p.closed {
 		return
@@ -154,23 +147,21 @@ func (p *CachePool[T]) Close() {
 	p.closed = true
 	close(p.closeCh)
 
-	for key, entry := range p.cache {
+	p.cache.Range(func(key string, entry *cacheEntry[T]) bool {
 		// 强制关闭连接
 		p.closeConn(key, entry, true)
-	}
-
+		return true
+	})
 	// 触发关闭回调
 	if p.config.OnPoolClose != nil {
 		p.config.OnPoolClose()
 	}
 
-	p.cache = make(map[string]*cacheEntry[T])
+	p.cache.Clear()
 }
 
 // Resize 动态调整大小
 func (p *CachePool[T]) Resize(newSize int) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
 
 	if p.closed || newSize == p.config.MaxConns {
 		return
@@ -179,18 +170,15 @@ func (p *CachePool[T]) Resize(newSize int) {
 	p.config.MaxConns = newSize
 
 	// 如果新大小小于当前缓存数量，清理多余的连接
-	for len(p.cache) > newSize {
+	for p.cache.Len() > newSize {
 		p.removeOldest()
 	}
 }
 
 // Stats 获取统计信息
 func (p *CachePool[T]) Stats() PoolStats {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
-
 	return PoolStats{
-		TotalConns: int32(len(p.cache)),
+		TotalConns: int32(len(p.cache.Values())),
 	}
 }
 
@@ -211,36 +199,35 @@ func (p *CachePool[T]) backgroundMaintenance() {
 
 // cleanupIdle 清理ping失败或者闲置超时的连接
 func (p *CachePool[T]) cleanupIdle() {
-	p.mu.Lock()
-    defer p.mu.Unlock()
-    
-    for key, entry := range p.cache {
-        shouldClean := false
-        
-        // 检查是否设置了超时时间，且连接已超时
-        if p.config.IdleTimeout > 0 {
-            cutoff := time.Now().Add(-p.config.IdleTimeout)
-            if entry.lastActive.Before(cutoff) {
-                shouldClean = true
-            }
-        }
-        
-        // 检查连接健康状态
-        if !shouldClean && !p.ping(entry.conn) {
-            shouldClean = true
-        }
-        
-        if shouldClean {
-            logx.Infof("cache pool - cleaning up connection (timeout or ping failed), key: %s", key)
-            p.closeConn(key, entry, false)
-        }
-    }
+
+	p.cache.Range(func(key string, entry *cacheEntry[T]) bool {
+		shouldClean := false
+
+		// 检查是否设置了超时时间，且连接已超时
+		if p.config.IdleTimeout > 0 {
+			cutoff := time.Now().Add(-p.config.IdleTimeout)
+			if entry.lastActive.Before(cutoff) {
+				shouldClean = true
+			}
+		}
+
+		// 检查连接健康状态
+		if !shouldClean && !p.ping(entry.conn) {
+			shouldClean = true
+		}
+
+		if shouldClean {
+			logx.Infof("cache pool - cleaning up connection (timeout or ping failed), key: %s", key)
+			p.closeConn(key, entry, false)
+		}
+		return true
+	})
 }
 
 func (p *CachePool[T]) ping(conn T) bool {
 	done := make(chan struct{})
 	var result bool
-	gox.Go(func ()  {
+	gox.Go(func() {
 		err := conn.Ping()
 		if err != nil {
 			logx.Errorf("conn pool - ping failed: %s", err.Error())
@@ -271,16 +258,16 @@ func (p *CachePool[T]) closeConn(key string, entry *cacheEntry[T], force bool) b
 
 	if err := entry.conn.Close(); err != nil {
 		logx.Errorf("cache pool - closing connection error: %v", err)
-		return false;
+		return false
 	}
-	delete(p.cache, key)
+	p.cache.Delete(key)
 
 	// 如果连接池组存在且当前缓存已空，则从组中移除该池
-	if group := p.config.Group; group != nil && p.config.GroupKey != "" && len(p.cache) == 0 {
+	if group := p.config.Group; group != nil && p.config.GroupKey != "" && p.cache.Len() == 0 {
 		logx.Infof("cache pool - closing group pool, key: %s", p.config.GroupKey)
 		group.Close(p.config.GroupKey)
 	}
-	
+
 	return true
 }
 

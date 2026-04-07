@@ -66,7 +66,7 @@
 import Guacamole from './guac/guacamole-common';
 import { getMachineRdpSocketUrl } from '@/views/ops/machine/api';
 import clipboard from './guac/clipboard';
-import { reactive, ref } from 'vue';
+import { onUnmounted, reactive, ref } from 'vue';
 import { TerminalStatus } from '@/components/terminal/common';
 import ClipboardDialog from '@/components/terminal-rdp/guac/ClipboardDialog.vue';
 import { TerminalExpose } from '@/components/terminal-rdp/index';
@@ -77,6 +77,7 @@ import { useDebounceFn, useEventListener } from '@vueuse/core';
 import { ClientState, TunnelState } from '@/components/terminal-rdp/guac/states';
 import { ElMessage } from 'element-plus';
 import { joinClientParams } from '@/common/request';
+import { MachineProtocolEnum } from '@/views/ops/machine/enums';
 
 const viewportRef = ref({} as any);
 const displayRef = ref({} as any);
@@ -90,6 +91,10 @@ const props = defineProps({
     authCert: {
         type: String,
         required: true,
+    },
+    protocol: {
+        type: Number,
+        default: 2, // 2=RDP, 3=VNC
     },
     clipboardList: {
         type: Array,
@@ -189,7 +194,7 @@ const installClipboard = () => {
 };
 
 const installResize = () => {
-    // 在resize事件结束后300毫秒执行
+    // 在 resize 事件结束后 300 毫秒执行，使用防抖
     useEventListener('resize', useDebounceFn(resize, 300));
 };
 
@@ -333,19 +338,21 @@ const resize = () => {
     const width = parseInt(String(box.clientWidth));
     const height = parseInt(String(box.clientHeight));
 
+    // VNC 协议只发送尺寸，不重连；RDP 协议在连接状态下发送尺寸，未连接时重连
     if (state.display.getWidth() !== width || state.display.getHeight() !== height) {
-        if (state.status !== TerminalStatus.Connected) {
-            connect(width, height);
-        } else {
+        // VNC 协议（protocol=3）只发送尺寸变化，不触发重连
+        if (props.protocol === MachineProtocolEnum.Vnc.value) {
+            // VNC: 仅发送尺寸
             state.client.sendSize(width, height);
+        } else {
+            // RDP: 未连接时重连，已连接时发送尺寸
+            if (state.status !== TerminalStatus.Connected) {
+                connect(width, height);
+            } else {
+                state.client.sendSize(width, height);
+            }
         }
     }
-    // setting timeout so display has time to get the correct size
-    // setTimeout(() => {
-    //     const scale = Math.min(box.clientWidth / Math.max(state.display.getWidth(), 1), box.clientHeight / Math.max(state.display.getHeight(), 1));
-    //     state.display.scale(scale);
-    //     console.log(state.size, scale);
-    // }, 100);
 };
 
 const handleMouseState = (mouseState: any, showCursor = false) => {
@@ -476,6 +483,10 @@ const exposes = {
     blur,
     setRemoteClipboard: onsubmitClipboard,
 } as TerminalExpose;
+
+onUnmounted(() => {
+    disconnect();
+});
 
 defineExpose(exposes);
 </script>

@@ -62,7 +62,7 @@
                     <el-row :gutter="10">
                         <el-col :span="10">
                             <el-form-item prop="targetFileDbType" :label="$t('db.dbFileType')" :required="form.mode === 2">
-                                <el-select v-model="form.targetFileDbType" clearable filterable>
+                                <el-select v-model="form.targetFileDbType" clearable filterable style="width: 180px">
                                     <el-option
                                         v-for="(dbTypeAndDialect, key) in getDbDialectMap()"
                                         :key="key"

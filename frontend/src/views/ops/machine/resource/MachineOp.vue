@@ -42,6 +42,7 @@
                         v-if="dt.params.protocol != MachineProtocolEnum.Ssh.value"
                         :machine-id="dt.params.id"
                         :auth-cert="dt.authCert"
+                        :protocol="dt.params.protocol"
                         :ref="(el: any) => setTerminalRef(el, dt.key)"
                         @status-change="terminalStatusChange(dt.key, $event)"
                     />

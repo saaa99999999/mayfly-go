@@ -59,7 +59,7 @@ watch(
 );
 
 const fileSize = computed(() => {
-    return fileDetail.value.size ? formatByteSize(fileDetail.value.size) : '';
+    return fileDetail.value?.size ? formatByteSize(fileDetail.value.size) : '';
 });
 
 const fileDetail: any = ref({});

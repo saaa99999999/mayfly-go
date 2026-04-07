@@ -6,7 +6,7 @@ import (
 	"mayfly-go/internal/mq/kafka/application"
 	"mayfly-go/internal/mq/kafka/domain/entity"
 	"mayfly-go/internal/mq/kafka/imsg"
-	"mayfly-go/internal/mq/kafka/mgm"
+	"mayfly-go/internal/mq/kafka/kfm"
 	"mayfly-go/internal/pkg/consts"
 	tagapp "mayfly-go/internal/tag/application"
 	tagentity "mayfly-go/internal/tag/domain/entity"
@@ -137,7 +137,7 @@ func (k *Kafka) GetTopics(rc *req.Ctx) {
 func (k *Kafka) CreateTopic(rc *req.Ctx) {
 	id := k.GetKafkaId(rc)
 
-	param := req.BindJson[mgm.CreateTopicParam](rc)
+	param := req.BindJson[kfm.CreateTopicParam](rc)
 	conn, err := k.kafkaApp.GetKafkaConn(rc, id)
 	if err != nil {
 		rc.Error = err
@@ -169,7 +169,7 @@ func (k *Kafka) GetTopicConfig(rc *req.Ctx) {
 }
 func (k *Kafka) CreatePartitions(rc *req.Ctx) {
 	id := k.GetKafkaId(rc)
-	param := req.BindJson[mgm.CreatePartitionsParam](rc)
+	param := req.BindJson[kfm.CreatePartitionsParam](rc)
 
 	conn, err := k.kafkaApp.GetKafkaConn(rc, id)
 	if err != nil {
@@ -183,7 +183,7 @@ func (k *Kafka) Produce(rc *req.Ctx) {
 	id := k.GetKafkaId(rc)
 	topic := rc.PathParam("topic")
 
-	param := req.BindJson[mgm.ProduceMessageParam](rc)
+	param := req.BindJson[kfm.ProduceMessageParam](rc)
 	param.Topic = topic
 
 	conn, err := k.kafkaApp.GetKafkaConn(rc, id)
@@ -205,7 +205,7 @@ func (k *Kafka) Consume(rc *req.Ctx) {
 		return
 	}
 
-	param := req.BindJson[mgm.ConsumeMessageParam](rc)
+	param := req.BindJson[kfm.ConsumeMessageParam](rc)
 	param.Topic = topic
 
 	rc.ResData, rc.Error = conn.ConsumeMessage(rc.MetaCtx, param)
