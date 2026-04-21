@@ -167,8 +167,13 @@ func (app *dataSyncAppImpl) Run(ctx context.Context, id uint64) error {
 			})
 
 			updSql = fmt.Sprintf("and %s > %s", task.UpdField, updFieldDataType.DataType.SQLValue(task.UpdFieldVal))
+		}
+
+		// 即使是首次同步，如果有更新字段也要添加排序，确保每次查询结果顺序一致，避免首次未同步完后续增量同步时漏数据或重复数据
+		if task.UpdField != "" {
 			orderSql = "order by " + task.UpdField + " asc "
 		}
+
 		// 正则判断DataSql是否以where .*结尾，如果是则不添加where 1 = 1
 		var where = "where 1=1"
 		if whereReg.MatchString(task.DataSql) {
