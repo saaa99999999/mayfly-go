@@ -25,6 +25,7 @@
                                     height: '100%',
                                     textAlign: 'center',
                                     borderRight: 'var(--el-table-border)',
+                                    borderTop: 'var(--el-table-border)',
                                 }"
                             >
                                 <!-- 行号列 -->
@@ -899,11 +900,6 @@ defineExpose({
 
 <style lang="scss">
 .db-table-data {
-    .table {
-        border-left: var(--el-table-border);
-        border-top: var(--el-table-border);
-    }
-
     .table-column {
         padding: 0 2px;
         font-size: 12px;

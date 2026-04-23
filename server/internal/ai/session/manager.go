@@ -7,7 +7,9 @@ import (
 	"mayfly-go/pkg/logx"
 	"mayfly-go/pkg/utils/collx"
 	"mayfly-go/pkg/utils/stringx"
+	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/cloudwego/eino/adk"
 	"github.com/cloudwego/eino/schema"
@@ -18,6 +20,7 @@ import (
 type Manager struct {
 	store         Store          // 底层存储
 	summaryConfig *SummaryConfig // 摘要配置（可选）
+	summarizing   sync.Map       // sessionKey -> struct{}，防止同一会话并发摘要
 }
 
 // NewManager 创建会话管理器
@@ -55,14 +58,27 @@ func (m *Manager) GetHistory(ctx context.Context, key string, opts ...GetOption)
 	// 计算 Store 层实际需要读取的消息数量
 	// 目标：只读取未摘要的消息，避免读取已摘要的历史记录
 	var storeLimit int
-	if meta != nil && meta.Skip > 0 && meta.Count > meta.Skip {
-		// 未摘要的消息数 = 总消息数 - Skip
+	if meta != nil && meta.Count > meta.Skip {
 		unsummarizedCount := meta.Count - meta.Skip
-		storeLimit = unsummarizedCount
-		logx.DebugfContext(ctx, "count=%d, skip=%d, unsummarizedCount=%d, messageLimit=%d",
-			meta.Count, meta.Skip, unsummarizedCount, options.messageLimit)
+		// 取未摘要消息数和用户限制中的较小值，避免加载过多数据
+		if options.messageLimit > 0 && options.messageLimit < unsummarizedCount {
+			storeLimit = options.messageLimit
+		} else {
+			storeLimit = unsummarizedCount
+		}
+		logx.DebugfContext(ctx, "count=%d, skip=%d, unsummarizedCount=%d, messageLimit=%d, storeLimit=%d",
+			meta.Count, meta.Skip, unsummarizedCount, options.messageLimit, storeLimit)
+	} else if meta != nil && meta.Count <= meta.Skip {
+		// 所有消息都已被摘要，无需从 Store 读取原始消息
+		if meta.Summary != "" {
+			summaryMsg := &schema.Message{
+				Role:    schema.System,
+				Content: fmt.Sprintf("[之前的对话摘要]\n%s\n\n[以下是新的对话内容]", meta.Summary),
+			}
+			return []adk.Message{summaryMsg}, nil
+		}
+		return []adk.Message{}, nil
 	} else {
-		// 没有 Skip 或 Count <= Skip，直接使用用户的 limit
 		storeLimit = options.messageLimit
 	}
 
@@ -117,13 +133,15 @@ func (m *Manager) AppendMsgs(ctx context.Context, key string, msgs ...adk.Messag
 		meta.Extra.Set("title", stringx.Truncate(msgs[0].Content, 50, 30, "..."))
 	}
 
-	// 计算新增消息的Token数量
+	// 计算新增消息的Token数量（使用 CompletionTokens + 内容长度估算，避免 TotalTokens 的累积重复计算）
 	totalTokens := collx.ArrayReduce(msgs, 0, func(totalToken int, msg adk.Message) int {
 		responseMeta := msg.ResponseMeta
 		if responseMeta != nil && responseMeta.Usage != nil {
-			return totalToken + responseMeta.Usage.TotalTokens
+			// 使用 CompletionTokens（仅 assistant 生成部分），更准确地反映单条消息的实际 token 数
+			return totalToken + responseMeta.Usage.CompletionTokens
 		}
-		return totalToken
+		// 无 Usage 时按内容长度估算
+		return totalToken + estimateTokens(msg.Content)
 	})
 
 	// 保存元数据
@@ -136,11 +154,21 @@ func (m *Manager) AppendMsgs(ctx context.Context, key string, msgs ...adk.Messag
 
 	// 异步检查并执行摘要（如果配置了摘要功能）
 	if m.summaryConfig != nil && m.summaryConfig.Enabled {
-		gox.Go(func() {
-			if err := m.CheckAndSummarize(ctx, key); err != nil {
-				logx.ErrorfContext(ctx, "auto summarize error: %v", err)
-			}
-		})
+		// 快速预检查：只有当未摘要消息数接近阈值时才启动 goroutine，避免无意义调度
+		unsummarizedCount := meta.Count - meta.Skip
+		keepCount := m.summaryConfig.KeepRecentCount
+		if keepCount <= 0 {
+			keepCount = DefaultSummaryKeepCount
+		}
+		if unsummarizedCount >= m.summaryConfig.MessageThreshold {
+			// 使用 context.WithoutCancel 防止请求结束后 context 被取消导致摘要中断
+			summaryCtx := context.WithoutCancel(ctx)
+			gox.Go(func() {
+				if err := m.CheckAndSummarize(summaryCtx, key); err != nil {
+					logx.ErrorfContext(summaryCtx, "auto summarize error: %v", err)
+				}
+			})
+		}
 	}
 
 	return nil
@@ -240,6 +268,13 @@ func (m *Manager) CheckAndSummarize(ctx context.Context, sessionKey string) erro
 
 // summarizeSession 对会话进行摘要处理（增量摘要）
 func (m *Manager) summarizeSession(ctx context.Context, sessionKey string, meta *SessionMeta, config *SummaryConfig) error {
+	// 防止同一 session 并发执行摘要
+	if _, loaded := m.summarizing.LoadOrStore(sessionKey, struct{}{}); loaded {
+		logx.DebugfContext(ctx, "summarization already in progress for session %s, skip", sessionKey)
+		return nil
+	}
+	defer m.summarizing.Delete(sessionKey)
+
 	keepCount := config.KeepRecentCount
 	if keepCount <= 0 {
 		keepCount = DefaultSummaryKeepCount
@@ -331,16 +366,12 @@ func (m *Manager) summarizeSession(ctx context.Context, sessionKey string, meta 
 	if len(fullContext) >= keepCount {
 		// 只计算保留的最近消息的 token
 		for _, msg := range fullContext[len(fullContext)-keepCount:] {
-			if msg.ResponseMeta != nil && msg.ResponseMeta.Usage != nil {
-				meta.TokenCount += msg.ResponseMeta.Usage.TotalTokens
-			}
+			meta.TokenCount += messageTokens(msg)
 		}
 	} else {
 		// 如果历史消息少于 keepCount，计算所有消息的 token
 		for _, msg := range fullContext {
-			if msg.ResponseMeta != nil && msg.ResponseMeta.Usage != nil {
-				meta.TokenCount += msg.ResponseMeta.Usage.TotalTokens
-			}
+			meta.TokenCount += messageTokens(msg)
 		}
 	}
 
@@ -367,5 +398,35 @@ func (m *Manager) summarizeSession(ctx context.Context, sessionKey string, meta 
 	logx.InfofContext(ctx, "summarize completed, summary length: %d, skipped messages: %d, kept messages: %d",
 		len(summaryText), newSkipCount, keepCount)
 
+	// 发布会话摘要完成事件，供外部模块（如长期记忆提取）订阅处理
+	// 使用事件总线解耦，session 包不感知下游消费者
+	EventBus.Publish(ctx, EventTopicSummarized, &SummarizedEvent{
+		UserId:     meta.UserId,
+		SessionKey: sessionKey,
+		Summary:    summaryText,
+		Skip:       newSkipCount,
+		Count:      meta.Count,
+	})
+
 	return nil
+}
+
+// estimateTokens 按内容长度估算 token 数
+func estimateTokens(content string) int {
+	if content == "" {
+		return 0
+	}
+	// 混合中英文场景下的保守估算：
+	// 中文字符 ≈ 1 token/字，英文 ≈ 0.25 token/字符
+	// utf8.RuneCountInString 对中文返回字数，对英文返回字母数
+	// 取 rune 数的一半作为保守估计
+	return utf8.RuneCountInString(content) / 2
+}
+
+// messageTokens 获取单条消息的 token 数，优先使用 CompletionTokens，否则估算
+func messageTokens(msg adk.Message) int {
+	if msg.ResponseMeta != nil && msg.ResponseMeta.Usage != nil {
+		return msg.ResponseMeta.Usage.CompletionTokens
+	}
+	return estimateTokens(msg.Content)
 }

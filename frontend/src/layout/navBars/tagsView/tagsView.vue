@@ -19,19 +19,15 @@
                     <SvgIcon :name="v.icon" class="layout-navbars-tagsview-ul-li-iconfont" v-if="themeConfig.isTagsviewIcon" />
                     <span>{{ $t(v.title) }}</span>
 
-                    <template v-if="isActive(v)">
-                        <SvgIcon
-                            name="RefreshRight"
-                            class="text-[14px]! ml-1 layout-navbars-tagsview-ul-li-icon layout-navbars-tagsview-ul-li-refresh"
-                            @click.stop="refreshCurrentTagsView($route.fullPath)"
-                        />
-                        <SvgIcon
-                            name="Close"
-                            class="text-[14px]! layout-navbars-tagsview-ul-li-icon layout-navbars-tagsview-ul-li-close layout-icon-active"
-                            v-if="!v.isAffix"
-                            @click.stop="closeCurrentTagsView(themeConfig.isShareTagsView ? v.path : v.path)"
-                        />
-                    </template>
+                    <SvgIcon
+                        v-if="isActive(v)"
+                        name="RefreshRight"
+                        class="text-[14px]! layout-navbars-tagsview-ul-li-icon layout-navbars-tagsview-ul-li-refresh"
+                        @click.stop="refreshCurrentTagsView($route.fullPath)"
+                    />
+                    <span v-if="!v.isAffix" class="layout-navbars-tagsview-ul-li-close-wrap" @click.stop="closeCurrentTagsView(v.path)">
+                        <SvgIcon name="Close" class="text-[14px]! layout-navbars-tagsview-ul-li-close-icon" />
+                    </span>
                 </li>
             </ul>
         </el-scrollbar>
@@ -408,7 +404,6 @@ onBeforeRouteUpdate((to) => {
 .layout-navbars-tagsview-ul {
     list-style: none;
     margin: 0;
-    padding: 0;
     height: 38px;
     display: flex;
     align-items: center;
@@ -442,7 +437,6 @@ onBeforeRouteUpdate((to) => {
     background-color: var(--el-fill-color-blank, #f5f7fa);
     color: var(--el-text-color-primary, #303133);
     border-color: var(--el-color-primary-light-7, #c6e2ff);
-    transform: translateY(-1px);
 }
 
 .layout-navbars-tagsview-ul-li-iconfont {
@@ -457,8 +451,6 @@ onBeforeRouteUpdate((to) => {
     position: relative;
     height: 18px;
     width: 18px;
-    text-align: center;
-    line-height: 18px;
     right: -3px;
     margin-left: 4px;
     transition: all 0.25s ease;
@@ -470,13 +462,57 @@ onBeforeRouteUpdate((to) => {
 
 .layout-navbars-tagsview-ul-li-icon:hover {
     background-color: var(--el-color-info-light-7);
-    border-radius: 4px;
 }
 
-.layout-icon-active {
+/* 关闭按钮动画容器：默认宽度0不占位，hover/active 时平滑展开 */
+.layout-navbars-tagsview-ul-li-close-wrap {
+    position: relative;
+    right: -3px;
+    height: 18px;
+    width: 0;
+    min-width: 0;
+    margin-left: 0;
+    overflow: hidden;
+    opacity: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    pointer-events: none;
+    transition:
+        width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+        min-width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+        margin-left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.5s ease;
+}
+
+/* 鼠标悬浮 li 或激活状态时展开 */
+.layout-navbars-tagsview-ul-li:hover .layout-navbars-tagsview-ul-li-close-wrap,
+.layout-navbars-tagsview-ul .is-active .layout-navbars-tagsview-ul-li-close-wrap {
+    width: 18px;
+    min-width: 18px;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* 关闭按钮图标：与刷新按钮尺寸和视觉完全一致 */
+.layout-navbars-tagsview-ul-li-close-icon {
+    border-radius: 4px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    color: var(--el-text-color-secondary, #909399);
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+    flex-shrink: 0;
+}
+
+/* 非激活 tag：关闭图标 hover 变红 */
+.layout-navbars-tagsview-ul-li:not(.is-active):hover .layout-navbars-tagsview-ul-li-close-icon:hover {
+    background-color: var(--el-color-danger);
+    color: var(--el-color-white);
 }
 
 .layout-navbars-tagsview-ul .is-active {
@@ -493,19 +529,17 @@ onBeforeRouteUpdate((to) => {
 .layout-navbars-tagsview-ul .is-active .layout-navbars-tagsview-ul-li-icon:hover {
     background-color: var(--el-color-primary);
     color: var(--el-color-white);
-    transform: scale(1.1);
 }
 
-.layout-navbars-tagsview-ul .is-active .layout-navbars-tagsview-ul-li-close:hover {
+/* 激活 tag 的关闭图标使用主色调 */
+.layout-navbars-tagsview-ul .is-active .layout-navbars-tagsview-ul-li-close-icon {
+    color: var(--el-color-primary, #409eff);
+}
+
+/* 激活 tag 的关闭图标 hover 变红 */
+.layout-navbars-tagsview-ul .is-active .layout-navbars-tagsview-ul-li-close-icon:hover {
     background-color: var(--el-color-danger);
     color: var(--el-color-white);
-    border-radius: 4px;
-}
-
-.layout-navbars-tagsview-ul .is-active .layout-navbars-tagsview-ul-li-refresh:hover {
-    background-color: var(--el-color-primary);
-    color: var(--el-color-white);
-    border-radius: 4px;
 }
 
 .layout-navbars-tagsview-shadow {

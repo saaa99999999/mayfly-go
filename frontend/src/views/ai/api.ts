@@ -17,6 +17,7 @@ export interface ToolCall {
 
 export interface SessionMessage {
     turnId?: string;
+    sessionId?: string; // 会话ID，用于过滤不属于当前会话的消息
     role: string;
     content: string;
     type?: string;

@@ -55,9 +55,10 @@
 
                 <template #content="{ item }">
                     <!-- chat 内容走 markdown -->
-                    <XMarkdown
+                    <MarkdownRenderer
                         v-if="item.role === ROLE.AI || item.role == ROLE.INTERNAL"
                         :markdown="item.content"
+                        :is-dark="isDark"
                         :themes="{ light: 'github-light', dark: 'github-dark' }"
                         :default-theme-mode="isDark ? 'dark' : 'light'"
                     />
@@ -83,7 +84,7 @@
 
         <!-- 输入框区域：固定在底部 -->
         <div class="w-full mt-4">
-            <EditorSender
+            <XSender
                 ref="senderRef"
                 @click.once="onFoucsSender()"
                 style="border-radius: 24px"
@@ -101,7 +102,7 @@
                 variant="updown"
                 clearable
             >
-            </EditorSender>
+            </XSender>
 
             <el-dialog v-model="dialogCustomVisible" title="自定义触发符号选择弹窗" width="500">
                 <template v-for="option of customSenderTrigger" :key="option.prefix">
@@ -121,14 +122,15 @@ import { copyToClipboard } from '@/common/utils/string';
 import { useThemeConfig } from '@/store/themeConfig';
 import { useUserInfo } from '@/store/userInfo';
 import { computed, onBeforeUnmount, reactive, ref, toRefs, useTemplateRef, watch } from 'vue';
-import { BubbleList, EditorSender, ThoughtChain, XMarkdown } from 'vue-element-plus-x';
+import { BubbleList, ThoughtChain, XSender } from 'vue-element-plus-x';
 import type { BubbleListInstance } from 'vue-element-plus-x/types/BubbleList';
-import type { SubmitResult } from 'vue-element-plus-x/types/EditorSender';
 import { useI18n } from 'vue-i18n';
 import { aiApi, SessionMessage, ToolCall } from './api';
 import { getInterruptComponent } from './interrupt';
 import { InterruptActionEvent } from './interrupt/types';
 import { ElMessage } from 'element-plus';
+import { MarkdownRenderer } from 'x-markdown-vue';
+import 'x-markdown-vue/style';
 
 const { t } = useI18n();
 
@@ -212,7 +214,7 @@ const RECONNECT_DELAY = 3000;
 const themeConfig = useThemeConfig();
 const isDark = computed(() => themeConfig.themeConfig.isDark);
 
-const senderRef = useTemplateRef<InstanceType<typeof EditorSender>>('senderRef');
+const senderRef = useTemplateRef<InstanceType<typeof XSender>>('senderRef');
 const bubbleListRef = useTemplateRef<BubbleListInstance>('bubbleListRef');
 
 const state = reactive({
@@ -233,6 +235,13 @@ const initSocket = async () => {
         socket = await createWebSocket(`/ai/chat`);
         socket.onmessage = (e) => {
             const data: SessionMessage = JSON.parse(e.data);
+
+            // 会话隔离：只处理属于当前激活会话的消息
+            if (data.sessionId && data.sessionId !== props.sessionId) {
+                console.log(`忽略不属于当前会话的消息: ${data.sessionId} !== ${props.sessionId}`);
+                return;
+            }
+
             handleChunk(data);
         };
 
@@ -758,7 +767,7 @@ const converterMessages = (messages: SessionMessage[]) => {
 };
 
 const onFoucsSender = () => {
-    senderRef.value?.focusToEnd();
+    // senderRef.value?.foucs();
 };
 
 /**
@@ -843,13 +852,14 @@ const sendUserMsg = (type: 'text' | 'interruptResume', content: string) => {
     );
 };
 
-const onSubmit = (value: SubmitResult) => {
+const onSubmit = () => {
     try {
         state.senderLoading = true;
-        sendUserMsg('text', value.text);
+        const content = senderRef.value?.getModelValue().text;
+        sendUserMsg('text', content);
 
         state.messages.push({
-            content: value.text,
+            content: content,
             role: ROLE.USER,
             time: new Date(),
         });

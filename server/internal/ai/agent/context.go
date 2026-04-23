@@ -7,6 +7,7 @@ import (
 	"mayfly-go/internal/ai/memory"
 	"mayfly-go/internal/ai/session"
 	"mayfly-go/pkg/contextx"
+	"mayfly-go/pkg/eventbus"
 	"mayfly-go/pkg/logx"
 	"sync"
 
@@ -122,6 +123,12 @@ func NewContextManager(config *ContextManagerConfig) (*ContextManager, error) {
 		logx.Warn("ChatModel not provided, memory extraction will be disabled")
 	}
 
+	// 注册记忆提取事件订阅：通过事件总线解耦 session 摘要和 memory 提取
+	// 避免 session 包直接依赖 memory 包，后续可灵活替换或移除记忆模块
+	if memoryManager != nil {
+		registerMemoryExtraction(cm)
+	}
+
 	return cm, nil
 }
 
@@ -224,4 +231,34 @@ func (c *ContextManager) GetSessionMeta(ctx context.Context) (*session.SessionMe
 		return nil, errors.New("session key is empty")
 	}
 	return c.sessionManager.GetMeta(ctx, sessionKey)
+}
+
+// registerMemoryExtraction 注册会话摘要完成事件订阅器
+// 当 session.Manager 完成自动摘要后，通过事件总线异步触发长期记忆提取
+// 使用固定 subId 避免重复注册，后注册的实例会覆盖前者
+func registerMemoryExtraction(cm *ContextManager) {
+	session.EventBus.SubscribeAsync(session.EventTopicSummarized, "AgentMemoryExtractor", func(ctx context.Context, event *eventbus.Event[any]) error {
+		evt, ok := event.Val.(*session.SummarizedEvent)
+		if !ok {
+			return nil
+		}
+		if cm.memoryManager == nil || evt.UserId == "" {
+			return nil
+		}
+
+		// 获取当前会话历史消息用于记忆提取
+		history, err := cm.sessionManager.GetHistory(ctx, evt.SessionKey)
+		if err != nil {
+			logx.WarnfContext(ctx, "get history for memory extraction failed: %v", err)
+			return nil // 不阻塞事件总线
+		}
+
+		if err := cm.memoryManager.ExtractAndSave(ctx, &memory.ExtractMemoryReq{
+			UserId: evt.UserId,
+			Msgs:   history,
+		}); err != nil {
+			logx.ErrorfContext(ctx, "auto extract memories error: %v", err)
+		}
+		return nil
+	}, false)
 }

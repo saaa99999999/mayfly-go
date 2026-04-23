@@ -9,6 +9,7 @@ import (
 
 type ChatMsg struct {
 	Type             string            `json:"type,omitempty"` // "text", "tool", "end"
+	SessionId        string            `json:"sessionId"`      // 会话ID，用于前端过滤消息
 	Time             time.Time         `json:"time"`
 	TurnId           string            `json:"turnId"`
 	Role             string            `json:"role"`

@@ -231,12 +231,14 @@ func TestSessionManager_AutoSummarize(t *testing.T) {
 	ctx := context.Background()
 	sessionKey := "test:auto_summarize"
 
-	// 追加消息以达到阈值
+	// 追加消息以达到阈值（MessageThreshold=3, KeepRecentCount=2, minTriggerCount=5）
 	msgs := []adk.Message{
 		&schema.Message{Role: schema.User, Content: "消息1"},
 		&schema.Message{Role: schema.Assistant, Content: "回复1"},
 		&schema.Message{Role: schema.User, Content: "消息2"},
 		&schema.Message{Role: schema.Assistant, Content: "回复2"},
+		&schema.Message{Role: schema.User, Content: "消息3"},
+		&schema.Message{Role: schema.Assistant, Content: "回复3"},
 	}
 
 	for _, msg := range msgs {
@@ -272,14 +274,14 @@ func TestSessionManager_AutoSummarize(t *testing.T) {
 		t.Fatalf("get history failed: %v", err)
 	}
 
-	t.Logf("GetHistory returned %d messages (1 summary + %d history with Skip=%d optimization)", 
+	t.Logf("GetHistory returned %d messages (1 summary + %d history with Skip=%d optimization)",
 		len(history), len(history)-1, meta.Skip)
 
 	// 验证返回了摘要消息（第 1 条应该是系统消息）
 	if len(history) == 0 {
 		t.Fatal("expected at least 1 message (summary)")
 	}
-	
+
 	if history[0].Role != schema.System {
 		t.Errorf("expected first message to be System (summary), got role: %v", history[0].Role)
 	}

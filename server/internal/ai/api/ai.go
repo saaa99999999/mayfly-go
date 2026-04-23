@@ -132,6 +132,7 @@ func (a *Ai) Chat(rc *req.Ctx) {
 					}
 					respMsg := vo.ChatMsg{
 						Type:             "chunk",
+						SessionId:        chatMsg.SessionId, // 添加 sessionId，用于前端过滤
 						Time:             now,
 						Role:             string(m.Role),
 						Content:          m.Content,
@@ -145,6 +146,7 @@ func (a *Ai) Chat(rc *req.Ctx) {
 					if len(m.ToolCalls) > 0 || m.Role == schema.Tool || m.Role == agent.RoleInternal {
 						respMsg := vo.ChatMsg{
 							Type:             "tool",
+							SessionId:        chatMsg.SessionId, // 添加 sessionId，用于前端过滤
 							TurnId:           agent.GetTurnId(m),
 							Time:             now,
 							Role:             string(m.Role),
@@ -174,7 +176,11 @@ func (a *Ai) Chat(rc *req.Ctx) {
 
 			_, err = ag.Run(ctx, userMessage, agentRunOptions...)
 
-			endMsg := &vo.ChatMsg{Role: string(agent.RoleInternal), Time: now}
+			endMsg := &vo.ChatMsg{
+				SessionId: chatMsg.SessionId, // 添加 sessionId，用于前端过滤
+				Role:      string(agent.RoleInternal),
+				Time:      now,
+			}
 			if err != nil {
 				endMsg.Type = "error"
 				endMsg.Content = err.Error()

@@ -19,7 +19,7 @@ const (
 	// DefaultMessageThreshold 消息数量阈值，超过此数量触发自动摘要
 	DefaultMessageThreshold = 10
 	// DefaultTokenThreshold Token 数量阈值，超过此数量触发自动压缩
-	DefaultTokenThreshold = 200000
+	DefaultTokenThreshold = 100000
 	// DefaultSummaryKeepCount 摘要后保留的最近消息数量
 	DefaultSummaryKeepCount = 5
 )
@@ -116,10 +116,14 @@ func (s *LLMSummarizer) generateLLMSummary(ctx context.Context, messages []adk.M
 	// 构建摘要提示
 	prompt := s.buildSummaryPrompt(messagesForSummary)
 
-	// 调用 LLM 生成摘要
+	// 调用 LLM 生成摘要（System 设定角色，User 提供待处理内容）
 	response, err := s.chatModel.Stream(ctx, []*schema.Message{
 		{
 			Role:    schema.System,
+			Content: "你是对话摘要专家，负责将对话历史压缩为结构化的摘要。保留关键信息，去除冗余细节。",
+		},
+		{
+			Role:    schema.User,
 			Content: prompt,
 		},
 	})
@@ -184,9 +188,9 @@ func (s *LLMSummarizer) buildSummaryPrompt(messages []adk.Message) string {
 		case schema.System:
 			// System 消息通常是旧摘要，完整保留并明确标识
 			if strings.Contains(msg.Content, "之前的对话摘要") {
-				conversationText.WriteString("\n=== 之前的对话摘要 ===\n")
+				// 直接写入原始 System 内容，避免重复包装标题
 				conversationText.WriteString(msg.Content)
-				conversationText.WriteString("\n=== 新的对话内容开始 ===\n")
+				conversationText.WriteString("\n")
 			} else {
 				conversationText.WriteString(fmt.Sprintf("\n[System]: %s\n", msg.Content))
 			}

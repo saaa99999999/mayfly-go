@@ -144,6 +144,17 @@ func (a *Agent) Run(ctx context.Context, messages []adk.Message, runOpts ...RunO
 	var events *adk.AsyncIterator[*adk.AgentEvent]
 	var err error
 
+	// 保证消息持久化：无论正常返回、错误返回还是 panic，都会尝试保存
+	// 避免崩溃或提前 return 导致整轮消息丢失
+	defer func() {
+		saveMsgs := slices.Concat(messages, outputMessages)
+		if len(saveMsgs) > 0 {
+			if err := a.contextManager.AppendMsgs(ctx, saveMsgs...); err != nil {
+				logx.ErrorfContext(ctx, "agent append message error: %v", err)
+			}
+		}
+	}()
+
 	if runOptions.resumeParams != nil {
 		resumePrams := runOptions.resumeParams
 		targets := map[string]any{}
@@ -185,6 +196,9 @@ func (a *Agent) Run(ctx context.Context, messages []adk.Message, runOpts ...RunO
 	}
 
 	eventOutputMessages, err := a.handleEvents(ctx, events, runOptions)
+	// 先合并已收到的消息，即使后续出错也不丢失部分输出
+	outputMessages = append(outputMessages, eventOutputMessages...)
+
 	if err != nil {
 		if toolErr, ok := errors.AsType[*tools.ToolError](err); ok {
 			// 工具调用失败，并且没有重试，则记录对应错误消息
@@ -207,17 +221,11 @@ func (a *Agent) Run(ctx context.Context, messages []adk.Message, runOpts ...RunO
 			outputMessages = append(outputMessages, toolErrMsg, errMsg)
 		} else {
 			logx.ErrorContext(ctx, err.Error())
-			return "", err
+			return "", err // defer 会保存 outputMessages 中已有的消息
 		}
-	} else {
-		outputMessages = append(outputMessages, eventOutputMessages...)
 	}
 
 	if len(outputMessages) > 0 {
-		// 追加输出消息到上下文中，构造要保存的消息列表：先存用户消息，再存AI回复，保持对话顺序
-		if err := a.contextManager.AppendMsgs(ctx, slices.Concat(messages, outputMessages)...); err != nil {
-			logx.ErrorfContext(ctx, "agent append message error: %v", err)
-		}
 		return outputMessages[len(outputMessages)-1].Content, err
 	}
 

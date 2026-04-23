@@ -261,14 +261,18 @@ func (s *JSONLStore) GetHistory(
 	l.Lock()
 	defer l.Unlock()
 
-	// Store 层只负责简单读取，不处理业务逻辑（如 Skip）
-	// 从第 0 行开始读取所有消息
-	msgs, err := readMessages(s.jsonlPath(sessionKey), 0)
+	// 读取元数据获取 Skip 偏移量，跳过已摘要的历史消息，减少 I/O
+	meta, err := s.readMeta(sessionKey)
 	if err != nil {
 		return nil, err
 	}
 
-	logx.DebugfContext(context.Background(), "[Store] GetHistory: loaded %d messages, limit=%d", len(msgs), limit)
+	msgs, err := readMessages(s.jsonlPath(sessionKey), meta.Skip)
+	if err != nil {
+		return nil, err
+	}
+
+	logx.DebugfContext(context.Background(), "[Store] GetHistory: loaded %d messages, skip=%d, limit=%d", len(msgs), meta.Skip, limit)
 
 	// Apply limit if specified and positive
 	if limit > 0 && len(msgs) > limit {
