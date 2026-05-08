@@ -15,12 +15,15 @@ import (
 )
 
 type QueryDataParam struct {
-	DbId   int64  `json:"dbId" jsonschema_description:"数据库ID。如果用户未明确提供，请传0，不要猜测！"`
-	DbName string `json:"dbName" jsonschema_description:"数据库名称。如果用户未明确提供，请留空，不要猜测！"`
+	DbId   int64  `json:"dbId" jsonschema_description:"数据库ID。取值逻辑：1. 用户本次明确指定；2. 从前序工具的输入输出中继承已选定的数据库ID；3. 若均无，传0以触发参数补全。禁止凭空猜测。"`
+	DbName string `json:"dbName" jsonschema_description:"数据库名称。取值逻辑：1. 用户本次明确指定；2. 从前序工具的输入输出中继承已选定的数据库名称；3. 若均无，留空以触发参数补全。禁止凭空猜测。"`
 	SQL    string `json:"sql" jsonschema_description:"SQL语句" jsonschema:"required" `
 }
 
 type QueryDataOutput struct {
+	DbId    int64              `json:"dbId" jsonschema_description:"数据库ID"`
+	DbName  string             `json:"dbName" jsonschema_description:"数据库名称"`
+	DbType  string             `json:"dbType" jsonschema_description:"数据库类型，如mysql、postgresql等"`
 	Columns []*dbi.QueryColumn `json:"columns" jsonschema_description:"查询结果列信息"`
 	Rows    []map[string]any   `json:"rows" jsonschema_description:"查询结果数据"`
 }
@@ -33,8 +36,8 @@ func GetQueryData() (tool.InvokableTool, error) {
 			// 检查必要参数，触发参数完善
 			if param.DbId == 0 || param.DbName == "" {
 				if err := tools.InterruptOrResumeParamCompletion(ctx, toolDesc, param, i18n.TC(ctx, imsg.DbInfoIncomplete), "db", []tools.CompletionParamInfo{
-					{Param: "dbId", Name: "数据库ID", Cacheable: true},
-					{Param: "dbName", Name: "数据库名称", Cacheable: true},
+					{Param: "dbId", Name: "数据库ID"},
+					{Param: "dbName", Name: "数据库名称"},
 				}); err != nil {
 					return nil, err
 				}
@@ -61,7 +64,13 @@ func GetQueryData() (tool.InvokableTool, error) {
 				return nil, tools.NewToolError(err, tools.RecoverRetry)
 			}
 
-			output := &QueryDataOutput{Columns: columns, Rows: rows}
+			output := &QueryDataOutput{
+				DbId:    param.DbId,
+				DbName:  param.DbName,
+				DbType:  string(conn.Info.Type),
+				Columns: columns,
+				Rows:    rows,
+			}
 			return output, nil
 		},
 	)

@@ -62,7 +62,7 @@ watch(
 );
 
 const changeResourceCode = async (db: any) => {
-    emit('changeResourceCode', TagResourceTypeEnum.Db.value, db.code);
+    emit('changeResourceCode', TagResourceTypeEnum.Db.value, db.dbCode);
 };
 
 const validateBizForm = async () => {

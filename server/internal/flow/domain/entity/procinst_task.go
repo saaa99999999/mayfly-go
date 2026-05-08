@@ -21,7 +21,7 @@ type ProcinstTask struct {
 	Vars        collx.M      `json:"vars" gorm:"type:text;comment:任务变量"`
 
 	Status   ProcinstTaskStatus `json:"status" ` // 状态
-	Remark   string             `json:"remark" gorm:"size:255;"`
+	Remark   string             `json:"remark" gorm:"size:1000;"`
 	EndTime  *time.Time         `json:"endTime" gorm:"comment:结束时间"`
 	Duration int64              `json:"duration" gorm:"comment:任务持续时间（开始到结束）"` // 持续时间（开始到结束）
 }

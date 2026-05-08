@@ -33,6 +33,10 @@ func (cd *ClickHouseDialect) GetSQLParser() sqlparser.SqlParser {
 	return new(pgsql.PgsqlParser)
 }
 
+func (cd *ClickHouseDialect) GetSQLSplitter() sqlparser.SQLSplitter {
+	return sqlparser.NewDefaultSplitter(';')
+}
+
 func (cd *ClickHouseDialect) CopyTable(copy *dbi.DbCopyTable) error {
 	// ClickHouse doesn't support traditional table copying
 	// This would need to be implemented with CREATE TABLE ... AS SELECT

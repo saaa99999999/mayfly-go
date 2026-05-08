@@ -37,6 +37,9 @@ type BaseDialect interface {
 
 	// GetSQLParser 获取sql解析器
 	GetSQLParser() sqlparser.SqlParser
+
+	// GetSQLSplitter 获取sql切割器
+	GetSQLSplitter() sqlparser.SQLSplitter
 }
 
 // -----------------------------------元数据接口定义------------------------------------------
@@ -71,6 +74,11 @@ func (dd *DefaultDialect) GetDumpHelper() DumpHelper {
 
 func (pd *DefaultDialect) GetSQLParser() sqlparser.SqlParser {
 	return new(pgsql.PgsqlParser)
+}
+
+func (pd *DefaultDialect) GetSQLSplitter() sqlparser.SQLSplitter {
+	// 默认使用切割器
+	return sqlparser.NewDefaultSplitter()
 }
 
 // DumpHelper 导出辅助方法

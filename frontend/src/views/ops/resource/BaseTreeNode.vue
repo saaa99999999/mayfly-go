@@ -3,8 +3,8 @@
         :id="props.node.key"
         class="w-full node-container flex items-center cursor-pointer select-none"
         :class="props.data.type?.nodeDblclickFunc ? 'select-none' : ''"
-        @mouseenter="showActions = true"
-        @mouseleave="showActions = false"
+        @mouseenter="isShowActions && (showActions = true)"
+        @mouseleave="isShowActions && (showActions = false)"
     >
         <!-- prefix -->
         <SvgIcon :size="13" v-if="data.icon" :name="data.icon.name" :color="data.icon.color" />
@@ -23,7 +23,10 @@
         </span>
 
         <!-- 操作按钮 or suffix 区域 -->
-        <span v-if="(showActions || dropdownVisible) && !data.disabled && contextMenuItems.length > 0" class="ml-auto pr-2.5 flex items-center">
+        <span
+            v-if="isShowActions && (showActions || dropdownVisible) && !data.disabled && contextMenuItems.length > 0"
+            class="ml-auto pr-2.5 flex items-center"
+        >
             <el-dropdown size="small" trigger="click" @command="handleCommand" @visibleChange="(visible: boolean) => (dropdownVisible = visible)">
                 <el-button text bg size="small" circle @click.stop type="primary">
                     <SvgIcon name="MoreFilled" />
@@ -53,10 +56,13 @@ import SvgIcon from '@/components/svgIcon/index.vue';
 
 import { ContextmenuItem } from '@/components/contextmenu';
 import { ResourceOpCtx, TagTreeNode } from '@/views/ops/component/tag';
-import { ResourceOpCtxKey } from '@/views/ops/resource/resource';
+import { ResourceOpCtxKey, IsShowActionsKey } from '@/views/ops/resource/resource';
 import { hasPerm } from '@/components/auth/auth';
 
 const resourceOpCtx: ResourceOpCtx | undefined = inject(ResourceOpCtxKey, undefined);
+
+// 注入 isShowActions，如果未注入则默认为 true
+const isShowActions = inject(IsShowActionsKey, true);
 
 const props = defineProps({
     node: {

@@ -106,7 +106,7 @@ export function deepClone(
         result = Array.isArray(obj) ? [] : {};
         hash.set(obj, result);
         for (let key in obj) {
-            if (obj.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
                 let value = obj[key];
                 value = callback(key, value);
                 result[key] = deepClone(value, callback, hash);

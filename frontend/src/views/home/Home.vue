@@ -86,7 +86,7 @@
                                 </el-table-column>
                                 <el-table-column prop="codePath" min-width="400" show-overflow-tooltip>
                                     <template #default="scope">
-                                        <TagCodePath :path="scope.row.codePath" :tagInfos="state.machine.tagInfos" />
+                                        <TagCodePath :path="scope.row.codePath" />
                                     </template>
                                 </el-table-column>
                                 <el-table-column width="30">
@@ -125,7 +125,7 @@
                                 </el-table-column>
                                 <el-table-column prop="codePath" min-width="380" show-overflow-tooltip>
                                     <template #default="scope">
-                                        <TagCodePath :path="scope.row.codePath" :tagInfos="state.db.tagInfos" />
+                                        <TagCodePath :path="scope.row.codePath" />
                                     </template>
                                 </el-table-column>
                                 <el-table-column width="30">
@@ -166,7 +166,7 @@
                                 </el-table-column>
                                 <el-table-column prop="codePath" min-width="380" show-overflow-tooltip>
                                     <template #default="scope">
-                                        <TagCodePath :path="scope.row.codePath" :tagInfos="state.redis.tagInfos" />
+                                        <TagCodePath :path="scope.row.codePath" />
                                     </template>
                                 </el-table-column>
                                 <el-table-column width="30">
@@ -205,7 +205,7 @@
                                 </el-table-column>
                                 <el-table-column prop="codePath" min-width="380" show-overflow-tooltip>
                                     <template #default="scope">
-                                        <TagCodePath :path="scope.row.codePath" :tagInfos="state.mongo.tagInfos" />
+                                        <TagCodePath :path="scope.row.codePath" />
                                     </template>
                                 </el-table-column>
                                 <el-table-column width="30">
@@ -225,21 +225,20 @@
 <script lang="ts" setup>
 import { computed, onMounted, reactive } from 'vue';
 // import * as echarts from 'echarts';
-import { formatAxis, formatDate } from '@/common/utils/format';
-import { indexApi } from './api';
-import { useRouter } from 'vue-router';
-import { storeToRefs } from 'pinia';
-import { useUserInfo } from '@/store/userInfo';
-import { personApi } from '../personal/api';
-import SvgIcon from '@/components/svgIcon/index.vue';
 import { TagResourceTypeEnum } from '@/common/commonEnum';
-import { resourceOpLogApi } from '../ops/tag/api';
-import TagCodePath from '../ops/component/TagCodePath.vue';
-import { useAutoOpenResource } from '@/store/autoOpenResource';
-import { getAllTagInfoByCodePaths } from '../ops/component/tag';
-import { ElMessage } from 'element-plus';
 import { getFileUrl, getUploadFileUrl } from '@/common/request';
+import { formatAxis, formatDate } from '@/common/utils/format';
 import { saveUser } from '@/common/utils/storage';
+import SvgIcon from '@/components/svgIcon/index.vue';
+import { useAutoOpenResource } from '@/store/autoOpenResource';
+import { useUserInfo } from '@/store/userInfo';
+import { ElMessage } from 'element-plus';
+import { storeToRefs } from 'pinia';
+import { useRouter } from 'vue-router';
+import TagCodePath from '../ops/component/TagCodePath.vue';
+import { resourceOpLogApi } from '../ops/tag/api';
+import { personApi } from '../personal/api';
+import { indexApi } from './api';
 
 const router = useRouter();
 const { userInfo } = storeToRefs(useUserInfo());
@@ -317,32 +316,24 @@ const initData = async () => {
     resourceOpLogApi.getAccountResourceOpLogs
         .request({ resourceType: TagResourceTypeEnum.Machine.value, pageSize: state.defaultLogSize })
         .then(async (res: any) => {
-            const tagInfos = await getAllTagInfoByCodePaths(res.list?.map((item: any) => item.codePath));
-            state.machine.tagInfos = tagInfos;
             state.machine.opLogs = res.list;
         });
 
     resourceOpLogApi.getAccountResourceOpLogs
         .request({ resourceType: TagResourceTypeEnum.DbInstance.value, pageSize: state.defaultLogSize })
         .then(async (res: any) => {
-            const tagInfos = await getAllTagInfoByCodePaths(res.list?.map((item: any) => item.codePath));
-            state.db.tagInfos = tagInfos;
             state.db.opLogs = res.list;
         });
 
     resourceOpLogApi.getAccountResourceOpLogs
         .request({ resourceType: TagResourceTypeEnum.Redis.value, pageSize: state.defaultLogSize })
         .then(async (res: any) => {
-            const tagInfos = await getAllTagInfoByCodePaths(res.list?.map((item: any) => item.codePath));
-            state.redis.tagInfos = tagInfos;
             state.redis.opLogs = res.list;
         });
 
     resourceOpLogApi.getAccountResourceOpLogs
         .request({ resourceType: TagResourceTypeEnum.Mongo.value, pageSize: state.defaultLogSize })
         .then(async (res: any) => {
-            const tagInfos = await getAllTagInfoByCodePaths(res.list?.map((item: any) => item.codePath));
-            state.mongo.tagInfos = tagInfos;
             state.mongo.opLogs = res.list;
         });
 

@@ -3,6 +3,8 @@ package dm
 import (
 	"fmt"
 	"mayfly-go/internal/db/dbm/dbi"
+	"mayfly-go/internal/db/dbm/sqlparser"
+	"mayfly-go/internal/db/dbm/sqlparser/dm"
 	"mayfly-go/pkg/gox"
 	"mayfly-go/pkg/utils/stringx"
 	"strings"
@@ -63,4 +65,8 @@ func (sd *DMDialect) GetSQLGenerator() dbi.SQLGenerator {
 		Dialect:  sd,
 		Metadata: sd.dc.GetMetadata(),
 	}
+}
+
+func (sd *DMDialect) GetSQLParser() sqlparser.SqlParser {
+	return new(dm.DmParser)
 }

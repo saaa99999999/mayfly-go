@@ -1,23 +1,28 @@
 <template>
-    <ResourceSelect v-bind="$attrs" v-model="selectNode" @change="changeNode" :resource-type="TagResourceTypePath.Db" :tag-path-node-type="NodeTypeDbInst">
+    <ResourceSelect
+        v-bind="$attrs"
+        v-model="selectNode"
+        @change="changeNode"
+        :resource-type="ResourceTypeEnum.Db.value"
+        :leaf-node-types="[NodeTypePostgresSchema]"
+        :transform-node="transformNode"
+    >
         <template #iconPrefix>
-            <SvgIcon v-if="dbType && getDbDialect(dbType)" :name="getDbDialect(dbType).getInfo().icon" :size="18" />
+            <SvgIcon v-if="dbType && getDbDialect(dbType)" :name="getDbDialect(dbType).getInfo().icon" :size="16" />
+            <TagCodePath :code="dbCode" />
         </template>
     </ResourceSelect>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { TagResourceTypeEnum, TagResourceTypePath } from '@/common/commonEnum';
-import { NodeType, TagTreeNode } from '@/views/ops/component/tag';
-import { dbApi } from '@/views/ops/db/api';
-import { sleep } from '@/common/utils/loading';
+import { ResourceTypeEnum } from '@/common/commonEnum';
+import { TagTreeNode } from '@/views/ops/component/tag';
 import { getDbDialect, schemaDbTypes } from '@/views/ops/db/dialect';
+import { NodeTypeDb, NodeTypePostgresSchema } from '@/views/ops/db/resource';
 import ResourceSelect from '@/views/ops/resource/ResourceSelect.vue';
-import NodeDbInst from '@/views/ops/db/resource/NodeDbInst.vue';
-import NodeDb from '@/views/ops/db/resource/NodeDb.vue';
-import { DbIcon, SchemaIcon } from '@/views/ops/db/resource';
-import { DbInst } from '@/views/ops/db/db';
+import { computed, ref, watch } from 'vue';
+import TagCodePath from '../../component/TagCodePath.vue';
+import { dbApi } from '@/views/ops/db/api';
 
 const dbId = defineModel<number>('dbId');
 const instName = defineModel<string>('instName');
@@ -25,105 +30,49 @@ const dbName = defineModel<string>('dbName');
 const tagPath = defineModel<string>('tagPath');
 const dbType = defineModel<string>('dbType');
 
+const dbCode = ref('');
+
 const emits = defineEmits(['selectDb']);
 
 const selectNode = computed({
     get: () => {
-        return dbName.value ? `${tagPath.value} > ${instName.value} > ${dbName.value}` : '';
+        return dbName.value;
     },
     set: () => {
         //
     },
 });
 
-const NodeTypeDbInst = new NodeType(TagResourceTypeEnum.DbInstance.value).withLoadNodesFunc(async (parentNode: TagTreeNode) => {
-    const tagPath = parentNode.key;
+watch(
+    () => dbId.value,
+    async (id) => {
+        if (!id || id <= 0) {
+            return;
+        }
 
-    const dbInstancesRes = await dbApi.instances.request({ tagPath, pageSize: 100 });
-    const dbInstances = dbInstancesRes.list;
-    if (!dbInstances) {
-        return [];
+        const dbRes = await dbApi.dbs.request({ id: dbId.value });
+        const db = dbRes.list?.[0];
+        if (!db) {
+            console.log('not found db: {}', id);
+            return '';
+        }
+        dbCode.value = db.code;
+    },
+    { immediate: true }
+);
+
+// 节点转换函数：动态判断数据库节点是否为叶子节点
+const transformNode = (node: TagTreeNode): TagTreeNode => {
+    // 如果是数据库节点，根据数据库类型动态设置 isLeaf
+    if (node.type.value === NodeTypeDb.value) {
+        const hasSchema = schemaDbTypes.includes(node.params?.type);
+        // 没有 schema 的数据库（如 MySQL），标记为叶子节点
+        if (!hasSchema) {
+            node.isLeaf = true;
+        }
     }
-
-    // 防止过快加载会出现一闪而过，对眼睛不好
-    await sleep(100);
-    return dbInstances?.map((x: any) => {
-        x.tagPath = tagPath;
-        return TagTreeNode.new(parentNode, `${x.code}`, x.name, NodeTypeDbConf).withParams(x).withNodeComponent(NodeDbInst);
-    });
-});
-
-const NodeTypeDbConf = new NodeType(TagResourceTypeEnum.Db.value).withLoadNodesFunc(async (parentNode: TagTreeNode) => {
-    const params = parentNode.params;
-
-    const tagPath = params.tagPath;
-    const authCerts = {} as any;
-    for (let authCert of params.authCerts) {
-        authCerts[authCert.name] = authCert;
-    }
-
-    const dbInfoRes = await dbApi.dbs.request({
-        tagPath: `${tagPath}${TagResourceTypeEnum.DbInstance.value}|${params.code}`,
-    });
-    const dbInfos = dbInfoRes.list;
-    if (!dbInfos) {
-        return [];
-    }
-
-    return dbInfos?.map((x: any) => {
-        x.tagPath = tagPath;
-        x.username = authCerts[x.authCertName]?.username;
-        return TagTreeNode.new(parentNode, `${x.code}`, x.name, NodeTypeDbs).withParams(x).withIcon(DbIcon).withNodeComponent(NodeDb);
-    });
-});
-
-// 数据库列表名类型
-const NodeTypeDbs = new NodeType(222).withLoadNodesFunc(async (parentNode: TagTreeNode) => {
-    const params = parentNode.params;
-    const dbs = (await DbInst.getDbNames(params))?.sort();
-    const hasSchema = schemaDbTypes.includes(params.type);
-    const nodeType = hasSchema ? NodeTypeDbSchema : NodeTypeNoSchemaDb;
-
-    return dbs.map((x: any) => {
-        return TagTreeNode.new(parentNode, `${parentNode.key}.${x}`, x, nodeType)
-            .withParams({
-                tagPath: params.tagPath,
-                id: params.id,
-                name: params.name,
-                type: params.type,
-                host: `${params.host}:${params.port}`,
-                dbs: dbs,
-                db: x,
-                code: params.code,
-            })
-            .withIcon(DbIcon)
-            .withIsLeaf(!hasSchema);
-    });
-});
-
-// 数据库节点
-const NodeTypeDbSchema = new NodeType(2).withLoadNodesFunc(async (parentNode: TagTreeNode) => {
-    const params = parentNode.params;
-    params.parentKey = parentNode.key;
-    const { id, db } = params;
-    const schemaNames = await dbApi.pgSchemas.request({ id, db });
-    const dbs = schemaNames.map((x: any) => `${db}/${x}`);
-    return schemaNames.map((sn: any) => {
-        // 将db变更为  db/schema;
-        const nParams = { ...params };
-        nParams.schema = sn;
-        nParams.db = nParams.db + '/' + sn;
-        nParams.dbs = dbs;
-        return TagTreeNode.new(parentNode, `${params.id}.${params.db}.schema.${sn}`, sn, NodeTypePostgresSchema)
-            .withParams(nParams)
-            .withIcon(SchemaIcon)
-            .withIsLeaf(true);
-    });
-});
-
-// postgres schema模式
-const NodeTypePostgresSchema = new NodeType(99);
-const NodeTypeNoSchemaDb = new NodeType(99);
+    return node;
+};
 
 const changeNode = (nodeData: TagTreeNode) => {
     const params = nodeData.params;

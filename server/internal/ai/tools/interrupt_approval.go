@@ -12,7 +12,36 @@ import (
 
 	"github.com/cloudwego/eino/components/tool"
 	"github.com/cloudwego/eino/compose"
+	"github.com/cloudwego/eino/schema"
 )
+
+type ApprovalInfo struct {
+	BaseInterruptInfo
+}
+
+var _ InterruptMetadata = (*ApprovalInfo)(nil)
+
+func NewArrpovalInfo(ctx context.Context, toolInfo *schema.ToolInfo, arguments string) *ApprovalInfo {
+	ti := &ToolInfo{
+		Name: toolInfo.Name,
+		Desc: toolInfo.Desc,
+	}
+	toolJsonSchema, err := toolInfo.ParamsOneOf.ToJSONSchema()
+	if err != nil {
+		ti.JsonSchema = jsonx.ToStr(toolJsonSchema)
+	}
+
+	ai := &ApprovalInfo{
+		BaseInterruptInfo: BaseInterruptInfo{
+			Type:        InterruptTypeApproval,
+			ToolInfo:    ti,
+			ToolCallId:  compose.GetToolCallID(ctx),
+			Arguments:   arguments,
+			Description: i18n.T(imsg.ApprovalDesc),
+			Title:       i18n.T(imsg.ApprovalTitle),
+		}}
+	return ai
+}
 
 func InterruptOrResumeApproval(ctx context.Context, toolDesc string, arguments any, reason string) error {
 	isApprovalResume, err := ResumeApproval(ctx, toolDesc)

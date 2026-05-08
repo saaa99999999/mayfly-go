@@ -20,7 +20,7 @@ import (
 
 // GetDefaultAgent 获取默认agent
 func GetDefaultAgent(ctx context.Context, opts ...option) (*Agent, error) {
-	return NewDeepAgent(ctx, opts...)
+	return NewAgent(ctx, opts...)
 }
 
 const (
@@ -152,6 +152,20 @@ func (a *Agent) Run(ctx context.Context, messages []adk.Message, runOpts ...RunO
 	// 保证消息持久化：无论正常返回、错误返回还是 panic，都会尝试保存
 	// 避免崩溃或提前 return 导致整轮消息丢失
 	defer func() {
+		// 如果有未处理的错误，包装为 AI 回复消息推送给前端并保存
+		if err != nil {
+			// 工具错误已经在前面单独处理过了，这里只处理其他类型的错误
+			errMsg := &schema.Message{
+				Role:    schema.Assistant,
+				Content: err.Error(),
+			}
+			SetTurnId(errMsg, runOptions.turnId)
+			// 推送错误消息给前端
+			runOptions.CallOnChunk(ctx, errMsg)
+			// 加入 outputMessages 以便保存到历史记录
+			outputMessages = append(outputMessages, errMsg)
+		}
+
 		saveMsgs := slices.Concat(messages, outputMessages)
 		if len(saveMsgs) > 0 {
 			if err := a.contextManager.AppendMsgs(ctx, saveMsgs...); err != nil {
@@ -223,18 +237,11 @@ func (a *Agent) Run(ctx context.Context, messages []adk.Message, runOpts ...RunO
 			SetTurnId(toolErrMsg, runOptions.turnId)
 			SetToolStatus(toolErrMsg, tools.ToolStatusError)
 
-			errMsg := &schema.Message{
-				Role:    schema.Assistant,
-				Content: err.Error(),
-			}
-			SetTurnId(errMsg, runOptions.turnId)
 			runOptions.CallOnEvent(ctx, nil, toolErrMsg)
-
-			outputMessages = append(outputMessages, toolErrMsg, errMsg)
-		} else {
-			logx.ErrorContext(ctx, err.Error())
-			return "", err // defer 会保存 outputMessages 中已有的消息
+			outputMessages = append(outputMessages, toolErrMsg)
+			// 工具错误的 AI 回复消息由 defer 统一处理
 		}
+		// 其他类型的错误交给 defer 统一处理
 	}
 
 	if len(outputMessages) > 0 {

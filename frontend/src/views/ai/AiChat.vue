@@ -15,7 +15,7 @@
                     <div class="flex flex-wrap gap-2">
                         <template v-for="internal in item.internals" :key="internal.id || internal.extra?.interruptId">
                             <component
-                                class="max-w-120 flex-shrink-0"
+                                class="max-w-120 shrink-0"
                                 v-if="internal.extra?.type?.startsWith('interrupt_')"
                                 :is="getInterruptComponent(internal.extra?.type)"
                                 :data="internal"
@@ -56,7 +56,7 @@
                     <!-- 中断处理进度提示：当有未处理的中断时显示进度 -->
                     <div
                         v-if="item.unprocessedInterruptCount > 0"
-                        class="mt-2 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800"
+                        class="mt-2 mb-2 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800"
                     >
                         <div class="flex items-center justify-between">
                             <span class="text-xs text-blue-700 dark:text-blue-300">
@@ -140,16 +140,17 @@ import { formatDate } from '@/common/utils/format';
 import { copyToClipboard } from '@/common/utils/string';
 import { useThemeConfig } from '@/store/themeConfig';
 import { useUserInfo } from '@/store/userInfo';
+import { ElMessage } from 'element-plus';
 import { computed, onBeforeUnmount, provide, reactive, ref, toRefs, useTemplateRef, watch } from 'vue';
+import { useDebounceFn } from '@vueuse/core';
 import { BubbleList, ThoughtChain, XSender } from 'vue-element-plus-x';
 import type { BubbleListInstance } from 'vue-element-plus-x/types/BubbleList';
 import { useI18n } from 'vue-i18n';
+import { MarkdownRenderer } from 'x-markdown-vue';
+import 'x-markdown-vue/style';
 import { aiApi, SessionMessage, ToolCall } from './api';
 import { getInterruptComponent } from './interrupt';
 import { InterruptActionEvent } from './interrupt/types';
-import { ElMessage } from 'element-plus';
-import { MarkdownRenderer } from 'x-markdown-vue';
-import 'x-markdown-vue/style';
 
 const { t } = useI18n();
 
@@ -180,6 +181,7 @@ const THINK_TYPE = {
 
 const BUBBLE_MAX_WIDTH = '80%';
 const TOOL_ERROR_PREFIX = '[tool error]';
+const TOOL_RESULT_MAX_LENGTH = 1500;
 
 /**
  * Internal 消息类型
@@ -531,7 +533,8 @@ const appendToolResult = (message: messageType, toolCallId: string, content?: st
             continue;
         }
         if (think.extra.toolCallId === toolCallId) {
-            think.thinkContent = content ? `${think.thinkContent}  ${t('ai.chat.toolCallResult')}: ${content}` : content;
+            const displayContent = content.length > TOOL_RESULT_MAX_LENGTH ? content.substring(0, TOOL_RESULT_MAX_LENGTH) + '...' : content;
+            think.thinkContent = content ? `${think.thinkContent}  ${t('ai.chat.toolCallResult')}: ${displayContent}` : displayContent;
             if (content.startsWith(TOOL_ERROR_PREFIX)) {
                 think.status = THINK_STATUS.ERROR;
             } else {
@@ -550,6 +553,8 @@ const appendToolResult = (message: messageType, toolCallId: string, content?: st
 const appendInternal = (message: messageType, internalMsg: SessionMessage) => {
     if (internalMsg.type == MESSAGE_TYPE.ERROR) {
         ElMessage.error(internalMsg.content);
+        // 内部错误也要取消 loading 状态
+        state.senderLoading = false;
         return;
     }
     // 处理会话结束或错误
@@ -667,7 +672,7 @@ const appendReasoning = (message: messageType, reasoningContent: string) => {
         id: String(id),
         title: title,
         isCanExpand: true,
-        isDefaultExpand: true,
+        isDefaultExpand: false,
         thinkTitle: title,
         thinkContent: reasoningContent,
     });
@@ -714,6 +719,8 @@ const appendContent = (message: messageType, content: string) => {
     if (message.loading) {
         message.loading = false;
     }
+
+    scrollToBottom();
 };
 
 /**
@@ -731,7 +738,16 @@ const processMessage = (message: SessionMessage, targetMessage: messageType) => 
 
         case ROLE.AI:
             // AI 消息：处理内容、推理、工具调用
-            appendContent(targetMessage, message.content);
+            const isToolCall = message.toolCalls && message.toolCalls.length > 0;
+
+            if (!isToolCall) {
+                appendContent(targetMessage, message.content);
+            } else {
+                // 如果是工具调用，并且存在内容，则添加为推理内容
+                if (message.content) {
+                    message.reasoningContent = message.content;
+                }
+            }
 
             // 处理推理内容
             if (message.reasoningContent) {
@@ -739,7 +755,7 @@ const processMessage = (message: SessionMessage, targetMessage: messageType) => 
             }
 
             // 处理工具调用
-            if (message.toolCalls && message.toolCalls.length > 0) {
+            if (isToolCall && message.toolCalls) {
                 for (let toolCall of message.toolCalls) {
                     appendToolCall(targetMessage, toolCall);
                 }
@@ -789,6 +805,12 @@ const loadMessage = async () => {
         state.msgLoading = true;
         const messages = await aiApi.listMessages.request({ sessionKey: props.sessionId });
         state.messages = converterMessages(messages);
+
+        // 检查最后一条 AI 消息是否还在 loading 状态，如果是则保持 senderLoading 为 true
+        const lastMessage = state.messages[state.messages.length - 1];
+        if (lastMessage && lastMessage.role === ROLE.AI && lastMessage.loading) {
+            state.senderLoading = true;
+        }
     } finally {
         state.msgLoading = false;
         scrollToBottom();
@@ -922,14 +944,13 @@ const onFoucsSender = () => {
 };
 
 /**
- * 滚动到底部
- * @param delay
+ * 滚动到底部（防抖处理，500ms 内只执行一次）
  */
-const scrollToBottom = (delay: number = 500) => {
+const scrollToBottom = useDebounceFn((delay: number = 500) => {
     setTimeout(() => {
         bubbleListRef.value?.scrollToBottom();
     }, delay);
-};
+}, 500);
 
 let isIniting = false;
 

@@ -6,10 +6,16 @@ import (
 )
 
 func Init() {
-	if queryTableTool, err := GetQueryTableInfo(); err != nil {
-		logx.Errorf("agent tool - 获取QueryTableInfo工具失败: %v", err)
+	if queryTableDDLTool, err := GetQueryTableDDL(); err != nil {
+		logx.Errorf("agent tool - 获取QueryTableDDL工具失败: %v", err)
 	} else {
-		tools.DefaultRegistry.Register(queryTableTool)
+		tools.DefaultRegistry.Register(queryTableDDLTool)
+	}
+
+	if queryTablesTool, err := GetQueryTables(); err != nil {
+		logx.Errorf("agent tool - 获取QueryTables工具失败: %v", err)
+	} else {
+		tools.DefaultRegistry.Register(queryTablesTool)
 	}
 
 	if queryDataTool, err := GetQueryData(); err != nil {

@@ -3,6 +3,8 @@ package postgres
 import (
 	"fmt"
 	"mayfly-go/internal/db/dbm/dbi"
+	"mayfly-go/internal/db/dbm/sqlparser"
+	"mayfly-go/internal/db/dbm/sqlparser/pgsql"
 	"mayfly-go/pkg/gox"
 	"time"
 
@@ -81,4 +83,8 @@ func (md *PgsqlDialect) GetSQLGenerator() dbi.SQLGenerator {
 		dialect: md,
 		dc:      md.dc,
 	}
+}
+
+func (pd *PgsqlDialect) GetSQLParser() sqlparser.SqlParser {
+	return new(pgsql.PgsqlParser)
 }

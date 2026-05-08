@@ -36,7 +36,7 @@ export const NodeTypeMachineTag = new NodeType(TagTreeNode.TagPath).withLoadNode
         );
 });
 
-const NodeTypeMachine = new NodeType(11)
+export const NodeTypeMachine = new NodeType(11)
     .withLoadNodesFunc((node: TagTreeNode) => {
         const machine = node.params;
         // 获取授权凭证列表
@@ -55,34 +55,34 @@ const NodeTypeMachine = new NodeType(11)
     })
     .withContextMenuItems([
         new ContextmenuItem('detail', 'common.detail').withIcon('More').withOnClick(async (node: TagTreeNode) => {
-            (await node.ctx?.addResourceComponent(MachineOpComp)).showInfo(node.params);
+            (await node.ctx?.addResourceComponent(MachineOpComp))?.showInfo(node.params);
         }),
 
         new ContextmenuItem('status', 'common.status')
             .withIcon('Compass')
             .withHideFunc((node: any) => node.params.protocol != MachineProtocolEnum.Ssh.value)
             .withOnClick(async (node: TagTreeNode) => {
-                (await node.ctx?.addResourceComponent(MachineOpComp)).showMachineStats(node.params);
+                (await node.ctx?.addResourceComponent(MachineOpComp))?.showMachineStats(node.params);
             }),
 
         new ContextmenuItem('process', 'machine.process')
             .withIcon('DataLine')
             .withHideFunc((node: any) => node.params.protocol != MachineProtocolEnum.Ssh.value)
             .withOnClick(async (node: TagTreeNode) => {
-                (await node.ctx?.addResourceComponent(MachineOpComp)).showProcess(node.params);
+                (await node.ctx?.addResourceComponent(MachineOpComp))?.showProcess(node.params);
             }),
 
         new ContextmenuItem('edit', 'machine.terminalPlayback')
             .withIcon('Compass')
             .withOnClick(async (node: TagTreeNode) => {
-                (await node.ctx?.addResourceComponent(MachineOpComp)).showRec(node.params);
+                (await node.ctx?.addResourceComponent(MachineOpComp))?.showRec(node.params);
             })
             .withHideFunc((node: any) => node.params.enableRecorder == 1),
     ]);
 
-const NodeTypeAuthCert = new NodeType(12)
+export const NodeTypeAuthCert = new NodeType(12)
     .withNodeDblclickFunc(async (node: TagTreeNode) => {
-        (await node.ctx?.addResourceComponent(MachineOpComp)).openTerminal(node.params);
+        (await node.ctx?.addResourceComponent(MachineOpComp))?.openTerminal(node.params);
     })
     .withContextMenuItems([
         new ContextmenuItem('term', 'machine.openTerminal')
@@ -98,14 +98,14 @@ const NodeTypeAuthCert = new NodeType(12)
                 (await node.ctx?.addResourceComponent(MachineOpComp))?.openTerminal(node.params, true);
             }),
         new ContextmenuItem('files', 'machine.fileManage').withIcon('FolderOpened').withOnClick(async (node: any) => {
-            (await node.ctx?.addResourceComponent(MachineOpComp)).showFileManage(node.params);
+            (await node.ctx?.addResourceComponent(MachineOpComp))?.showFileManage(node.params);
         }),
 
         new ContextmenuItem('scripts', 'machine.scriptManage')
             .withIcon('Files')
             .withHideFunc((node: any) => node.params.protocol != MachineProtocolEnum.Ssh.value)
             .withOnClick(async (node: any) => {
-                (await node.ctx?.addResourceComponent(MachineOpComp)).serviceManager(node.params);
+                (await node.ctx?.addResourceComponent(MachineOpComp))?.serviceManager(node.params);
             }),
     ]);
 

@@ -5,6 +5,7 @@ import (
 	"mayfly-go/internal/ai/application"
 	"mayfly-go/internal/ai/infra/persistence"
 	"mayfly-go/internal/ai/tools/dbtool"
+	"mayfly-go/internal/ai/tools/machinetool"
 	"mayfly-go/pkg/starter"
 )
 
@@ -18,4 +19,6 @@ func init() {
 
 	// 数据库工具初始化
 	dbtool.Init()
+	// 机器工具初始化
+	machinetool.Init()
 }

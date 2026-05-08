@@ -67,7 +67,7 @@ const ContextmenuItemRefresh = new ContextmenuItem('refresh', 'common.refresh')
     .withOnClick(async (node: TagTreeNode) => (await node.ctx?.addResourceComponent(DbDataOpComp)).reloadNode(node.key));
 
 // 数据库实例节点类型
-const NodeTypeDbInst = new NodeType(TagResourceTypeEnum.DbInstance.value).withLoadNodesFunc(async (parentNode: TagTreeNode) => {
+export const NodeTypeDbInst = new NodeType(TagResourceTypeEnum.DbInstance.value).withLoadNodesFunc(async (parentNode: TagTreeNode) => {
     parentNode.ctx?.addResourceComponent(DbDataOpComp);
     const tagPath = parentNode.params.tagPath;
 
@@ -81,12 +81,13 @@ const NodeTypeDbInst = new NodeType(TagResourceTypeEnum.DbInstance.value).withLo
     await sleep(100);
     return dbInstances?.map((x: any) => {
         x.tagPath = tagPath;
+        x.instCode = x.code;
         return TagTreeNode.new(parentNode, `${x.code}`, x.name, NodeTypeDbConf).withParams(x).withNodeComponent(NodeDbInst);
     });
 });
 
 // 数据库配置节点类型
-const NodeTypeDbConf = new NodeType(TagResourceTypeEnum.Db.value)
+export const NodeTypeDbConf = new NodeType(TagResourceTypeEnum.Db.value)
     .withLoadNodesFunc(async (parentNode: TagTreeNode) => {
         const params = parentNode.params;
 
@@ -107,13 +108,15 @@ const NodeTypeDbConf = new NodeType(TagResourceTypeEnum.Db.value)
         return dbInfos?.map((x: any) => {
             x.tagPath = tagPath;
             x.username = authCerts[x.authCertName]?.username;
+            x.instCode = params.instCode;
+            x.dbCode = x.code;
             return TagTreeNode.new(parentNode, `${x.code}`, x.name, NodeTypeDbs).withParams(x).withIcon(DbIcon).withNodeComponent(NodeDb);
         });
     })
     .withContextMenuItems([ContextmenuItemRefresh]);
 
 // 数据库列表名类型
-const NodeTypeDbs = new NodeType(222).withLoadNodesFunc(async (parentNode: TagTreeNode) => {
+export const NodeTypeDbs = new NodeType(222).withLoadNodesFunc(async (parentNode: TagTreeNode) => {
     const params = parentNode.params;
     const dbs = (await DbInst.getDbNames(params))?.sort();
     // 查询数据库版本信息
@@ -123,6 +126,9 @@ const NodeTypeDbs = new NodeType(222).withLoadNodesFunc(async (parentNode: TagTr
             .withParams({
                 tagPath: params.tagPath,
                 id: params.id,
+                code: params.code,
+                instCode: params.instCode,
+                dbCode: params.dbCode,
                 name: params.name,
                 type: params.type,
                 version: version || 'unset',
@@ -135,7 +141,7 @@ const NodeTypeDbs = new NodeType(222).withLoadNodesFunc(async (parentNode: TagTr
 });
 
 // 数据库节点
-const NodeTypeDb = new NodeType(2)
+export const NodeTypeDb = new NodeType(223)
     .withContextMenuItems([ContextmenuItemRefresh])
     .withLoadNodesFunc(async (parentNode: TagTreeNode) => {
         const params = parentNode.params;
@@ -160,7 +166,7 @@ const NodeTypeDb = new NodeType(2)
     })
     .withNodeClickFunc(nodeClickChangeDb);
 
-const getNodeTypeTables = (parentNode: TagTreeNode) => {
+export const getNodeTypeTables = (parentNode: TagTreeNode) => {
     const params = parentNode.params;
     let tableKey = `${params.id}.${params.db}.table-menu`;
     let sqlKey = getSqlMenuNodeKey(params.id, params.db);
@@ -179,7 +185,7 @@ const getNodeTypeTables = (parentNode: TagTreeNode) => {
 };
 
 // postgres schema模式
-const NodeTypePostgresSchema = new NodeType(3)
+export const NodeTypePostgresSchema = new NodeType(224)
     .withContextMenuItems([ContextmenuItemRefresh])
     .withLoadNodesFunc(async (parentNode: TagTreeNode) => {
         const params = parentNode.params;
@@ -244,7 +250,7 @@ const NodeTypeTableMenu = new NodeType(4)
 // });
 
 // 数据库sql模板菜单节点
-const NodeTypeSqlMenu = new NodeType(5)
+const NodeTypeSqlMenu = new NodeType(225)
     .withLoadNodesFunc(async (parentNode: TagTreeNode) => {
         const params = parentNode.params;
         const id = params.id;
@@ -262,7 +268,7 @@ const NodeTypeSqlMenu = new NodeType(5)
     .withNodeClickFunc(nodeClickChangeDb);
 
 // 表节点类型
-const NodeTypeTable = new NodeType(6)
+const NodeTypeTable = new NodeType(226)
     .withContextMenuItems([
         new ContextmenuItem('copyTable', 'db.copyTable')
             .withIcon('copyDocument')
@@ -286,7 +292,7 @@ const NodeTypeTable = new NodeType(6)
     });
 
 // sql模板节点类型
-const NodeTypeSql = new NodeType(7)
+const NodeTypeSql = new NodeType(227)
     .withNodeClickFunc(async (parentNode: TagTreeNode) => {
         const compRef = await parentNode.ctx?.addResourceComponent(DbDataOpComp);
         const params = parentNode.params;

@@ -1,79 +1,32 @@
 package sqlstmt
 
-import (
-	"reflect"
+// Kind 表示 SQL 语句种类
+type Kind string
 
-	"github.com/antlr4-go/antlr/v4"
+const (
+	KindSelect Kind = "SELECT"
+	KindInsert Kind = "INSERT"
+	KindUpdate Kind = "UPDATE"
+	KindDelete Kind = "DELETE"
+	KindDdl    Kind = "DDL"
+	KindWith   Kind = "WITH"
+	KindOther  Kind = "OTHER"
 )
 
-type INode interface {
+// Stmt 是所有 SQL 语句的接口
+type Stmt interface {
 	GetText() string
-
-	// GetStartIndex() int
-	// GetStopIndex() int
+	StmtKind() Kind
 }
 
-type Node struct {
-	// startIndex int
-	// stopIndex  int
-
-	parser      antlr.Parser
-	ruleContext antlr.RuleContext
+// Base 提供基础实现
+type Base struct {
+	Text string // 原始 SQL 文本
 }
 
-func (n *Node) GetText() string {
-	if n == nil || n.ruleContext == nil || n.parser == nil {
+func (b *Base) GetText() string {
+	if b == nil {
 		return ""
 	}
-	return n.parser.GetTokenStream().GetTextFromRuleContext(n.ruleContext)
-}
-
-// func (n *Node) GetStartIndex() int {
-// 	return n.startIndex
-// }
-
-// func (n *Node) GetStopIndex() int {
-// 	return n.stopIndex
-// }
-
-func NewNode(parser antlr.Parser, ruleContext antlr.RuleContext) *Node {
-	return &Node{
-		parser:      parser,
-		ruleContext: ruleContext,
-	}
-}
-
-// func NewNode(startIndex, stopIndex int) *Node {
-// 	return &Node{
-// 		startIndex: startIndex,
-// 		stopIndex:  stopIndex,
-// 	}
-// }
-
-// func GetText(sqlstmts string, node INode) string {
-// 	return sqlstmts[node.GetStartIndex() : node.GetStopIndex()+1]
-// }
-
-type Stmt interface {
-	INode
-}
-
-type SqlStmt struct {
-	*Node
-}
-
-type DmlStmt struct {
-	SqlStmt
-}
-
-type OtherReadStmt struct {
-	*Node
-}
-
-type WithStmt struct {
-	*Node
-}
-
-func IsSelectStmt(stmt Stmt) bool {
-	return reflect.TypeOf(stmt).AssignableTo(reflect.TypeOf(&SelectStmt{}))
+	return b.Text
 }

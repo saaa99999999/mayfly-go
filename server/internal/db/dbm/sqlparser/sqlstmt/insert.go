@@ -1,15 +1,11 @@
 package sqlstmt
 
-type (
-	IInsertStmt interface {
-		isInsert()
-	}
+// InsertStmt INSERT 语句
+type InsertStmt struct {
+	Base
+	Table   TableRef
+	Columns []string
+	Values  string // VALUES 部分原始文本
+}
 
-	InsertStmt struct {
-		*Node
-
-		TableName *TableName
-	}
-)
-
-func (*InsertStmt) isInsert() {}
+func (*InsertStmt) StmtKind() Kind { return KindInsert }

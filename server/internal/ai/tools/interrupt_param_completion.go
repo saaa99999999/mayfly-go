@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"mayfly-go/internal/ai/imsg"
 	"mayfly-go/internal/ai/session"
@@ -15,9 +16,8 @@ import (
 
 // CompletionParamInfo 参数补全信息
 type CompletionParamInfo struct {
-	Param     string `json:"param"`     // 参数名
-	Name      string `json:"name"`      // 参数描述
-	Cacheable bool   `json:"cacheable"` // 是否缓存本次补全的参数值
+	Param string `json:"param"` // 参数名
+	Name  string `json:"name"`  // 参数描述
 }
 
 // ParamCompletionInterruptInfo 参数完善中断信息
@@ -37,7 +37,7 @@ func InterruptOrResumeParamCompletion(ctx context.Context, toolDesc string, args
 	if err == nil {
 		return nil
 	}
-	return NewToolError(err, RecoverRetry)
+	return NewToolError(err, RecoverNone)
 }
 
 // InterruptParamCompletion 中断参数完善
@@ -88,14 +88,14 @@ func ResumeParamCompletion(ctx context.Context, args any) (bool, error) {
 		return false, nil
 	}
 
-	if err := handleParamCompletion(ctx, data, args); err != nil {
-		return false, err
-	}
-
 	// 修改参数调用的消息体，更新参数后
 	msg := AppendResumeInfo(ctx, data.InterruptId, data)
 	if msg == nil {
 		return true, nil
+	}
+
+	if err := handleParamCompletion(ctx, data, args); err != nil {
+		return true, err
 	}
 
 	// 对同一 TurnId 的 RMW 操作加锁，防止并发覆盖
@@ -121,7 +121,7 @@ func ResumeParamCompletion(ctx context.Context, args any) (bool, error) {
 
 func handleParamCompletion(ctx context.Context, data *ParamCompletionResume, args any) error {
 	if data.Action != "complete" {
-		return fmt.Errorf("param completion cancelled")
+		return errors.New("[PARAM_COMPLETION_CANCELLED] The user has cancelled the parameter completion for this tool.\nPlease do not retry parameter completion automatically. Ask the user for further instructions if needed.")
 	}
 
 	// 从 Payload 中获取 params 和 caches

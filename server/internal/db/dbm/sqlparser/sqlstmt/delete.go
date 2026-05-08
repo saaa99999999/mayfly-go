@@ -1,16 +1,10 @@
 package sqlstmt
 
-type (
-	IDeleteStmt interface {
-		isDelete()
-	}
+// DeleteStmt DELETE 语句
+type DeleteStmt struct {
+	Base
+	Tables []TableRef // 删除的表
+	Where  *Expr
+}
 
-	DeleteStmt struct {
-		*Node
-
-		TableSources *TableSources
-		Where        IExpr
-	}
-)
-
-func (*DeleteStmt) isDelete() {}
+func (*DeleteStmt) StmtKind() Kind { return KindDelete }

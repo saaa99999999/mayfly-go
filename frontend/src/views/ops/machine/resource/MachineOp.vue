@@ -9,7 +9,8 @@
                                 class="mr-1"
                                 :color="EnumValue.getEnumByValue(TerminalStatusEnum, dt.status)?.extra?.iconColor"
                                 :title="dt.status == TerminalStatusEnum.Connected.value ? '' : $t('machine.clickReConn')"
-                                ><Connection />
+                            >
+                                <Connection />
                             </el-icon>
                         </template>
                     </el-popconfirm>
@@ -431,9 +432,11 @@ defineExpose({
     .machine-terminal-tab-label {
         font-size: 12px;
     }
+
     .el-tabs__header {
         margin-bottom: 5px;
     }
+
     .el-tabs__item {
         padding: 0 8px !important;
     }

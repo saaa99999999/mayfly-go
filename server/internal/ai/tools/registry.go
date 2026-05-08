@@ -10,8 +10,9 @@ import (
 type ToolType string
 
 const (
-	ToolTypeDb   ToolType = "db"
-	ToolTypeFlow ToolType = "flow"
+	ToolTypeDb      ToolType = "db"
+	ToolTypeFlow    ToolType = "flow"
+	ToolTypeMachine ToolType = "machine"
 )
 
 // Registry 工具注册中心

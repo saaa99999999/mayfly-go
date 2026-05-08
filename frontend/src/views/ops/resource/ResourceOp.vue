@@ -87,14 +87,13 @@ import { isPrefixSubsequence } from '@/common/utils/string';
 import SvgIcon from '@/components/svgIcon/index.vue';
 import { TagResourceTypeEnum } from '@/common/commonEnum';
 import EnumValue from '@/common/Enum';
-import { getResourceNodeType, getResourceTypes, ResourceOpCtxKey } from './resource';
+import { getResourceNodeType, getResourceTypes, ResourceOpCtxKey, loadResourceTags } from './resource';
 import BaseTreeNode from './BaseTreeNode.vue';
 import { tagApi } from '@/views/ops/tag/api';
 import { TagTreeNode, ResourceComponentConfig, ResourceOpCtx } from '@/views/ops/component/tag';
 import { useI18n } from 'vue-i18n';
 import { useAutoOpenResource } from '@/store/autoOpenResource';
 import { storeToRefs } from 'pinia';
-import { LabelLayout } from 'echarts/features';
 
 const props = defineProps({
     load: {
@@ -218,7 +217,7 @@ const loadNode = async (node: any, resolve: (data: any) => void, reject: () => v
     let nodes;
     try {
         if (node.level == 0) {
-            nodes = await loadTags();
+            nodes = await loadResourceTags(getResourceTypes(), ctx);
         } else if (props.load) {
             nodes = await props.load(node);
         } else {
@@ -372,133 +371,6 @@ const onResizeOpPanel = () => {
     for (let name in resourceComponentRefs.value) {
         resourceComponentRefs.value[name]?.onResize?.();
     }
-};
-
-/**
- * 加载相关标签树节点
- */
-const loadTags = async () => {
-    const tags = await tagApi.getTagTrees.request({
-        type: getResourceTypes().join(','),
-    });
-
-    const result: any[] = [];
-    const flatten = (node: any, namePath: string[]) => {
-        const currentNamePath = [...namePath, node.name];
-
-        if (node.type !== TagResourceTypeEnum.Tag.value) {
-            return;
-        }
-
-        let hasNonMinus1Child = false;
-        for (const child of node.children || []) {
-            if (child.type !== TagResourceTypeEnum.Tag.value) {
-                hasNonMinus1Child = true;
-                break;
-            }
-        }
-
-        if (hasNonMinus1Child) {
-            const newNode = {
-                ...node,
-                children: [] as any[],
-            };
-            newNode.name = currentNamePath.join('/');
-
-            for (const child of node.children || []) {
-                if (child.type !== TagResourceTypeEnum.Tag.value) {
-                    const childCopy = {
-                        ...child,
-                        children: [] as any[],
-                    };
-                    childCopy.name = [...currentNamePath, child.name].join('/');
-
-                    for (const grandchild of child.children || []) {
-                        const grandchildCopy = {
-                            ...grandchild,
-                        };
-                        grandchildCopy.name = [...currentNamePath, child.name, grandchild.name].join('/');
-                        childCopy.children.push(grandchildCopy);
-                    }
-
-                    newNode.children.push(childCopy);
-                } else {
-                    flatten(child, currentNamePath);
-                }
-            }
-
-            result.push(newNode);
-            return;
-        }
-
-        for (const child of node.children || []) {
-            flatten(child, currentNamePath);
-        }
-    };
-
-    for (const tree of tags) {
-        flatten(tree, []);
-    }
-
-    const tagNodes = [];
-    for (let tag of result) {
-        const tagNode = processTagNode(tag);
-        tagNodes.push(tagNode);
-    }
-    return tagNodes;
-};
-
-const processTagNode = (tag: any): TagTreeNode => {
-    const tagNode = new TagTreeNode(tag.codePath, tag.name, tag.type);
-
-    if (!tag.children || !Array.isArray(tag.children) || tag.children.length == 0) {
-        return tagNode;
-    }
-
-    // 子节点还是tag类型，则直接默认加载children即可
-    if (tag.children[0].type == TagResourceTypeEnum.Tag.value) {
-        tagNode.loadChildren = async () => {
-            const childNodes = [];
-            for (let child of tag.children) {
-                const childNode = processTagNode(child);
-                childNodes.push(childNode);
-            }
-            return childNodes;
-        };
-        return tagNode;
-    }
-
-    // 创建中间节点， 按类型分组
-    const type2Tags = new Map<number, any>();
-    tag.children.forEach((child: any) => {
-        if (!type2Tags.has(child.type)) {
-            type2Tags.set(child.type, [child]);
-            return;
-        }
-        type2Tags.get(child.type).push(child);
-    });
-
-    tagNode.loadChildren = async () => {
-        const childNodes = [];
-
-        for (let [type, children] of type2Tags) {
-            // 创建中间节点
-            const typeEnum = EnumValue.getEnumByValue(TagResourceTypeEnum, type);
-            const intermediateNode = new TagTreeNode(`${tag.codePath}-${type}`, t(typeEnum?.label || '未知'), getResourceNodeType(type))
-                .withIcon({
-                    name: typeEnum?.extra.icon,
-                    color: typeEnum?.extra.iconColor,
-                })
-                .withIsLeaf(false)
-                .withParams({ resourceCodes: children.map((c: any) => c.code), tagPath: tag.codePath })
-                .withContext(ctx);
-
-            childNodes.push(intermediateNode);
-        }
-        return childNodes;
-    };
-
-    return tagNode;
 };
 
 const ctx: ResourceOpCtx = {

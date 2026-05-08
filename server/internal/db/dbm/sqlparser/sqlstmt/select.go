@@ -1,135 +1,69 @@
 package sqlstmt
 
-type (
-	ISelectStmt interface {
-		INode
+// SelectItemKind SELECT 元素类型
+type SelectItemKind int
 
-		isSelect()
-	}
-
-	SelectStmt struct {
-		*Node
-	}
-
-	QuerySpecification struct {
-		*Node
-
-		SelectElements *SelectElements
-		From           *TableSources
-		Where          IExpr
-		Limit          *Limit
-	}
-
-	SimpleSelectStmt struct {
-		SelectStmt
-
-		QuerySpecification *QuerySpecification
-	}
-
-	UnionSelectStmt struct {
-		SelectStmt
-
-		UnionType          string
-		QuerySpecification *QuerySpecification
-		QueryExpr          *QueryExpr
-		UnionStmts         []*UnionStmt
-		Limit              *Limit
-	}
-
-	// 圆括号查询
-	ParenthesisSelect struct {
-		SelectStmt
-
-		QueryExpr *QueryExpr
-	}
-
-	QueryExpr struct {
-		*Node
-
-		QuerySpecification *QuerySpecification
-		QueryExpr          *QueryExpr
-	}
+const (
+	SelectItemStar SelectItemKind = iota
+	SelectItemColumn
+	SelectItemExpr
+	SelectItemFunction
 )
 
-func (*SelectStmt) isSelect() {}
-
-// var _ (ISelectStmt) = (*SimpleSelectStmt)(nil)
-// var _ (ISelectStmt) = (*SelectStmt)(nil)
-// var _ (ISelectStmt) = (*ParenthesisSelect)(nil)
-
-type (
-	SelectElements struct {
-		*Node
-
-		Star     string // 查询所有
-		Elements []ISelectElement
-	}
-
-	ISelectElement interface {
-		INode
-	}
-
-	SelectStarElement struct {
-		*Node
-
-		FullId string
-	}
-
-	SelectColumnElement struct {
-		*Node
-
-		ColumnName *ColumnName
-		Alias      string
-	}
-
-	SelectFunctionElement struct {
-		*Node
-
-		Alias string
-	}
-)
-
-type From struct {
-	TableSource *ITableSource
+// SelectItem 表示 SELECT 列表中的一个元素
+type SelectItem struct {
+	Kind       SelectItemKind
+	Text       string // 原始文本
+	Alias      string
+	TableAlias string // 对于 t.* 或 t.col，这是表别名
+	ColumnName string // 对于列引用
 }
 
-type Limit struct {
-	*Node
-
-	RowCount int
-	Offset   int
+// IsStar 判断是否为 *
+func (s SelectItem) IsStar() bool {
+	return s.Kind == SelectItemStar
 }
 
-type (
-	IJoinPart interface {
-		INode
-	}
+// JoinKind JOIN 类型
+type JoinKind int
 
-	JoinPart struct {
-		*Node
-
-		TableSourceItem ITableSourceItem
-	}
-
-	InnerJoin struct {
-		JoinPart
-	}
-
-	OuterJoin struct {
-		JoinPart
-	}
-
-	NaturalJoin struct {
-		JoinPart
-	}
+const (
+	JoinKindInner JoinKind = iota
+	JoinKindLeft
+	JoinKindRight
+	JoinKindFull
+	JoinKindCross
+	JoinKindNatural
 )
 
-type (
-	UnionStmt struct {
-		*Node
+// JoinClause JOIN 子句
+type JoinClause struct {
+	Kind  JoinKind
+	Table TableRef
+	On    *Expr
+	Text  string
+}
 
-		UnionType          string
-		QuerySpecification *QuerySpecification
-		QueryExpr          *QueryExpr
-	}
-)
+// UnionClause UNION 子句
+type UnionClause struct {
+	Select *SelectStmt
+	All    bool
+	Text   string
+}
+
+// SelectStmt SELECT 语句（含 UNION、子查询等）
+type SelectStmt struct {
+	Base
+	Distinct bool
+	Items    []SelectItem
+	From     []TableRef
+	Joins    []JoinClause
+	Where    *Expr
+	GroupBy  []string
+	Having   *Expr
+	OrderBy  []OrderByItem
+	Limit    *Limit
+	Unions   []UnionClause
+}
+
+func (*SelectStmt) StmtKind() Kind { return KindSelect }

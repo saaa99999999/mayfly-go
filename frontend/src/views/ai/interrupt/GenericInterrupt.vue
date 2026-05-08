@@ -21,17 +21,20 @@
 
             <!-- 操作结果记录 -->
             <div v-if="resumeInfo" class="flex items-center gap-2 text-xs">
-                <span class="text-gray-500 dark:text-gray-400">操作类型:</span>
+                <span class="text-gray-500 dark:text-gray-400">{{ t('ai.interrupt.generic.operationType') }}:</span>
                 <el-tag :type="getActionTag(resumeInfo.action)" size="small">
                     {{ getActionText(resumeInfo.action) }}
                 </el-tag>
+                <span v-if="resumeInfo.action === 'reject' && resumeInfo.payload?.reason" class="text-gray-700 dark:text-gray-300 truncate max-w-40" :title="resumeInfo.payload.reason">
+                    ({{ resumeInfo.payload.reason }})
+                </span>
             </div>
         </div>
 
         <!-- 操作按钮 -->
         <div v-if="!readonly && !isProcessed && !hasPending" class="flex justify-end gap-2 px-3 py-2 border-t border-gray-100 dark:border-gray-800">
             <el-button size="small" @click="handleAction('approve')">{{ t('ai.interrupt.generic.confirm') }}</el-button>
-            <el-button size="small" type="danger" @click="handleAction('reject')">{{ t('ai.interrupt.generic.reject') }}</el-button>
+            <el-button size="small" type="danger" @click="handleReject">{{ t('ai.interrupt.generic.reject') }}</el-button>
         </div>
     </div>
 </template>
@@ -44,6 +47,7 @@
 
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { ElMessageBox } from 'element-plus';
 import type { InternalMessage, InterruptActionEvent } from './types';
 
 const { t } = useI18n();
@@ -102,6 +106,29 @@ const getActionTag = (actionType: string): 'success' | 'danger' | 'info' => {
             return 'danger';
         default:
             return 'info';
+    }
+};
+
+/**
+ * 处理拒绝操作，弹出输入框填写原因
+ */
+const handleReject = async () => {
+    try {
+        const { value: reason } = await ElMessageBox.prompt(t('ai.interrupt.generic.rejectReasonPlaceholder'), t('ai.interrupt.generic.rejectTitle'), {
+            confirmButtonText: t('common.confirm'),
+            cancelButtonText: t('common.cancel'),
+            inputType: 'textarea',
+            inputPlaceholder: t('ai.interrupt.generic.rejectReasonPlaceholder'),
+            inputValidator: (value: string) => {
+                if (!value || !value.trim()) {
+                    return t('ai.interrupt.generic.rejectReasonRequired');
+                }
+                return true;
+            },
+        });
+        handleAction('reject', { reason: reason?.trim() });
+    } catch {
+        // 用户取消，不做处理
     }
 };
 

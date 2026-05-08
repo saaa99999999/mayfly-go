@@ -13,13 +13,16 @@ import (
 )
 
 type SqlExecParam struct {
-	DbId   int64  `json:"dbId" jsonschema_description:"数据库ID。如果用户未明确提供，请传0，不要猜测！"`
-	DbName string `json:"dbName" jsonschema_description:"数据库名称。如果用户未明确提供，请留空，不要猜测！"`
+	DbId   int64  `json:"dbId" jsonschema_description:"数据库ID。取值逻辑：1. 用户本次明确指定；2. 从前序工具的输入输出中继承已选定的数据库ID；3. 若均无，传0以触发参数补全。禁止凭空猜测。"`
+	DbName string `json:"dbName" jsonschema_description:"数据库名称。取值逻辑：1. 用户本次明确指定；2. 从前序工具的输入输出中继承已选定的数据库名称；3. 若均无，留空以触发参数补全。禁止凭空猜测。"`
 	SQL    string `json:"sql" jsonschema_description:"SQL语句" jsonschema:"required" `
 }
 
 type SqlExecOutput struct {
-	Effected int64 `json:"effected" jsonschema_description:"影响的行数"`
+	DbId     int64  `json:"dbId" jsonschema_description:"数据库ID"`
+	DbName   string `json:"dbName" jsonschema_description:"数据库名称"`
+	DbType   string `json:"dbType" jsonschema_description:"数据库类型，如mysql、postgresql等"`
+	Effected int64  `json:"effected" jsonschema_description:"影响的行数"`
 }
 
 func GetSqlExec() (tool.InvokableTool, error) {
@@ -30,8 +33,8 @@ func GetSqlExec() (tool.InvokableTool, error) {
 			// 检查必要参数，触发参数完善
 			if param.DbId == 0 || param.DbName == "" {
 				if err := tools.InterruptOrResumeParamCompletion(ctx, toolDesc, param, i18n.TC(ctx, imsg.DbInfoIncomplete), "db", []tools.CompletionParamInfo{
-					{Param: "dbId", Name: "数据库ID", Cacheable: true},
-					{Param: "dbName", Name: "数据库名称", Cacheable: true},
+					{Param: "dbId", Name: "数据库ID"},
+					{Param: "dbName", Name: "数据库名称"},
 				}); err != nil {
 					return nil, err
 				}
@@ -51,7 +54,12 @@ func GetSqlExec() (tool.InvokableTool, error) {
 				return nil, tools.NewToolError(err, tools.RecoverRetry)
 			}
 
-			return &SqlExecOutput{Effected: res}, nil
+			return &SqlExecOutput{
+				DbId:     param.DbId,
+				DbName:   param.DbName,
+				DbType:   string(conn.Info.Type),
+				Effected: res,
+			}, nil
 		},
 	)
 }

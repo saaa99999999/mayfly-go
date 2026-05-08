@@ -63,15 +63,14 @@
 <script setup lang="ts" name="AiAssistant">
 import { notBlankI18n } from '@/common/assert';
 import { formatDate } from '@/common/utils/format';
-import { randomUuid } from '@/common/utils/string';
 import { useI18nOperateSuccessMsg } from '@/hooks/useI18n';
+import { useThemeConfig } from '@/store/themeConfig';
 import { ElMessageBox } from 'element-plus';
 import { computed, defineAsyncComponent, onMounted, ref } from 'vue';
-import { Conversations, ConfigProvider } from 'vue-element-plus-x';
+import { ConfigProvider, Conversations } from 'vue-element-plus-x';
 import type { ConversationItem, ConversationMenuCommand } from 'vue-element-plus-x/types/Conversations';
 import { useI18n } from 'vue-i18n';
 import { aiApi } from './api';
-import { useThemeConfig } from '@/store/themeConfig';
 
 const AiChat = defineAsyncComponent(() => import('./AiChat.vue'));
 

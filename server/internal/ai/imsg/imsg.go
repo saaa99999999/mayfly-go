@@ -22,7 +22,14 @@ const (
 	ExecSqlToolInfo
 	DbQueryDataToolDesc
 	DbQueryDataToolInfo
-	DbQueryTableInfoToolDesc
-	DbQueryTableInfoToolInfo
+	DbQueryTableDDLToolDesc
+	DbQueryTableDDLToolInfo
 	DbInfoIncomplete
+	DbQueryTablesToolDesc
+	DbQueryTablesToolInfo
+	// Machine tools
+	MachineCommandExecToolDesc
+	MachineCommandExecToolInfo
+	MachineInfoIncomplete
+	CommandExecApprovalReason
 )

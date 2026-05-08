@@ -2,6 +2,8 @@ package agent
 
 import (
 	"context"
+	"encoding/base64"
+	"mayfly-go/pkg/cache"
 
 	"github.com/cloudwego/eino/compose"
 )
@@ -18,33 +20,38 @@ func GetDefaultCheckPointStore() CheckPointStore {
 	if checkPointStore != nil {
 		return checkPointStore
 	}
-	checkPointStore = NewInMemoryStore()
+	checkPointStore = NewCheckPointStore()
 	return checkPointStore
 }
 
-func NewInMemoryStore() CheckPointStore {
-	return &inMemoryStore{
-		mem: map[string][]byte{},
-	}
+func NewCheckPointStore() CheckPointStore {
+	return &cacheStore{}
 }
 
-type inMemoryStore struct {
-	mem map[string][]byte
+type cacheStore struct {
 }
 
-var _ CheckPointStore = (*inMemoryStore)(nil)
+var _ CheckPointStore = (*cacheStore)(nil)
 
-func (i *inMemoryStore) Set(ctx context.Context, key string, value []byte) error {
-	i.mem[key] = value
+func (i *cacheStore) Set(ctx context.Context, key string, value []byte) error {
+	cache.Set(key, base64.StdEncoding.EncodeToString(value), -1)
 	return nil
 }
 
-func (i *inMemoryStore) Get(ctx context.Context, key string) ([]byte, bool, error) {
-	v, ok := i.mem[key]
-	return v, ok, nil
+func (i *cacheStore) Get(ctx context.Context, key string) ([]byte, bool, error) {
+	encoded := cache.GetStr(key)
+	if encoded == "" {
+		return nil, false, nil
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		return nil, false, err
+	}
+	return decoded, true, nil
 }
 
-func (i *inMemoryStore) Delete(ctx context.Context, key string) error {
-	delete(i.mem, key)
+func (i *cacheStore) Delete(ctx context.Context, key string) error {
+	cache.Del(key)
 	return nil
 }

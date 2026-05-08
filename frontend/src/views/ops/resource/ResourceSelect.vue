@@ -17,6 +17,10 @@
         <template #prefix="{ node, data }">
             <slot name="iconPrefix" :node="node" :data="data" />
         </template>
+        <template #label="{ label, value }">
+            <slot name="label" :label="label" :value="value" />
+        </template>
+
         <template #default="{ node, data }">
             <component v-if="data.nodeComponent" :is="data.nodeComponent" :node="node" :data="data" />
             <BaseTreeNode v-else :node="node" :data="data" />
@@ -25,26 +29,43 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, reactive, ref, toRefs, watch } from 'vue';
+import { onMounted, reactive, ref, toRefs, watch, provide, PropType } from 'vue';
 
 import { NodeType, TagTreeNode } from '@/views/ops/component/tag';
-import { tagApi } from '@/views/ops/tag/api';
 import BaseTreeNode from '@/views/ops/resource/BaseTreeNode.vue';
+import { loadResourceTags, IsShowActionsKey, LeafNodeTypesKey } from './resource';
 
 const props = defineProps({
     resourceType: {
-        type: [Number, String],
-        required: true,
-    },
-    tagPathNodeType: {
-        type: [NodeType],
+        type: [Number],
         required: true,
     },
     load: {
         type: Function,
         required: false,
     },
+    // 是否显示操作按钮，默认 false（选择器模式）
+    isShowActions: {
+        type: Boolean,
+        default: false,
+    },
+    // 叶子节点类型数组，匹配到的节点将标记为叶子节点
+    leafNodeTypes: {
+        type: Array as () => NodeType[],
+        default: () => [],
+    },
+    // 节点转换函数，在节点加载后调用，可用于动态设置 isLeaf 等属性
+    transformNode: {
+        type: Function as PropType<(node: TagTreeNode) => TagTreeNode>,
+        default: null,
+    },
 });
+
+// 注入 isShowActions 到子组件
+provide(IsShowActionsKey, props.isShowActions);
+
+// 注入叶子节点类型到子组件
+provide(LeafNodeTypesKey, props.leafNodeTypes);
 
 const treeProps = {
     label: 'name',
@@ -55,7 +76,7 @@ const treeProps = {
 const emit = defineEmits(['change']);
 const treeRef: any = ref(null);
 
-const modelValue = defineModel('modelValue');
+const modelValue = defineModel<any>('modelValue');
 
 const state = reactive({
     height: 600 as any,
@@ -76,18 +97,6 @@ const filterNode = (value: string, data: any) => {
 };
 
 /**
- * 加载标签树节点
- */
-const loadTags = async () => {
-    const tags = await tagApi.getResourceTagPaths.request({ resourceType: props.resourceType });
-    const tagNodes = [];
-    for (let tagPath of tags) {
-        tagNodes.push(new TagTreeNode(tagPath, tagPath, props.tagPathNodeType));
-    }
-    return tagNodes;
-};
-
-/**
  * 加载树节点
  * @param { Object } node
  * @param { Object } resolve
@@ -96,10 +105,11 @@ const loadNode = async (node: any, resolve: any) => {
     if (typeof resolve !== 'function') {
         return;
     }
+
     let nodes = [];
     try {
         if (node.level == 0) {
-            nodes = await loadTags();
+            nodes = await loadResourceTags([props.resourceType], null);
         } else if (props.load) {
             nodes = await props.load(node);
         } else {
@@ -108,6 +118,21 @@ const loadNode = async (node: any, resolve: any) => {
     } catch (e: any) {
         console.error(e);
     }
+
+    // 如果配置了叶子节点类型，检查并标记
+    if (props.leafNodeTypes && props.leafNodeTypes.length > 0) {
+        nodes.forEach((n: any) => {
+            if (n.type && props.leafNodeTypes.some((type: NodeType) => type.value === n.type.value)) {
+                n.isLeaf = true;
+            }
+        });
+    }
+
+    // 如果提供了节点转换函数，调用它来处理每个节点
+    if (props.transformNode) {
+        nodes = nodes.map((n: TagTreeNode) => props.transformNode(n));
+    }
+
     return resolve(nodes);
 };
 
@@ -122,6 +147,13 @@ const getNode = (nodeKey: any) => {
 const changeNode = (val: any) => {
     // 触发改变事件，并传递节点数据
     emit('change', getNode(val)?.data);
+    
+    // 选择后关闭下拉框
+    setTimeout(() => {
+        if (treeRef.value) {
+            treeRef.value.blur();
+        }
+    }, 100);
 };
 </script>
 

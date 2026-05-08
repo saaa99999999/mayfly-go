@@ -194,7 +194,6 @@ func toSessionMessage(msg *entity.SessionMessage) *session.Message {
 		Id:         int64(msg.Id),
 		Role:       schema.RoleType(msg.Role),
 		Content:    msg.Content,
-		ToolCalls:  nil,
 		ToolCallId: msg.ToolCallId,
 		ActionId:   msg.ActionId,
 		MsgType:    msg.MsgType,

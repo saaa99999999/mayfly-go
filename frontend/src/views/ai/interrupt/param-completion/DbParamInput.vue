@@ -4,18 +4,18 @@
             {{ t('ai.interrupt.paramCompletion.selectDbHint') }}
         </div>
 
-        <!-- 未选择时显示选择器 -->
+        <!-- 使用 DbSelectTree 组件 -->
         <DbSelectTree
-            v-if="!dbValue.dbId"
             v-model:db-id="dbValue.dbId"
             v-model:inst-name="dbValue.instanceName"
             v-model:db-name="dbValue.dbName"
             v-model:tag-path="dbValue.tagPath"
             v-model:db-type="dbValue.dbType"
+            :disabled="isConfirmed"
             @select-db="onSelectDb"
         />
 
-        <!-- 已选中的数据库信息 -->
+        <!-- 已选中的数据库详细信息 -->
         <div v-if="dbValue.dbId" class="mt-3 p-3 bg-primary-50 dark:bg-primary-900/20 rounded border border-primary-200 dark:border-primary-800">
             <div class="flex items-center gap-2">
                 <SvgIcon :name="getDbDialect(dbValue.dbType)?.getInfo().icon || 'DataLine'" :size="20" />
@@ -33,6 +33,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
+import { Check } from '@element-plus/icons-vue';
 import DbSelectTree from '@/views/ops/db/component/DbSelectTree.vue';
 import { getDbDialect } from '@/views/ops/db/dialect';
 
@@ -62,10 +63,6 @@ const props = withDefaults(defineProps<Props>(), {
         tagPath: '',
     }),
 });
-
-const emit = defineEmits<{
-    change: [value: DbParamValue];
-}>();
 
 const { t } = useI18n();
 

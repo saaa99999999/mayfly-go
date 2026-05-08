@@ -232,12 +232,12 @@ export class TableColumn {
             }
             // 转为字符串比较长度
             let nowText;
-            if (typeof nowValue === 'object'){
+            if (typeof nowValue === 'object') {
                 nowText = JSON.stringify(nowValue);
-            }else{
+            } else {
                 nowText = nowValue + '';
             }
-            console.log(nowText);
+
             if (nowText.length > maxWidthText.length) {
                 maxWidthText = nowText;
                 maxWidthValue = nowValue;

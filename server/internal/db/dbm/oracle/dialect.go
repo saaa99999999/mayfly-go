@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	"mayfly-go/internal/db/dbm/dbi"
+	"mayfly-go/internal/db/dbm/sqlparser"
+	"mayfly-go/internal/db/dbm/sqlparser/oracle"
 	"mayfly-go/pkg/logx"
 	"mayfly-go/pkg/utils/collx"
 	"strings"
 	"time"
-
-	_ "gitee.com/chunanyong/dm"
 )
 
 type OracleDialect struct {
@@ -265,6 +265,10 @@ func (od *OracleDialect) GetSQLGenerator() dbi.SQLGenerator {
 		Dialect:  od,
 		Metadata: od.dc.GetMetadata(),
 	}
+}
+
+func (od *OracleDialect) GetSQLParser() sqlparser.SqlParser {
+	return new(oracle.OracleParser)
 }
 
 func (od *OracleDialect) genColumnBasicSql(column dbi.Column) string {

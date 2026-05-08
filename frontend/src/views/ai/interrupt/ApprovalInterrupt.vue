@@ -37,12 +37,18 @@
             <div v-if="hasPending && !isProcessed" class="flex items-center gap-2 text-xs text-yellow-600 dark:text-yellow-400">
                 <span>{{ t('ai.interrupt.approval.selected') }}</span>
                 <enum-tag :enums="InterruptAction" :value="pendingResumeInfo.action" />
+                <span v-if="pendingResumeInfo.action === 'reject' && pendingResumeInfo.payload?.reason" class="truncate max-w-40" :title="pendingResumeInfo.payload.reason">
+                    ({{ pendingResumeInfo.payload.reason }})
+                </span>
             </div>
 
             <!-- 操作结果记录 -->
             <div v-if="resumeInfo" class="flex items-center gap-2 text-xs">
                 <span class="text-gray-500 dark:text-gray-400">{{ t('ai.interrupt.approval.operationType') }}:</span>
                 <enum-tag :enums="InterruptAction" :value="resumeInfo.action" />
+                <span v-if="resumeInfo.action === 'reject' && resumeInfo.payload?.reason" class="text-gray-700 dark:text-gray-300 truncate max-w-40" :title="resumeInfo.payload.reason">
+                    ({{ resumeInfo.payload.reason }})
+                </span>
             </div>
         </div>
 
@@ -116,7 +122,7 @@ const handleReject = async () => {
             cancelButtonText: t('common.cancel'),
             inputType: 'textarea',
             inputPlaceholder: t('ai.interrupt.approval.rejectReasonPlaceholder'),
-            inputValidator: (value) => {
+            inputValidator: (value: string) => {
                 if (!value || !value.trim()) {
                     return t('ai.interrupt.approval.rejectReasonRequired');
                 }

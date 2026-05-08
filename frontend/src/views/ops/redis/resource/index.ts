@@ -44,7 +44,10 @@ const NodeTypeRedis = new NodeType(2).withLoadNodesFunc(async (parentNode: TagTr
         return TagTreeNode.new(parentNode, `${parentNode.key}.${x}`, `db${x}`, NodeTypeDb)
             .withIsLeaf(true)
             .withParams({
+                tagPath: redisInfo.tagPath,
                 id: redisInfo.id,
+                redisName: redisInfo.name,
+                code: redisInfo.code,
                 db: x,
                 name: `db${x}`,
                 keys: 0,

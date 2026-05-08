@@ -1,21 +1,12 @@
 package sqlparser
 
 import (
-	"io"
 	"mayfly-go/internal/db/dbm/sqlparser/sqlstmt"
-	"mayfly-go/internal/pkg/utils"
 )
-
-type DbDialect string
 
 type SqlParser interface {
 
-	// sql解析
-	//  -  stmt sql语句
-	Parse(stmt string) ([]sqlstmt.Stmt, error)
-}
-
-// SQLSplit sql切割
-func SQLSplit(r io.Reader, delimiter rune, callback utils.StmtCallback) error {
-	return utils.SplitStmts(r, delimiter, callback)
+	// Parse 解析单条 SQL 语句
+	//  - 返回: 解析后的 Stmt 对象
+	Parse(stmt string) (sqlstmt.Stmt, error)
 }

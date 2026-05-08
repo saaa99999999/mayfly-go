@@ -1,26 +1,11 @@
 package sqlstmt
 
-type (
-	IUpdateStmt interface {
-		INode
-
-		isUpdate()
-	}
-
-	UpdateStmt struct {
-		*Node
-
-		TableSources    *TableSources
-		UpdatedElements []*UpdatedElement
-		Where           IExpr
-	}
-)
-
-func (*UpdateStmt) isUpdate() {}
-
-type UpdatedElement struct {
-	*Node
-
-	ColumnName *ColumnName
-	Value      IExpr
+// UpdateStmt UPDATE 语句
+type UpdateStmt struct {
+	Base
+	Tables []TableRef   // 更新的表（支持多表）
+	Set    []Assignment // SET 子句
+	Where  *Expr
 }
+
+func (*UpdateStmt) StmtKind() Kind { return KindUpdate }

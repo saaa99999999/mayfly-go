@@ -6,7 +6,9 @@
                 <el-tag type="primary" size="small">{{ t('ai.interrupt.paramCompletion.title') }}</el-tag>
                 <span class="text-sm font-medium">{{ interruptData?.title || t('ai.interrupt.paramCompletion.completeParam') }}</span>
             </div>
-            <el-tag v-if="isProcessed" type="success" size="small">{{ t('ai.interrupt.paramCompletion.completed') }}</el-tag>
+            <!-- 根据操作类型显示不同状态 -->
+            <el-tag v-if="isProcessed && currentAction === 'complete'" type="success" size="small">{{ t('ai.interrupt.paramCompletion.completed') }}</el-tag>
+            <el-tag v-else-if="isProcessed && currentAction === 'cancel'" type="info" size="small">{{ t('ai.interrupt.action.cancel') }}</el-tag>
             <el-tag v-else-if="hasPending" type="info" size="small">待提交</el-tag>
             <el-tag v-else type="warning" size="small">{{ t('ai.interrupt.paramCompletion.pending') }}</el-tag>
         </div>
@@ -59,6 +61,7 @@ import type { InternalMessage, InterruptActionEvent } from '../types';
 // 引入参数输入组件
 import DbParamInput from './DbParamInput.vue';
 import GenericParamInput from './GenericParamInput.vue';
+import MachineParamInput from './MachineParamInput.vue';
 
 const { t } = useI18n();
 
@@ -99,8 +102,8 @@ const paramType = computed(() => {
 // 参数输入组件映射
 const paramInputComponents: Record<string, any> = {
     db: markRaw(DbParamInput),
+    machine: markRaw(MachineParamInput),
     // 后续可以添加更多类型
-    // machine: markRaw(MachineParamInput),
     // redis: markRaw(RedisParamInput),
 };
 
@@ -131,6 +134,9 @@ watch(
 const isProcessed = computed(() => !!resumeInfo.value);
 const hasPending = computed(() => !!pendingResumeInfo.value);
 
+// 当前操作类型（complete/cancel）
+const currentAction = computed(() => resumeInfo.value?.action || pendingResumeInfo.value?.action || '');
+
 // 参数填写校验状态
 const formValid = ref(false);
 
@@ -138,9 +144,7 @@ const formValid = ref(false);
 watch(
     paramInputValues,
     () => {
-        nextTick(() => {
-            formValid.value = paramInputRef.value?.isValid?.() ?? false;
-        });
+        formValid.value = paramInputRef.value?.isValid?.() ?? false;
     },
     { deep: true }
 );
@@ -153,6 +157,12 @@ const onParamChange = (values: any) => {
 // 处理确认操作
 const handleConfirm = () => {
     if (isProcessed.value) {
+        return;
+    }
+
+    // 实时校验
+    formValid.value = paramInputRef.value?.isValid?.() ?? false;
+    if (!formValid.value) {
         return;
     }
 

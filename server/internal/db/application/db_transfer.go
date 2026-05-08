@@ -8,7 +8,6 @@ import (
 	"io"
 	"mayfly-go/internal/db/application/dto"
 	"mayfly-go/internal/db/dbm/dbi"
-	"mayfly-go/internal/db/dbm/sqlparser"
 	"mayfly-go/internal/db/domain/entity"
 	"mayfly-go/internal/db/domain/repository"
 	fileapp "mayfly-go/internal/file/application"
@@ -263,7 +262,9 @@ func (app *dbTransferAppImpl) transfer2Db(ctx context.Context, logId uint64, tas
 			})
 
 			tx, _ := targetConn.Begin()
-			err = sqlparser.SQLSplit(pr, ';', func(stmt string) error {
+			// 使用目标库的方言切割器进行 SQL 切割
+			splitter := targetConn.GetDialect().GetSQLSplitter()
+			err = splitter.SplitSQL(pr, func(stmt string) error {
 				if _, err := targetConn.TxExec(tx, stmt); err != nil {
 					app.Log(ctx, logId, fmt.Sprintf("sql exec failed: %s", stmt), err, nil)
 					pw.CloseWithError(err)
