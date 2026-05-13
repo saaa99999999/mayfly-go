@@ -9,7 +9,7 @@
                 <el-divider content-position="left">{{ t('common.basic') }}</el-divider>
 
                 <el-form-item prop="tagCodePaths" :label="t('tag.relateTag')">
-                    <tag-tree-select multiple v-model="form.tagCodePaths" />
+                    <TagTreeSelect multiple :code="form.code" v-model="form.tagCodePaths" />
                 </el-form-item>
 
                 <el-form-item prop="name" :label="t('common.name')" required>
@@ -70,18 +70,18 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, toRefs, useTemplateRef, watchEffect } from 'vue';
-import { esApi } from './api';
-import { ElMessage } from 'element-plus';
-import SshTunnelSelect from '../component/SshTunnelSelect.vue';
-import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
 import { TagResourceTypeEnum } from '@/common/commonEnum';
-import ResourceAuthCertTableEdit from '../component/ResourceAuthCertTableEdit.vue';
-import { AuthCertCiphertextTypeEnum } from '../tag/enums';
-import TagTreeSelect from '../component/TagTreeSelect.vue';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
-import { useI18n } from 'vue-i18n';
 import { Rules } from '@/common/rule';
+import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
+import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
+import { ElMessage } from 'element-plus';
+import { reactive, toRefs, useTemplateRef, watchEffect } from 'vue';
+import { useI18n } from 'vue-i18n';
+import ResourceAuthCertTableEdit from '../component/ResourceAuthCertTableEdit.vue';
+import SshTunnelSelect from '../component/SshTunnelSelect.vue';
+import TagTreeSelect from '../component/TagTreeSelect.vue';
+import { AuthCertCiphertextTypeEnum } from '../tag/enums';
+import { esApi } from './api';
 
 const { t } = useI18n();
 
@@ -138,7 +138,6 @@ watchEffect(() => {
     const dbInst: any = props.data;
     if (dbInst) {
         state.form = { ...dbInst };
-        state.form.tagCodePaths = dbInst.tags.map((t: any) => t.codePath) || [];
     } else {
         state.form = { ...DefaultForm };
         state.form.authCerts = [];

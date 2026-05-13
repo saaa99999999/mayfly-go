@@ -3,7 +3,7 @@
         <el-tabs v-if="state.tabs.size > 0" type="card" @tab-remove="onRemoveTab" v-model="state.activeTermName" class="!h-full w-full">
             <el-tab-pane class="h-full! flex flex-col" closable v-for="dt in state.tabs.values()" :label="dt.label" :name="dt.key" :key="dt.key">
                 <template #label>
-                    <el-popconfirm @confirm="handleReconnect(dt, true)" :title="$t('machine.reConnTips')">
+                    <el-popconfirm @confirm="handleReconnect(dt, true)" :title="$t('machine.reConnTips')" v-if="dt.type === 'terminal'">
                         <template #reference>
                             <el-icon
                                 class="mr-1"
@@ -31,7 +31,8 @@
                     </el-popover>
                 </template>
 
-                <div class="terminal-wrapper flex-1 h-[calc(100vh-155px)]">
+                <!-- 终端类型 tab -->
+                <div v-if="dt.type === 'terminal'" class="terminal-wrapper flex-1 min-h-0">
                     <TerminalBody
                         v-if="dt.params.protocol == MachineProtocolEnum.Ssh.value"
                         :mount-init="false"
@@ -48,6 +49,11 @@
                         @status-change="terminalStatusChange(dt.key, $event)"
                     />
                 </div>
+
+                <!-- 文件操作类型 tab -->
+                <div v-if="dt.type === 'file'" class="file-wrapper flex-1 min-h-0">
+                    <machine-file :machine-id="dt.machineId" :auth-cert-name="dt.authCertName" :protocol="dt.protocol" :file-id="dt.fileId" :path="dt.path" />
+                </div>
             </el-tab-pane>
         </el-tabs>
 
@@ -57,7 +63,7 @@
                 <el-descriptions-item :span="1.5" :label="$t('common.name')">{{ infoDialog.data.name }}</el-descriptions-item>
 
                 <el-descriptions-item :span="3" :label="$t('tag.relateTag')">
-                    <ResourceTags :tags="infoDialog.data.tags" />
+                    <TagCodePath :path="infoDialog.data.tags" />
                 </el-descriptions-item>
 
                 <el-descriptions-item :span="2" label="IP">{{ infoDialog.data.ip }}</el-descriptions-item>
@@ -98,22 +104,13 @@
         />
 
         <file-conf-list
-            :title="fileDialog.title"
-            :auth-cert-name="fileDialog.authCertName"
             v-model:visible="fileDialog.visible"
-            v-model:machineId="fileDialog.machineId"
-            :protocol="fileDialog.protocol"
+            :machine-id="fileDialog.machine?.id"
+            :auth-cert-name="fileDialog.machine?.selectAuthCert?.name"
+            :protocol="fileDialog.machine?.protocol"
+            :open-file-manager="false"
+            @select="onFileConfigSelect"
         />
-
-        <el-dialog destroy-on-close :title="state.filesystemDialog.title" v-model="state.filesystemDialog.visible" :close-on-click-modal="false" width="70%">
-            <machine-file
-                :machine-id="state.filesystemDialog.machineId"
-                :auth-cert-name="state.filesystemDialog.authCertName"
-                :protocol="state.filesystemDialog.protocol"
-                :file-id="state.filesystemDialog.fileId"
-                :path="state.filesystemDialog.path"
-            />
-        </el-dialog>
 
         <machine-stats v-model:visible="machineStatsDialog.visible" :machineId="machineStatsDialog.machineId" :title="machineStatsDialog.title" />
 
@@ -122,22 +119,22 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, getCurrentInstance, inject, nextTick, onMounted, reactive, ref, toRefs, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import { getMachineTerminalSocketUrl } from '../api';
+import EnumValue from '@/common/Enum';
 import { formatDate } from '@/common/utils/format';
 import { hasPerms } from '@/components/auth/auth';
+import MachineRdp from '@/components/terminal-rdp/MachineRdp.vue';
 import TerminalBody from '@/components/terminal/TerminalBody.vue';
 import { TerminalStatus, TerminalStatusEnum } from '@/components/terminal/common';
-import MachineRdp from '@/components/terminal-rdp/MachineRdp.vue';
-import MachineFile from '@/views/ops/machine/file/MachineFile.vue';
-import ResourceTags from '../../component/ResourceTags.vue';
-import { MachineProtocolEnum } from '../enums';
-import EnumValue from '@/common/Enum';
-import { useI18n } from 'vue-i18n';
 import { ResourceOpCtx } from '@/views/ops/component/tag';
-import { ResourceOpCtxKey } from '@/views/ops/resource/resource';
+import MachineFile from '@/views/ops/machine/file/MachineFile.vue';
 import { MachineOpComp } from '@/views/ops/machine/resource';
+import { ResourceOpCtxKey } from '@/views/ops/resource/resource';
+import { defineAsyncComponent, getCurrentInstance, inject, nextTick, onMounted, reactive, toRefs, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
+import TagCodePath from '../../component/TagCodePath.vue';
+import { getMachineTerminalSocketUrl } from '../api';
+import { MachineProtocolEnum } from '../enums';
 
 // 组件
 const ScriptManage = defineAsyncComponent(() => import('../ScriptManage.vue'));
@@ -149,6 +146,20 @@ const ProcessList = defineAsyncComponent(() => import('../ProcessList.vue'));
 const { t } = useI18n();
 
 const router = useRouter();
+
+// 机器信息类型定义
+interface MachineInfo {
+    id: number;
+    name: string;
+    ip: string;
+    port: number;
+    protocol: number;
+    remark?: string;
+    selectAuthCert: {
+        name: string;
+        username: string;
+    };
+}
 
 const perms = {
     addMachine: 'machine:add',
@@ -190,19 +201,7 @@ const state = reactive({
     },
     fileDialog: {
         visible: false,
-        machineId: 0,
-        protocol: 1,
-        title: '',
-        authCertName: '',
-    },
-    filesystemDialog: {
-        visible: false,
-        machineId: 0,
-        authCertName: '',
-        protocol: 1,
-        title: '',
-        fileId: 0,
-        path: '',
+        machine: null as MachineInfo | null,
     },
     machineStatsDialog: {
         visible: false,
@@ -228,11 +227,18 @@ watch(
     (newValue, oldValue) => {
         fitTerminal();
 
-        oldValue && terminalRefs[oldValue]?.blur && terminalRefs[oldValue]?.blur();
-        terminalRefs[newValue]?.focus && terminalRefs[newValue]?.focus();
+        // 只有终端类型才需要 blur/focus
+        const oldTab = state.tabs.get(oldValue);
+        const newTab = state.tabs.get(newValue);
 
-        const nowTab = state.tabs.get(state.activeTermName);
-        resourceOpCtx?.setCurrentTreeKey(nowTab?.authCert);
+        if (oldTab?.type === 'terminal') {
+            terminalRefs[oldValue]?.blur && terminalRefs[oldValue]?.blur();
+        }
+        if (newTab?.type === 'terminal') {
+            terminalRefs[newValue]?.focus && terminalRefs[newValue]?.focus();
+        }
+
+        resourceOpCtx?.setCurrentTreeKey(newTab?.authCert || newTab?.authCertName);
     }
 );
 
@@ -285,9 +291,11 @@ const openTerminal = (machine: any, ex?: boolean) => {
     let tab = {
         key,
         label: `${label}${sameIndex === 1 ? '' : ':' + sameIndex}`, // label组成为:总打开term次数+name+同一个机器打开的次数
+        type: 'terminal',
         params: machine,
         authCert: ac,
         socketUrl: getMachineTerminalSocketUrl(ac),
+        status: TerminalStatusEnum.Disconnected.value,
     };
 
     state.tabs.set(key, tab);
@@ -317,24 +325,48 @@ const showMachineStats = (machine: any) => {
 };
 
 const showFileManage = (selectionData: any) => {
-    const authCert = selectionData.selectAuthCert;
-    if (selectionData.protocol == 1) {
-        state.fileDialog.visible = true;
-        state.fileDialog.protocol = selectionData.protocol;
-        state.fileDialog.machineId = selectionData.id;
-        state.fileDialog.authCertName = authCert.name;
-        state.fileDialog.title = `${selectionData.name} => ${authCert.username}@${selectionData.ip}`;
+    state.fileDialog.machine = selectionData;
+    state.fileDialog.visible = true;
+};
+
+/**
+ * 处理文件配置选择事件
+ */
+const onFileConfigSelect = (fileConfig: { fileId: number; path: string; name: string; type: number }) => {
+    const machine = state.fileDialog.machine;
+    if (!machine) return;
+
+    // 获取当前机器信息
+    const machineId = machine.id;
+    const authCertName = machine.selectAuthCert.name;
+
+    // 生成文件操作 tab 的 key
+    const fileTabKey = `file_${machineId}_${authCertName}_${fileConfig.fileId}`;
+
+    // 检查是否已经存在该文件操作 tab
+    if (state.tabs.has(fileTabKey)) {
+        // 如果已存在，直接切换到该 tab
+        state.activeTermName = fileTabKey;
+        return;
     }
 
-    if (selectionData.protocol == 2) {
-        state.filesystemDialog.protocol = 2;
-        state.filesystemDialog.machineId = selectionData.id;
-        state.filesystemDialog.authCertName = authCert.name;
-        state.filesystemDialog.fileId = selectionData.id;
-        state.filesystemDialog.path = '/';
-        state.filesystemDialog.title = t('machine.remoteFileDesktopManage');
-        state.filesystemDialog.visible = true;
-    }
+    // 使用国际化前缀拼接 tab 标签
+    const labelName = `${t('machine.fileTabPrefix')}${machine.selectAuthCert.username}@${machine.name}/${fileConfig.name}`;
+
+    let tab = {
+        key: fileTabKey,
+        label: labelName.length > 25 ? labelName.slice(0, 18) + '...' + labelName.slice(-7) : labelName,
+        type: 'file',
+        machineId: machineId,
+        authCertName: authCertName,
+        protocol: machine.protocol,
+        fileId: fileConfig.fileId,
+        path: fileConfig.path,
+        params: machine,
+    };
+
+    state.tabs.set(fileTabKey, tab);
+    state.activeTermName = fileTabKey;
 };
 
 const showInfo = (info: any) => {
@@ -362,17 +394,20 @@ const onRemoveTab = (targetName: string) => {
             continue;
         }
 
-        state.tabs.delete(targetName);
-        let info = state.tabs.get(targetName);
-        if (info) {
-            terminalRefs[info.key]?.close();
+        const tab = state.tabs.get(targetName);
+
+        // 只有终端类型才需要关闭连接
+        if (tab?.type === 'terminal') {
+            terminalRefs[targetName]?.close();
         }
+
+        state.tabs.delete(targetName);
 
         if (activeTermName != targetName) {
             break;
         }
 
-        // 如果删除的tab是当前激活的tab，则切换到前一个或后一个tab
+        // 如果删除的 tab 是当前激活的 tab，则切换到前一个或后一个 tab
         const nextTab = tabNames[i + 1] || tabNames[i - 1];
         if (nextTab) {
             activeTermName = nextTab;
@@ -399,14 +434,18 @@ const setTerminalRef = (el: any, key: any) => {
 const fitTerminal = () => {
     setTimeout(() => {
         let info = state.tabs.get(state.activeTermName);
-        if (info) {
+        // 只有终端类型才需要调整大小
+        if (info && info.type === 'terminal') {
             terminalRefs[info.key]?.fitTerminal && terminalRefs[info.key]?.fitTerminal();
         }
     });
 };
 
 const handleReconnect = (tab: any, force = false) => {
-    terminalRefs[tab.key]?.init();
+    // 只有终端类型才需要重连
+    if (tab?.type === 'terminal') {
+        terminalRefs[tab.key]?.init();
+    }
 };
 
 defineExpose({

@@ -7,7 +7,7 @@
 
             <el-form :model="form" ref="milvusFormRef" :rules="rules" label-width="auto">
                 <el-form-item prop="tagCodePaths" :label="$t('tag.relateTag')" required>
-                    <tag-tree-select multiple v-model="form.tagCodePaths" />
+                    <TagTreeSelect multiple :code="form.code" v-model="form.tagCodePaths" />
                 </el-form-item>
                 <el-form-item prop="name" :label="$t('common.name')" required>
                     <el-input v-model.trim="form.name" :placeholder="$t('common.pleaseInput')" auto-complete="off"></el-input>
@@ -100,7 +100,6 @@ watch(dialogVisible, () => {
     const milvus: any = props.milvus;
     if (milvus) {
         state.form = { ...milvus };
-        state.form.tagCodePaths = milvus.tags.map((t: any) => t.codePath);
     } else {
         state.form = { database: 'default', sshTunnelMachineId: -1 } as any;
     }

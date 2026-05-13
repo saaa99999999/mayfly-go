@@ -18,8 +18,9 @@
                 </el-button>
             </template>
 
-            <template #tagPath="{ data }">
-                <resource-tags :tags="data.tags" />
+            <template #name="{ data }">
+                <TagCodePath :code="data.code" show-popover />
+                {{ data.name }}
             </template>
 
             <template #action="{ data }">
@@ -32,16 +33,16 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
-import ResourceTags from '../../component/ResourceTags.vue';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
 import { TagResourceTypeEnum } from '@/common/commonEnum';
-import { useRoute } from 'vue-router';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
 import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle } from '@/hooks/useI18n';
-import { mqApi } from '@/views/ops/mq/api';
 import { getTagPathSearchItem } from '@/views/ops/component/tag';
+import { mqApi } from '@/views/ops/mq/api';
+import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
+import { useRoute } from 'vue-router';
+import TagCodePath from '../../component/TagCodePath.vue';
 
 const KafkaEdit = defineAsyncComponent(() => import('./KafkaEdit.vue'));
 
@@ -61,8 +62,7 @@ const searchItems = [
 ];
 
 const columns = [
-    TableColumn.new('tags[0].tagPath', 'tag.relateTag').isSlot('tagPath').setAddWidth(20),
-    TableColumn.new('name', 'common.name'),
+    TableColumn.new('name', 'common.name').isSlot('name').setAddWidth(15),
     TableColumn.new('hosts', 'Hosts'),
     TableColumn.new('username', 'mq.kafka.username'),
     TableColumn.new('password', 'common.password'),

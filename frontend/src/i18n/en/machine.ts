@@ -23,6 +23,7 @@ export default {
         openTerminal: 'Open Terminal',
         newTabOpenTerminal: 'Open Terminal(New TAB)',
         fileManage: 'File Manage',
+        fileTabPrefix: 'File-',
         scriptManage: 'Script Manage',
         machineState: 'Machine State',
         remoteFileDesktopManage: 'Remote desktop file management', // Remote desktop file management

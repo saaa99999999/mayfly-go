@@ -53,8 +53,8 @@ func GetCommandExec() (tool.InvokableTool, error) {
 				return nil, tools.NewToolError(fmt.Errorf("%s", i18n.TC(ctx, imsg.MissingRequiredParams)), tools.RecoverRetry)
 			}
 
-			// 危险命令检测
-			if isDangerousCommand(param.Command) {
+			// 白名单命令检测：不在白名单中的命令需要审批
+			if !isWhitelistCommand(param.Command) {
 				// 触发审批中断
 				if err := tools.InterruptOrResumeApproval(ctx, toolDesc, param, i18n.TC(ctx, imsg.CommandExecApprovalReason)); err != nil {
 					return nil, err
@@ -89,37 +89,114 @@ func GetCommandExec() (tool.InvokableTool, error) {
 	)
 }
 
-// isDangerousCommand 判断命令是否包含危险操作
-// 使用词法分析遍历所有命令，检测危险命令模式
-func isDangerousCommand(cmd string) bool {
+// isWhitelistCommand 判断命令是否在白名单中，可以自动执行
+// 白名单包含：查询、统计、查看类命令，不包含修改系统资源的命令
+func isWhitelistCommand(cmd string) bool {
 	if cmd == "" {
 		return false
 	}
 
-	// 定义危险命令规则
-	type dangerousRule struct {
-		command string // 命令名
-		pattern string // 危险参数模式（空表示命令本身就危险）
+	// 定义白名单命令规则
+	type whitelistRule struct {
+		command     string   // 命令名
+		allowedArgs []string // 允许的参数模式（空表示所有参数都允许）
 	}
 
-	dangerousRules := []dangerousRule{
-		{command: "rm", pattern: ""},   // rm 删除
-		{command: "mkfs", pattern: ""}, // 所有格式化命令
-		{command: "mkfs.ext2", pattern: ""},
-		{command: "mkfs.ext3", pattern: ""},
-		{command: "mkfs.ext4", pattern: ""},
-		{command: "mkfs.xfs", pattern: ""},
-		{command: "mkfs.vfat", pattern: ""},
-		{command: "dd", pattern: "if="},      // dd if= 磁盘写入
-		{command: "dd", pattern: "of=/dev/"}, // dd of=/dev/ 写入设备
-		{command: "shutdown", pattern: ""},   // 关机命令
-		{command: "reboot", pattern: ""},     // 重启命令
-		{command: "halt", pattern: ""},       // 停机命令
-		{command: "poweroff", pattern: ""},   // 断电命令
-		{command: "fdisk", pattern: ""},      // 分区操作
-		{command: "parted", pattern: ""},     // 分区工具
-		{command: "debugfs", pattern: ""},    // 文件系统调试
-		{command: "ddrescue", pattern: ""},   // 磁盘救援
+	whitelistRules := []whitelistRule{
+		// 系统信息查询
+		{command: "uname", allowedArgs: nil},    // 系统信息
+		{command: "hostname", allowedArgs: nil}, // 主机名
+		{command: "whoami", allowedArgs: nil},   // 当前用户
+		{command: "id", allowedArgs: nil},       // 用户信息
+		{command: "pwd", allowedArgs: nil},      // 当前目录
+		{command: "date", allowedArgs: nil},     // 日期时间
+		{command: "cal", allowedArgs: nil},      // 日历
+		{command: "uptime", allowedArgs: nil},   // 运行时间
+		{command: "w", allowedArgs: nil},        // 登录用户
+		{command: "who", allowedArgs: nil},      // 登录用户
+		{command: "last", allowedArgs: nil},     // 登录历史
+		{command: "lastlog", allowedArgs: nil},  // 最后登录
+
+		// 硬件和系统状态
+		{command: "lscpu", allowedArgs: nil},   // CPU信息
+		{command: "lsblk", allowedArgs: nil},   // 块设备
+		{command: "lspci", allowedArgs: nil},   // PCI设备
+		{command: "lsusb", allowedArgs: nil},   // USB设备
+		{command: "free", allowedArgs: nil},    // 内存使用
+		{command: "df", allowedArgs: nil},      // 磁盘使用
+		{command: "du", allowedArgs: nil},      // 目录大小
+		{command: "top", allowedArgs: nil},     // 进程状态
+		{command: "htop", allowedArgs: nil},    // 进程状态
+		{command: "vmstat", allowedArgs: nil},  // 虚拟内存
+		{command: "iostat", allowedArgs: nil},  // IO统计
+		{command: "mpstat", allowedArgs: nil},  // CPU统计
+		{command: "netstat", allowedArgs: nil}, // 网络统计
+		{command: "ss", allowedArgs: nil},      // 网络统计
+		{command: "uptime", allowedArgs: nil},  // 运行时间
+
+		// 文件和目录查看
+		{command: "ls", allowedArgs: nil},      // 列出文件
+		{command: "dir", allowedArgs: nil},     // 列出文件
+		{command: "find", allowedArgs: nil},    // 查找文件（只读）
+		{command: "locate", allowedArgs: nil},  // 查找文件
+		{command: "which", allowedArgs: nil},   // 查找命令
+		{command: "whereis", allowedArgs: nil}, // 查找程序
+		{command: "tree", allowedArgs: nil},    // 目录树
+		{command: "file", allowedArgs: nil},    // 文件类型
+		{command: "stat", allowedArgs: nil},    // 文件状态
+		{command: "wc", allowedArgs: nil},      // 统计行数
+		{command: "sort", allowedArgs: nil},    // 排序
+		{command: "uniq", allowedArgs: nil},    // 去重
+
+		// 文件内容查看
+		{command: "cat", allowedArgs: nil},   // 查看文件
+		{command: "tac", allowedArgs: nil},   // 反向查看
+		{command: "less", allowedArgs: nil},  // 分页查看
+		{command: "more", allowedArgs: nil},  // 分页查看
+		{command: "head", allowedArgs: nil},  // 查看前几行
+		{command: "tail", allowedArgs: nil},  // 查看后几行
+		{command: "grep", allowedArgs: nil},  // 搜索文本
+		{command: "egrep", allowedArgs: nil}, // 扩展搜索
+		{command: "fgrep", allowedArgs: nil}, // 固定搜索
+		{command: "zcat", allowedArgs: nil},  // 查看压缩文件
+		{command: "zless", allowedArgs: nil}, // 分页查看压缩文件
+		{command: "zgrep", allowedArgs: nil}, // 搜索压缩文件
+
+		// 文本处理
+		{command: "awk", allowedArgs: nil},       // 文本处理
+		{command: "sed", allowedArgs: nil},       // 流编辑器（只读使用）
+		{command: "cut", allowedArgs: nil},       // 截取文本
+		{command: "paste", allowedArgs: nil},     // 合并文本
+		{command: "tr", allowedArgs: nil},        // 转换字符
+		{command: "diff", allowedArgs: nil},      // 比较文件
+		{command: "cmp", allowedArgs: nil},       // 比较文件
+		{command: "md5sum", allowedArgs: nil},    // MD5校验
+		{command: "sha256sum", allowedArgs: nil}, // SHA256校验
+
+		// 输出和打印
+		{command: "echo", allowedArgs: nil},   // 输出文本
+		{command: "printf", allowedArgs: nil}, // 格式化输出
+
+		// 网络查询
+		{command: "ping", allowedArgs: nil},     // 网络连通性
+		{command: "nslookup", allowedArgs: nil}, // DNS查询
+		{command: "dig", allowedArgs: nil},      // DNS查询
+		{command: "host", allowedArgs: nil},     // DNS查询
+		{command: "curl", allowedArgs: nil},     // HTTP请求（GET）
+		{command: "wget", allowedArgs: nil},     // 下载文件
+		{command: "ifconfig", allowedArgs: nil}, // 网络配置
+		{command: "ip", allowedArgs: nil},       // 网络配置
+
+		// 进程查看
+		{command: "ps", allowedArgs: nil},     // 进程状态
+		{command: "pgrep", allowedArgs: nil},  // 查找进程
+		{command: "pstree", allowedArgs: nil}, // 进程树
+
+		// 包管理查询
+		{command: "rpm", allowedArgs: []string{"-q", "-qa", "-qi", "-ql"}}, // 查询包
+		{command: "dpkg", allowedArgs: []string{"-l", "-s"}},               // 查询包
+		{command: "yum", allowedArgs: []string{"list", "info", "search"}},  // 查询包
+		{command: "apt", allowedArgs: []string{"list", "show", "search"}},  // 查询包
 	}
 
 	// 词法分析命令
@@ -140,34 +217,57 @@ func isDangerousCommand(cmd string) bool {
 			cmdName = token[idx+1:]
 		}
 
-		// 检查是否匹配危险命令
-		for _, rule := range dangerousRules {
+		// 检查是否匹配白名单命令
+		for _, rule := range whitelistRules {
 			if cmdName != rule.command {
 				continue
 			}
 
-			// 如果规则没有 pattern，命令本身就危险
-			if rule.pattern == "" {
+			// 如果规则没有限制参数，该命令所有参数都允许
+			if len(rule.allowedArgs) == 0 {
 				return true
 			}
 
-			// 检查后续参数是否包含危险模式
-			if checkArgsContainPattern(tokens[i+1:], rule.pattern) {
-				return true
+			// 检查参数是否在允许列表中
+			args := extractArgs(tokens[i+1:])
+			for _, arg := range args {
+				// 如果参数不在允许列表中，需要审批
+				if !isArgAllowed(arg, rule.allowedArgs) {
+					return false
+				}
 			}
-		}
-
-		// 特殊处理：chmod 777 /
-		if cmdName == "chmod" && checkChmod777Root(tokens[i+1:]) {
-			return true
-		}
-
-		// 特殊处理：重定向到危险设备
-		if checkRedirectToDevice(tokens[i:]) {
 			return true
 		}
 	}
 
+	// 不在白名单中的命令需要审批
+	return false
+}
+
+// extractArgs 从 tokens 中提取参数（排除操作符）
+func extractArgs(tokens []string) []string {
+	var args []string
+	for _, token := range tokens {
+		if !isOperator(token) && !isQuotedString(token) {
+			args = append(args, token)
+		}
+	}
+	return args
+}
+
+// isArgAllowed 检查参数是否在允许列表中
+func isArgAllowed(arg string, allowedArgs []string) bool {
+	// 跳过选项标志（- 开头的）
+	if strings.HasPrefix(arg, "-") {
+		return true
+	}
+
+	// 检查是否在允许列表中
+	for _, allowed := range allowedArgs {
+		if arg == allowed {
+			return true
+		}
+	}
 	return false
 }
 
@@ -259,87 +359,6 @@ func isOperator(token string) bool {
 		return false
 	}
 	return isOperatorChar(token[0])
-}
-
-// checkArgsContainPattern 检查参数列表是否包含指定模式
-func checkArgsContainPattern(args []string, pattern string) bool {
-	for _, arg := range args {
-		// 遇到操作符就停止
-		if isOperator(arg) {
-			break
-		}
-
-		// 检查参数
-		if strings.Contains(arg, pattern) {
-			return true
-		}
-
-		// 处理组合选项，如 -rf 拆分为 -r -f
-		if strings.HasPrefix(arg, "-") && len(arg) > 2 {
-			opts := arg[1:]
-			// 检查是否包含 pattern 中的字符（如 -rf 包含 r 和 f）
-			if pattern[0] == '-' {
-				patternChars := pattern[1:]
-				hasAll := true
-				for _, pc := range patternChars {
-					if !strings.ContainsRune(opts, pc) {
-						hasAll = false
-						break
-					}
-				}
-				if hasAll {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
-
-// checkChmod777Root 检查是否为 chmod 777 /
-func checkChmod777Root(args []string) bool {
-	for i, arg := range args {
-		if isOperator(arg) {
-			break
-		}
-
-		// 跳过选项
-		if strings.HasPrefix(arg, "-") {
-			continue
-		}
-
-		// 检查权限模式
-		if arg == "777" || arg == "0777" {
-			// 检查目标是否为根目录
-			if i+1 < len(args) {
-				target := args[i+1]
-				if !isOperator(target) && (target == "/" || target == "/*") {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
-
-// checkRedirectToDevice 检查是否重定向到危险设备
-func checkRedirectToDevice(tokens []string) bool {
-	for i, token := range tokens {
-		// 检查重定向操作符
-		if token == ">" || token == ">>" || token == "1>" || token == "2>" || token == "&>" {
-			// 检查下一个 token 是否为危险设备
-			if i+1 < len(tokens) {
-				target := tokens[i+1]
-				if strings.HasPrefix(target, "/dev/sd") ||
-					strings.HasPrefix(target, "/dev/hd") ||
-					strings.HasPrefix(target, "/dev/nvme") ||
-					strings.HasPrefix(target, "/dev/vd") {
-					return true
-				}
-			}
-		}
-	}
-	return false
 }
 
 // isQuotedString 判断是否为引号字符串

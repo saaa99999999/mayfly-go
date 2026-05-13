@@ -33,18 +33,19 @@ func (od *OracleMetadata11) GetCompatibleDbVersion() dbi.DbVersion {
 }
 
 func (od *OracleMetadata) GetDbServer() (*dbi.DbServer, error) {
-	_, res, err := od.dc.Query("select * from v$instance")
+	// 使用Oracle内置函数获取版本号，任何用户都有权限
+	_, res, err := od.dc.Query("SELECT dbms_utility.db_version AS VERSION FROM SYS.dual")
 	if err != nil {
 		return nil, err
 	}
-	ds := &dbi.DbServer{
+
+	return &dbi.DbServer{
 		Version: cast.ToString(res[0]["VERSION"]),
-	}
-	return ds, nil
+	}, nil
 }
 
 func (od *OracleMetadata) GetDbNames() ([]string, error) {
-	_, res, err := od.dc.Query("SELECT name AS DBNAME FROM v$database")
+	_, res, err := od.dc.Query("SELECT sys_context('USERENV', 'DB_NAME') AS DBNAME FROM SYS.dual")
 	if err != nil {
 		return nil, err
 	}

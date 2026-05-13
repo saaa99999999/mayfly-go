@@ -8,7 +8,6 @@ import (
 	"mayfly-go/internal/es/domain/entity"
 	"mayfly-go/internal/es/esm/esi"
 	"mayfly-go/internal/es/imsg"
-	"mayfly-go/internal/pkg/consts"
 	tagapp "mayfly-go/internal/tag/application"
 	tagentity "mayfly-go/internal/tag/domain/entity"
 	"mayfly-go/pkg/biz"
@@ -81,11 +80,6 @@ func (d *Instance) Instances(rc *req.Ctx) {
 	// 填充授权凭证信息
 	d.resourceAuthCertApp.FillAuthCertByAcNames(tagentity.GetCodesByCodePaths(tagentity.TagTypeAuthCert, certTags.GetCodePaths()...), collx.ArrayMap(instvos, func(vos *vo.InstanceListVO) tagentity.IAuthCert {
 		return vos
-	})...)
-
-	// 填充标签信息
-	d.tagApp.FillTagInfo(tagentity.TagType(consts.ResourceTypeEsInstance), collx.ArrayMap(instvos, func(insvo *vo.InstanceListVO) tagentity.ITagResource {
-		return insvo
 	})...)
 
 	rc.ResData = resVo

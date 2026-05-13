@@ -6,7 +6,6 @@ import (
 	"mayfly-go/internal/milvus/application"
 	"mayfly-go/internal/milvus/domain/entity"
 	"mayfly-go/internal/milvus/imsg"
-	"mayfly-go/internal/pkg/consts"
 	tagapp "mayfly-go/internal/tag/application"
 	tagentity "mayfly-go/internal/tag/domain/entity"
 	"mayfly-go/pkg/biz"
@@ -60,14 +59,7 @@ func (m *Milvus) Milvuses(rc *req.Ctx) {
 
 	res, err := m.milvusApp.GetPageList(queryCond)
 	biz.ErrIsNil(err)
-
 	resVo := model.PageResultConv[*entity.Milvus, *vo.Milvus](res)
-	vos := resVo.List
-
-	// 填充标签信息
-	m.tagTreeApp.FillTagInfo(tagentity.TagType(consts.ResourceTypeMilvus), collx.ArrayMap(vos, func(mvo *vo.Milvus) tagentity.ITagResource {
-		return mvo
-	})...)
 
 	rc.ResData = resVo
 }

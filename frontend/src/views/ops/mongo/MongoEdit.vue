@@ -5,7 +5,7 @@
                 <el-tabs v-model="tabActiveName">
                     <el-tab-pane :label="$t('common.basic')" name="basic">
                         <el-form-item prop="tagCodePaths" :label="$t('tag.relateTag')" required>
-                            <tag-tree-select multiple v-model="form.tagCodePaths" />
+                            <TagTreeSelect multiple :code="form.code" v-model="form.tagCodePaths" />
                         </el-form-item>
 
                         <el-form-item prop="name" :label="$t('common.name')" required>
@@ -100,7 +100,6 @@ watchEffect(() => {
     const mongo: any = props.mongo;
     if (mongo) {
         state.form = { ...mongo };
-        state.form.tagCodePaths = mongo.tags.map((t: any) => t.codePath);
     } else {
         state.form = { db: 0, tagCodePaths: [] } as any;
     }

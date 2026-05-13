@@ -18,8 +18,9 @@
                 </el-button>
             </template>
 
-            <template #tagPath="{ data }">
-                <resource-tags :tags="data.tags" />
+            <template #name="{ data }">
+                <TagCodePath :code="data.code" show-popover />
+                {{ data.name }}
             </template>
 
             <template #action="{ data }">
@@ -45,16 +46,16 @@
 </template>
 
 <script lang="ts" setup>
-import { mongoApi } from './api';
-import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
-import ResourceTags from '../component/ResourceTags.vue';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
 import { TagResourceTypeEnum } from '@/common/commonEnum';
-import { useRoute } from 'vue-router';
-import { getTagPathSearchItem } from '../component/tag';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
 import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle } from '@/hooks/useI18n';
+import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
+import { useRoute } from 'vue-router';
+import { getTagPathSearchItem } from '../component/tag';
+import { mongoApi } from './api';
+import TagCodePath from '../component/TagCodePath.vue';
 
 const MongoEdit = defineAsyncComponent(() => import('./MongoEdit.vue'));
 const MongoDbs = defineAsyncComponent(() => import('./MongoDbs.vue'));
@@ -76,8 +77,7 @@ const searchItems = [
 ];
 
 const columns = [
-    TableColumn.new('tags[0].tagPath', 'tag.relateTag').isSlot('tagPath').setAddWidth(20),
-    TableColumn.new('name', 'common.name'),
+    TableColumn.new('name', 'common.name').isSlot('name').setAddWidth(25),
     TableColumn.new('uri', 'mongo.connUrl'),
     TableColumn.new('createTime', 'common.createTime').isTime(),
     TableColumn.new('creator', 'common.creator'),

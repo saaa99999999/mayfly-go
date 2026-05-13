@@ -58,14 +58,14 @@
                     <el-row>
                         <el-text size="small" class="font11">
                             CPU:
-                            <span>{{ row.stats.cpuPercent.toFixed(2) }}%</span>
+                            <span>{{ Number(row.stats.cpuPercent).toFixed(2) }}%</span>
                         </el-text>
                     </el-row>
 
                     <el-row>
                         <el-text size="small" class="font11">
                             {{ $t('docker.memory') }}:
-                            <span>{{ row.stats.memoryPercent.toFixed(2) }}%</span>
+                            <span>{{ Number(row.stats.memoryPercent).toFixed(2) }}%</span>
                         </el-text>
 
                         <el-popover placement="right" :width="300" trigger="hover">

@@ -11,7 +11,7 @@
             <el-descriptions-item :span="1" :label="$t('common.code')">{{ state.machineDetail.code }}</el-descriptions-item>
             <el-descriptions-item :span="1" :label="$t('common.name')">{{ state.machineDetail.name }}</el-descriptions-item>
 
-            <el-descriptions-item :span="3" :label="$t('tag.relateTag')"><ResourceTags :tags="state.machineDetail.tags" /></el-descriptions-item>
+            <el-descriptions-item :span="3" :label="$t('tag.relateTag')"><TagCodePath :path="state.machineDetail.tags" /></el-descriptions-item>
 
             <el-descriptions-item :span="2" label="IP">{{ state.machineDetail.ip }}</el-descriptions-item>
             <el-descriptions-item :span="1" :label="$t('machine.port')">{{ state.machineDetail.port }}</el-descriptions-item>
@@ -35,10 +35,10 @@
 </template>
 
 <script lang="ts" setup>
+import { formatDate } from '@/common/utils/format';
+import TagCodePath from '@/views/ops/component/TagCodePath.vue';
 import { reactive } from 'vue';
 import { machineApi } from '../api';
-import { formatDate } from '@/common/utils/format';
-import ResourceTags from '../../component/ResourceTags.vue';
 
 const props = defineProps({
     code: {

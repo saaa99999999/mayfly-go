@@ -7,10 +7,8 @@ var Zh_CN = map[i18n.MsgId]string{
 	LogTagSave:   "标签树-保存信息",
 	LogTagDelete: "标签树-删除信息",
 
-	ErrTagCodeInvalid:         "标识符不能包含'/'",
 	ErrNoAdminCreateTag:       "非管理员无法添加根标签",
 	ErrNoPermissionCreateTag:  "无权添加该标签",
-	ErrTagCodePathLikeExist:   "已存在该标签路径开头的标签, 请修改该标识code",
 	ErrNoPermissionOpResource: "您无权操作该资源",
 	ErrNoPermissionDeleteTag:  "您无权删除该标签",
 	ErrConflictingCodePath:    "存在冲突的编号路径",

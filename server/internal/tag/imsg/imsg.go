@@ -15,10 +15,8 @@ const (
 	LogTagSave = iota + consts.ImsgNumTag
 	LogTagDelete
 
-	ErrTagCodeInvalid
 	ErrNoAdminCreateTag
 	ErrNoPermissionCreateTag
-	ErrTagCodePathLikeExist
 	ErrNoPermissionOpResource
 	ErrNoPermissionDeleteTag
 	ErrConflictingCodePath

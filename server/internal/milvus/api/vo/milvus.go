@@ -1,13 +1,11 @@
 package vo
 
 import (
-	tagentity "mayfly-go/internal/tag/domain/entity"
 	"mayfly-go/pkg/model"
 )
 
 type Milvus struct {
 	model.Model
-	tagentity.ResourceTags
 
 	Code     string `json:"code"`
 	Name     string `json:"name"`

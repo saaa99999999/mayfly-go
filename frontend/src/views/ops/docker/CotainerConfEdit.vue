@@ -7,7 +7,7 @@
 
             <el-form :model="form" ref="formRef" :rules="rules" label-width="auto">
                 <el-form-item prop="tagCodePaths" :label="$t('tag.relateTag')" required>
-                    <tag-tree-select multiple v-model="form.tagCodePaths" />
+                    <TagTreeSelect multiple :code="form.code" v-model="form.tagCodePaths" />
                 </el-form-item>
                 <el-form-item prop="name" :label="$t('common.name')" required>
                     <el-input v-model.trim="form.name" auto-complete="off"></el-input>
@@ -87,7 +87,6 @@ watch(dialogVisible, () => {
     const container: any = props.container;
     if (container) {
         state.form = { ...container };
-        state.form.tagCodePaths = container.tags.map((t: any) => t.codePath);
     } else {
         state.form = {} as any;
     }

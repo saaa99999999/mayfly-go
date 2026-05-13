@@ -1,5 +1,5 @@
 <template>
-    <div class="flex h-full">
+    <div class="flex h-full" v-loading="sessionLoading">
         <ConfigProvider :theme="isDark ? 'dark' : 'light'">
             <!-- 左侧会话列表 -->
             <aside class="flex flex-col border-r transition-all duration-300 ease-in-out" style="border-color: var(--el-border-color-light, #e4e7ed)">
@@ -82,23 +82,30 @@ const isDark = computed(() => themeConfig.themeConfig.isDark);
 const conversations = ref<ConversationItem[]>([]);
 // 当前会话id（'-1' 表示新建会话）
 const currentSessionId = ref<string>('');
+// sessions 加载状态
+const sessionLoading = ref<boolean>(true);
 
 /**
  * 加载会话列表
  */
 const loadSessions = async () => {
-    const sessions = await aiApi.listSessions.request();
-    conversations.value = sessions.map((session) => {
-        return {
-            key: session.sessionKey,
-            label: session.title,
-            createTime: formatDate(session.createTime),
-            updateTime: formatDate(session.updateTime),
-        };
-    });
-    // 默认选中第一个会话
-    if (!currentSessionId.value && sessions.length > 0) {
-        switchSession(sessions[0].sessionKey);
+    try {
+        sessionLoading.value = true;
+        const sessions = await aiApi.listSessions.request();
+        conversations.value = sessions.map((session) => {
+            return {
+                key: session.sessionKey,
+                label: session.title,
+                createTime: formatDate(session.createTime),
+                updateTime: formatDate(session.updateTime),
+            };
+        });
+        // 默认选中第一个会话
+        if (!currentSessionId.value && sessions.length > 0) {
+            switchSession(sessions[0].sessionKey);
+        }
+    } finally {
+        sessionLoading.value = false;
     }
 };
 

@@ -102,9 +102,6 @@
 
         <el-dialog width="500px" :title="saveTabDialog.title" :before-close="onCancelSaveTag" v-model="saveTabDialog.visible">
             <el-form ref="tagForm" :rules="rules" :model="saveTabDialog.form" label-width="auto">
-                <el-form-item prop="code" :label="$t('tag.code')" required>
-                    <el-input :disabled="saveTabDialog.form.id ? true : false" v-model="saveTabDialog.form.code" auto-complete="off"></el-input>
-                </el-form-item>
                 <el-form-item prop="name" :label="$t('common.name')" required>
                     <el-input v-model="saveTabDialog.form.name" auto-complete="off"></el-input>
                 </el-form-item>
@@ -218,7 +215,7 @@ const state = reactive({
     saveTabDialog: {
         title: '',
         visible: false,
-        form: { id: 0, pid: 0, code: '', name: '', remark: '' },
+        form: { id: 0, pid: 0, name: '', remark: '' },
     },
     resourceDialog: {
         title: '',
@@ -248,7 +245,6 @@ const props = {
 };
 
 const rules = {
-    code: [Rules.requiredInput('tag.code')],
     name: [Rules.requiredInput('common.name')],
 };
 
@@ -353,7 +349,6 @@ const onShowSaveTagDialog = (data: any) => {
 
 const onShowEditTagDialog = (data: any) => {
     state.saveTabDialog.form.id = data.id;
-    state.saveTabDialog.form.code = data.code;
     state.saveTabDialog.form.name = data.name;
     state.saveTabDialog.form.remark = data.remark;
     state.saveTabDialog.title = useI18nEditTitle(data.codePath);

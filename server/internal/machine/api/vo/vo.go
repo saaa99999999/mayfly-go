@@ -8,8 +8,7 @@ import (
 
 type MachineVO struct {
 	model.ExtraData
-	tagentity.ResourceTags // 标签信息
-	tagentity.AuthCerts    // 授权凭证信息
+	tagentity.AuthCerts // 授权凭证信息
 
 	Id                 uint64     `json:"id"`
 	Code               string     `json:"code"`

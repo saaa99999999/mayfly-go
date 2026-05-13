@@ -7,7 +7,6 @@ import (
 	"mayfly-go/internal/mq/kafka/domain/entity"
 	"mayfly-go/internal/mq/kafka/imsg"
 	"mayfly-go/internal/mq/kafka/kfm"
-	"mayfly-go/internal/pkg/consts"
 	tagapp "mayfly-go/internal/tag/application"
 	tagentity "mayfly-go/internal/tag/domain/entity"
 	"mayfly-go/pkg/biz"
@@ -83,12 +82,6 @@ func (k *Kafka) Kafkas(rc *req.Ctx) {
 	res, err := k.kafkaApp.GetPageList(queryCond)
 	biz.ErrIsNil(err)
 	resVo := model.PageResultConv[*entity.Kafka, *vo.Kafka](res)
-	kafkavos := resVo.List
-
-	// 填充标签信息
-	k.tagTreeApp.FillTagInfo(tagentity.TagType(consts.ResourceTypeMqKafka), collx.ArrayMap(kafkavos, func(mvo *vo.Kafka) tagentity.ITagResource {
-		return mvo
-	})...)
 
 	rc.ResData = resVo
 }

@@ -7,7 +7,6 @@ import (
 	"mayfly-go/internal/mongo/application"
 	"mayfly-go/internal/mongo/domain/entity"
 	"mayfly-go/internal/mongo/imsg"
-	"mayfly-go/internal/pkg/consts"
 	"mayfly-go/internal/pkg/event"
 	tagapp "mayfly-go/internal/tag/application"
 	tagentity "mayfly-go/internal/tag/domain/entity"
@@ -84,12 +83,6 @@ func (m *Mongo) Mongos(rc *req.Ctx) {
 	res, err := m.mongoApp.GetPageList(queryCond)
 	biz.ErrIsNil(err)
 	resVo := model.PageResultConv[*entity.Mongo, *vo.Mongo](res)
-	mongovos := resVo.List
-
-	// 填充标签信息
-	m.tagTreeApp.FillTagInfo(tagentity.TagType(consts.ResourceTypeMongo), collx.ArrayMap(mongovos, func(mvo *vo.Mongo) tagentity.ITagResource {
-		return mvo
-	})...)
 
 	rc.ResData = resVo
 }

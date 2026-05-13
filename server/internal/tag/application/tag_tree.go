@@ -15,6 +15,7 @@ import (
 	"mayfly-go/pkg/logx"
 	"mayfly-go/pkg/model"
 	"mayfly-go/pkg/utils/collx"
+	"mayfly-go/pkg/utils/stringx"
 	"slices"
 	"strings"
 
@@ -53,14 +54,14 @@ type TagTree interface {
 	// 根据标签类型和标签code获取对应的标签路径列表
 	ListTagPathByTypeAndCode(resourceType int8, resourceCode string) []string
 
+	// ListResourceTagByCode 根据资源code获取资源关联的标签
+	ListResourceTagByCode(resourceCode string) []*entity.ResourceTag
+
 	// ListTagByAccountId 根据账号id获取其可访问标签信息
 	ListTagByAccountId(accountId uint64) []string
 
 	// CanAccess 账号是否有权限访问该标签关联的资源信息
 	CanAccess(accountId uint64, tagPath ...string) error
-
-	// FillTagInfo 填充资源的标签信息
-	FillTagInfo(resourceTagType entity.TagType, resources ...entity.ITagResource)
 }
 
 type tagTreeAppImpl struct {
@@ -74,9 +75,7 @@ var _ (TagTree) = (*tagTreeAppImpl)(nil)
 func (p *tagTreeAppImpl) SaveTag(ctx context.Context, pid uint64, tag *entity.TagTree) error {
 	// 新建资源树节点信息
 	if tag.Id == 0 {
-		if strings.Contains(tag.Code, entity.CodePathSeparator) {
-			return errorx.NewBizI(ctx, imsg.ErrTagCodeInvalid)
-		}
+		tag.Code = stringx.Rand(12)
 		if pid != 0 {
 			parentTag, err := p.GetById(pid)
 			if err != nil {
@@ -84,7 +83,7 @@ func (p *tagTreeAppImpl) SaveTag(ctx context.Context, pid uint64, tag *entity.Ta
 			}
 
 			tag.CodePath = parentTag.CodePath + tag.Code + entity.CodePathSeparator
-			
+
 			account := contextx.GetLoginAccount(ctx)
 			if account == nil {
 				return errorx.NewBiz("login account not found")
@@ -94,13 +93,6 @@ func (p *tagTreeAppImpl) SaveTag(ctx context.Context, pid uint64, tag *entity.Ta
 			}
 		} else {
 			tag.CodePath = tag.Code + entity.CodePathSeparator
-		}
-		
-		// 判断该路径是否存在
-		var hasLikeTags []entity.TagTree
-		p.GetRepo().SelectByCondition(&entity.TagTreeQuery{CodePathLikes: []string{tag.CodePath}}, &hasLikeTags)
-		if len(hasLikeTags) > 0 {
-			return errorx.NewBizI(ctx, imsg.ErrTagCodePathLikeExist)
 		}
 
 		// 普通标签类型
@@ -433,6 +425,15 @@ func (p *tagTreeAppImpl) ListTagPathByTypeAndCode(resourceType int8, resourceCod
 	})
 }
 
+func (p *tagTreeAppImpl) ListResourceTagByCode(resourceCode string) []*entity.ResourceTag {
+	// 获取资源code关联的标签列表信息
+	var tagResources []*entity.TagTree
+	p.ListByQuery(&entity.TagTreeQuery{Codes: collx.AsArray(resourceCode)}, &tagResources)
+	return collx.ArrayMap(tagResources, func(tt *entity.TagTree) *entity.ResourceTag {
+		return &entity.ResourceTag{TagId: tt.Id, CodePath: string(entity.CodePath(tt.CodePath).GetTag())}
+	})
+}
+
 func (p *tagTreeAppImpl) ListTagByAccountId(accountId uint64) []string {
 	tagPaths, err := cache.GetAccountTagPaths(accountId)
 	if err != nil {
@@ -458,29 +459,6 @@ func (p *tagTreeAppImpl) CanAccess(accountId uint64, tagPath ...string) error {
 	}
 
 	return errorx.NewBizI(context.Background(), imsg.ErrNoPermissionOpResource)
-}
-
-func (p *tagTreeAppImpl) FillTagInfo(resourceTagType entity.TagType, resources ...entity.ITagResource) {
-	if len(resources) == 0 {
-		return
-	}
-
-	// 资源编号 -> 资源
-	resourceCode2Resouce := collx.ArrayToMap(resources, func(rt entity.ITagResource) string {
-		return rt.GetCode()
-	})
-
-	// 获取所有资源code关联的标签列表信息
-	var tagResources []*entity.TagTree
-	p.ListByQuery(&entity.TagTreeQuery{Codes: collx.MapKeys(resourceCode2Resouce), Types: []entity.TagType{resourceTagType}}, &tagResources)
-
-	for _, tr := range tagResources {
-		// 赋值标签信息
-		resource := resourceCode2Resouce[tr.Code]
-		if resource != nil {
-			resource.SetTagInfo(entity.ResourceTag{TagId: tr.Id, CodePath: string(entity.CodePath(tr.CodePath).GetTag())})
-		}
-	}
 }
 
 func (p *tagTreeAppImpl) Delete(ctx context.Context, id uint64) error {

@@ -101,22 +101,15 @@
                 </el-form-item>
 
                 <el-form-item prop="code" label="OTP" required>
-                    <el-input
-                        style="width: 220px"
+                    <el-input-otp
                         ref="otpCodeInputRef"
                         v-model.trim="otpDialog.form.code"
                         clearable
-                        @keyup.enter="otpVerify"
+                        @finish="otpVerify"
                         :placeholder="$t('login.enterOtpCodeTip')"
-                    ></el-input>
+                    ></el-input-otp>
                 </el-form-item>
             </el-form>
-
-            <template #footer>
-                <el-button @click="otpVerify" type="primary" :loading="loading.otpConfirm">
-                    {{ $t('common.confirm') }}
-                </el-button>
-            </template>
         </el-dialog>
 
         <el-dialog :title="$t('login.updateBasicInfo')" v-model="baseInfoDialog.visible" :close-on-click-modal="false" width="350px" :destroy-on-close="true">

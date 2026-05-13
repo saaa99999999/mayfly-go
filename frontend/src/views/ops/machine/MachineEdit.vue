@@ -8,7 +8,7 @@
             <el-form :model="form" ref="machineFormRef" :rules="rules" label-width="auto">
                 <el-divider content-position="left">{{ $t('common.basic') }}</el-divider>
                 <el-form-item prop="tagCodePaths" :label="$t('tag.relateTag')">
-                    <tag-tree-select multiple v-model="form.tagCodePaths" />
+                    <TagTreeSelect multiple :code="form.code" v-model="form.tagCodePaths" />
                 </el-form-item>
                 <el-form-item prop="name" :label="$t('common.name')" required>
                     <el-input v-model.trim="form.name" auto-complete="off"></el-input>
@@ -144,7 +144,7 @@ watchEffect(() => {
     const machine: any = props.machine;
     if (machine) {
         state.form = { ...machine };
-        state.form.tagCodePaths = machine.tags.map((t: any) => t.codePath);
+        // state.form.tagCodePaths = machine.tags.map((t: any) => t.codePath);
         state.form.authCerts = machine.authCerts || [];
         state.form.extra = machine.extra || {};
     } else {

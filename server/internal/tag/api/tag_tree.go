@@ -32,6 +32,8 @@ func (t *TagTree) ReqConfs() *req.Confs {
 
 		req.NewDelete(":id", t.DelTagTree).Log(req.NewLogSaveI(imsg.LogTagDelete)).RequiredPermissionCode("tag:del"),
 
+		req.NewGet("/resource-tags", t.ListResourceTags),
+
 		req.NewGet("/resources/tag-paths", t.TagResources),
 
 		req.NewGet("/resources/count", t.CountTagResource),
@@ -128,6 +130,12 @@ func (p *TagTree) SaveTagTree(rc *req.Ctx) {
 
 func (p *TagTree) DelTagTree(rc *req.Ctx) {
 	biz.ErrIsNil(p.tagTreeApp.Delete(rc.MetaCtx, uint64(rc.PathParamInt("id"))))
+}
+
+func (p *TagTree) ListResourceTags(rc *req.Ctx) {
+	resourceCode := rc.Query("resourceCode")
+	biz.NotEmpty(resourceCode, "resourceCode cannot be empty")
+	rc.ResData = p.tagTreeApp.ListResourceTagByCode(resourceCode)
 }
 
 // 获取用户可操作的标签路径

@@ -1,12 +1,10 @@
 package vo
 
 import (
-	tagentity "mayfly-go/internal/tag/domain/entity"
 	"time"
 )
 
 type Redis struct {
-	tagentity.ResourceTags
 	Id                 *int64     `json:"id"`
 	Code               string     `json:"code"`
 	Name               *string    `json:"name"`

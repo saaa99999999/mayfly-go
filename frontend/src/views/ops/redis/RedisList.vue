@@ -18,8 +18,9 @@
                 </el-button>
             </template>
 
-            <template #tagPath="{ data }">
-                <resource-tags :tags="data.tags" />
+            <template #name="{ data }">
+                <TagCodePath :code="data.code" show-popover />
+                {{ data.name }}
             </template>
 
             <template #action="{ data }">
@@ -111,7 +112,7 @@
                 <el-descriptions-item :span="1.5" label="id">{{ detailDialog.data.id }}</el-descriptions-item>
                 <el-descriptions-item :span="1.5" :label="$t('common.name')">{{ detailDialog.data.name }}</el-descriptions-item>
 
-                <el-descriptions-item :span="3" :label="$t('tag.relateTag')"><ResourceTags :tags="detailDialog.data.tags" /></el-descriptions-item>
+                <el-descriptions-item :span="3" :label="$t('tag.relateTag')"><TagCodePath :code="detailDialog.data.code" /></el-descriptions-item>
 
                 <el-descriptions-item :span="3" label="Host">{{ detailDialog.data.host }}</el-descriptions-item>
 
@@ -139,19 +140,19 @@
 </template>
 
 <script lang="ts" setup>
-import Info from './Info.vue';
-import { redisApi } from './api';
-import { onMounted, reactive, ref, Ref, toRefs } from 'vue';
-import RedisEdit from './RedisEdit.vue';
-import { formatDate } from '@/common/utils/format';
-import ResourceTags from '../component/ResourceTags.vue';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
 import { TagResourceTypeEnum } from '@/common/commonEnum';
-import { useRoute } from 'vue-router';
-import { getTagPathSearchItem } from '../component/tag';
+import { formatDate } from '@/common/utils/format';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
 import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle } from '@/hooks/useI18n';
+import { onMounted, reactive, ref, Ref, toRefs } from 'vue';
+import { useRoute } from 'vue-router';
+import TagCodePath from '../component/TagCodePath.vue';
+import { getTagPathSearchItem } from '../component/tag';
+import Info from './Info.vue';
+import RedisEdit from './RedisEdit.vue';
+import { redisApi } from './api';
 
 const props = defineProps({
     lazy: {
@@ -169,8 +170,7 @@ const searchItems = [
 ];
 
 const columns = ref([
-    TableColumn.new('tags[0].tagPath', 'tag.relateTag').isSlot('tagPath').setAddWidth(20),
-    TableColumn.new('name', 'common.name'),
+    TableColumn.new('name', 'common.name').isSlot('name').setAddWidth(15),
     TableColumn.new('host', 'Host'),
     TableColumn.new('mode', 'Mode'),
     TableColumn.new('remark', 'common.remark'),

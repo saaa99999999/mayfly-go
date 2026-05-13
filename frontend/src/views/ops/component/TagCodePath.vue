@@ -1,46 +1,44 @@
 <template>
-    <el-row v-for="(path, idx) in codePaths?.slice(0, 1)" :key="idx">
-        <span v-for="item in path" :key="item.code">
-            <SvgIcon
-                :name="EnumValue.getEnumByValue(TagResourceTypeEnum, item.type)?.extra.icon"
-                :color="EnumValue.getEnumByValue(TagResourceTypeEnum, item.type)?.extra.iconColor"
-                class="mr-0.5"
-                :size="iconSize"
-            />
-            <span :class="textClass"> {{ item.name ? item.name : item.code }}</span>
+    <!-- 普通模式：直接展示标签路径 -->
+    <template v-if="!showPopover">
+        <el-row v-for="(path, idx) in codePaths?.slice(0, 1)" :key="idx">
+            <TagPathItem :path="path" :size="size" />
 
-            <SvgIcon v-if="!item.isEnd" color="var(--el-text-color-placeholder)" :size="iconSize" :class="arrowMarginClass" name="arrow-right" />
-        </span>
+            <!-- 展示剩余的标签信息 -->
+            <el-popover :show-after="300" v-if="paths.length > 1 && idx == 0" placement="bottom" :width="popoverWidth" trigger="hover">
+                <template #reference>
+                    <SvgIcon :size="iconSize" :class="moreIconMarginClass" color="var(--el-color-primary)" name="MoreFilled" />
+                </template>
 
-        <!-- 展示剩余的标签信息 -->
-        <el-popover :show-after="300" v-if="paths.length > 1 && idx == 0" placement="bottom" :width="popoverWidth" trigger="hover">
-            <template #reference>
-                <SvgIcon :size="iconSize" :class="moreIconMarginClass" color="var(--el-color-primary)" name="MoreFilled" />
-            </template>
+                <el-row v-for="(opath, oi) in codePaths.slice(1)" :key="oi" class="mb-2 tag-path-row">
+                    <TagPathItem :path="opath" :size="size" />
+                </el-row>
+            </el-popover>
+        </el-row>
+    </template>
 
-            <el-row v-for="(opath, oi) in codePaths.slice(1)" :key="oi" class="mb-2">
-                <span v-for="item in opath" :key="item.code">
-                    <SvgIcon
-                        :name="EnumValue.getEnumByValue(TagResourceTypeEnum, item.type)?.extra.icon"
-                        :color="EnumValue.getEnumByValue(TagResourceTypeEnum, item.type)?.extra.iconColor"
-                        class="mr-0.5"
-                        :size="iconSize"
-                    />
-                    <span :class="textClass"> {{ item.name ? item.name : item.code }}</span>
-                    <SvgIcon v-if="!item.isEnd" color="var(--el-text-color-placeholder)" :size="iconSize" :class="arrowMarginClass" name="arrow-right" />
-                </span>
+    <!-- popover模式：默认显示按钮，悬浮时显示所有详细信息 -->
+    <el-popover v-else :show-after="300" placement="bottom" :width="popoverWidth" trigger="hover" @show="handlePopoverShow">
+        <template #reference>
+            <SvgIcon :size="iconSize" color="var(--el-color-primary)" name="location" />
+        </template>
+
+        <div v-loading="isPopoverVisible && !codePaths.length">
+            <el-row v-for="(path, idx) in codePaths" :key="idx" class="mb-2 tag-path-row">
+                <TagPathItem :path="path" :size="size" />
             </el-row>
-        </el-popover>
-    </el-row>
+        </div>
+    </el-popover>
 </template>
 
 <script lang="ts" setup>
 import { TagResourceTypeEnum } from '@/common/commonEnum';
-import EnumValue from '@/common/Enum';
 import { tagApi } from '@/views/ops/tag/api';
 import { computed, onMounted, ref, watch } from 'vue';
+import TagPathItem from './TagPathItem.vue';
 
 const props = defineProps({
+    // 兼容["default/test1/test2/"] 与 [{id: 1, codePath: "default/test1/test2/"}]
     path: {
         type: [String, Array<string>, Array<Object>],
     },
@@ -53,22 +51,21 @@ const props = defineProps({
         type: String,
         default: 'small',
     },
+    // 是否使用popover模式: 默认false，true时默认只显示icon，悬浮时才显示详细信息并请求接口
+    showPopover: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const codePath = ref(props.path);
 const codePaths: any = ref([]);
 let allTagInfos: any = {};
+const popoverTagInfos = ref<any>({});
+const isPopoverVisible = ref(false);
 
 const iconSize = computed(() => {
     return props.size === 'small' ? 14 : 15;
-});
-
-const textClass = computed(() => {
-    return props.size === 'small' ? 'text-sm' : '';
-});
-
-const arrowMarginClass = computed(() => {
-    return props.size === 'small' ? 'mx-0.5' : 'mx-1';
 });
 
 const moreIconMarginClass = computed(() => {
@@ -78,6 +75,12 @@ const moreIconMarginClass = computed(() => {
 const popoverWidth = computed(() => {
     return props.size === 'small' ? 400 : 500;
 });
+
+const handlePopoverShow = () => {
+    if (props.showPopover) {
+        loadPopoverTagInfo();
+    }
+};
 
 const paths = computed(() => {
     if (Array.isArray(codePath.value)) {
@@ -98,14 +101,18 @@ const paths = computed(() => {
 
 onMounted(() => {
     codePath.value = props.path;
-    setCodePaths();
+    if (!props.showPopover) {
+        setCodePaths();
+    }
 });
 
 watch(
     () => props.path,
     () => {
         codePath.value = props.path;
-        setCodePaths();
+        if (!props.showPopover) {
+            setCodePaths();
+        }
     }
 );
 
@@ -116,7 +123,9 @@ watch(
             clear();
             return;
         }
-        setCodePaths();
+        if (!props.showPopover) {
+            setCodePaths();
+        }
     }
 );
 
@@ -127,7 +136,7 @@ const setCodePaths = async () => {
             clear();
             return;
         }
-        codePath.value = tagInfos[0].codePath;
+        codePath.value = tagInfos;
     }
 
     if (!paths.value) {
@@ -136,7 +145,28 @@ const setCodePaths = async () => {
     }
 
     allTagInfos = await getAllCodePaths(paths.value as any);
-    codePaths.value = paths.value.map((p) => parseTagPath(p));
+    codePaths.value = paths.value.map((p: any) => parseTagPath(p));
+};
+
+// popover模式下，悬浮时加载tag信息
+const loadPopoverTagInfo = async () => {
+    // if (isPopoverVisible.value) return; // 已经加载过
+
+    isPopoverVisible.value = true;
+
+    if (props.code) {
+        const tagInfos = await tagApi.listByQuery.request({ codes: props.code });
+        if (tagInfos.length > 0) {
+            codePath.value = tagInfos;
+        }
+    }
+
+    if (!paths.value) {
+        return;
+    }
+
+    popoverTagInfos.value = await getAllCodePaths(paths.value as any);
+    codePaths.value = paths.value.map((p: any) => parseTagPathWithInfo(p, popoverTagInfos.value));
 };
 
 const clear = () => {
@@ -145,6 +175,10 @@ const clear = () => {
 };
 
 const parseTagPath = (tagPath: string = '') => {
+    return parseTagPathWithInfo(tagPath, allTagInfos);
+};
+
+const parseTagPathWithInfo = (tagPath: string = '', tagInfos: any) => {
     if (!tagPath) {
         return [];
     }
@@ -177,7 +211,7 @@ const parseTagPath = (tagPath: string = '') => {
             };
         }
 
-        const ti = allTagInfos[codePath];
+        const ti = tagInfos[codePath];
         if (ti) {
             tagInfo.name = ti.name;
         }
@@ -242,4 +276,15 @@ async function getAllCodePaths(codePaths: string[]) {
     return codepath2CodeInfo;
 }
 </script>
-<style lang="scss" scoped></style>
+
+<style lang="scss" scoped>
+.tag-path-row {
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+
+    &:last-child {
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+}
+</style>

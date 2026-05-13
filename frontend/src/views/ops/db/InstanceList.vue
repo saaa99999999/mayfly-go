@@ -18,8 +18,9 @@
                 </el-button>
             </template>
 
-            <template #tagPath="{ data }">
-                <ResourceTags :tags="data.tags" />
+            <template #name="{ data }">
+                <TagCodePath :code="data.code" show-popover />
+                {{ data.name }}
             </template>
 
             <template #authCert="{ data }">
@@ -75,21 +76,21 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
-import { dbApi } from './api';
-import { formatDate } from '@/common/utils/format';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
-import { hasPerms } from '@/components/auth/auth';
-import SvgIcon from '@/components/svgIcon/index.vue';
-import { getDbDialect } from './dialect';
-import { SearchItem } from '@/components/pagetable/SearchForm';
-import ResourceAuthCert from '../component/ResourceAuthCert.vue';
-import ResourceTags from '../component/ResourceTags.vue';
-import { getTagPathSearchItem } from '../component/tag';
 import { TagResourceTypePath } from '@/common/commonEnum';
+import { formatDate } from '@/common/utils/format';
+import { hasPerms } from '@/components/auth/auth';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
+import { SearchItem } from '@/components/pagetable/SearchForm';
+import SvgIcon from '@/components/svgIcon/index.vue';
 import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle } from '@/hooks/useI18n';
+import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
 import { useI18n } from 'vue-i18n';
+import ResourceAuthCert from '../component/ResourceAuthCert.vue';
+import { getTagPathSearchItem } from '../component/tag';
+import TagCodePath from '../component/TagCodePath.vue';
+import { dbApi } from './api';
+import { getDbDialect } from './dialect';
 
 const InstanceEdit = defineAsyncComponent(() => import('./InstanceEdit.vue'));
 const DbList = defineAsyncComponent(() => import('./DbList.vue'));
@@ -112,8 +113,7 @@ const perms = {
 const searchItems = [SearchItem.input('keyword', 'common.keyword').withPlaceholder('db.keywordPlaceholder'), getTagPathSearchItem(TagResourceTypePath.Db)];
 
 const columns = ref([
-    TableColumn.new('tags[0].tagPath', 'tag.relateTag').isSlot('tagPath').setAddWidth(20),
-    TableColumn.new('name', 'common.name'),
+    TableColumn.new('name', 'common.name').isSlot('name').setAddWidth(15),
     TableColumn.new('type', 'common.type').isSlot().setAddWidth(-15).alignCenter(),
     TableColumn.new('host', 'host:port').setFormatFunc((data: any) => `${data.host}:${data.port}`),
     TableColumn.new('authCerts[0].username', 'db.acName').isSlot('authCert').setAddWidth(10),

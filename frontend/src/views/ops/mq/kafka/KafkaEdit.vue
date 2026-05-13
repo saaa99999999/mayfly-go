@@ -3,7 +3,7 @@
         <el-drawer :title="title" v-model="dialogVisible" :before-close="onCancel" :close-on-click-modal="false" size="40%" :destroy-on-close="true">
             <el-form :model="form" ref="kafkaFormRef" :rules="rules" label-width="auto">
                 <el-form-item prop="tagCodePaths" :label="$t('tag.relateTag')" required>
-                    <tag-tree-select multiple v-model="form.tagCodePaths" />
+                    <TagTreeSelect multiple :code="form.code" v-model="form.tagCodePaths" />
                 </el-form-item>
 
                 <el-form-item prop="name" :label="$t('common.name')" required>
@@ -50,14 +50,14 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, reactive, watchEffect, useTemplateRef } from 'vue';
-import { ElMessage } from 'element-plus';
-import TagTreeSelect from '../../component/TagTreeSelect.vue';
-import SshTunnelSelect from '../../component/SshTunnelSelect.vue';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
-import { useI18n } from 'vue-i18n';
 import { Rules } from '@/common/rule';
+import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
 import { mqApi } from '@/views/ops/mq/api';
+import { ElMessage } from 'element-plus';
+import { reactive, toRefs, useTemplateRef, watchEffect } from 'vue';
+import { useI18n } from 'vue-i18n';
+import SshTunnelSelect from '../../component/SshTunnelSelect.vue';
+import TagTreeSelect from '../../component/TagTreeSelect.vue';
 
 const { t } = useI18n();
 
@@ -124,7 +124,6 @@ watchEffect(() => {
     const kafka: any = props.kafka;
     if (kafka) {
         state.form = { ...kafka };
-        state.form.tagCodePaths = kafka.tags.map((t: any) => t.codePath);
     } else {
         state.form = { saslMechanism: 'PLAIN', tagCodePaths: [] } as any;
     }

@@ -10,7 +10,6 @@ import (
 	"mayfly-go/internal/machine/guac"
 	"mayfly-go/internal/machine/imsg"
 	"mayfly-go/internal/machine/mcm"
-	"mayfly-go/internal/pkg/consts"
 	"mayfly-go/internal/pkg/event"
 	tagapp "mayfly-go/internal/tag/application"
 	tagentity "mayfly-go/internal/tag/domain/entity"
@@ -102,11 +101,6 @@ func (m *Machine) Machines(rc *req.Ctx) {
 
 	resVo := model.PageResultConv[*entity.Machine, *vo.MachineVO](res)
 	machinevos := resVo.List
-
-	// 填充标签信息
-	m.tagTreeApp.FillTagInfo(tagentity.TagType(consts.ResourceTypeMachine), collx.ArrayMap(machinevos, func(mvo *vo.MachineVO) tagentity.ITagResource {
-		return mvo
-	})...)
 
 	// 填充授权凭证信息
 	m.resourceAuthCertApp.FillAuthCertByAcNames(tagentity.GetCodesByCodePaths(tagentity.TagTypeAuthCert, tagCodePaths...), collx.ArrayMap(machinevos, func(mvo *vo.MachineVO) tagentity.IAuthCert {

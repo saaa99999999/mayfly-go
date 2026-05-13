@@ -7,7 +7,7 @@
 
             <el-form :model="form" ref="redisFormRef" :rules="rules" label-width="auto">
                 <el-form-item prop="tagCodePaths" :label="$t('tag.relateTag')" required>
-                    <tag-tree-select multiple v-model="form.tagCodePaths" />
+                    <TagTreeSelect multiple :code="form.code" v-model="form.tagCodePaths" />
                 </el-form-item>
                 <el-form-item prop="name" :label="$t('common.name')" required>
                     <el-input v-model.trim="form.name" auto-complete="off"></el-input>
@@ -123,7 +123,6 @@ watch(dialogVisible, () => {
     const redis: any = props.redis;
     if (redis) {
         state.form = { ...redis };
-        state.form.tagCodePaths = redis.tags.map((t: any) => t.codePath);
         convertDb(state.form.db);
     } else {
         state.form = { db: '0', tagCodePaths: [] } as any;

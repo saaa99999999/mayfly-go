@@ -5,9 +5,9 @@ WORKDIR /mayfly
 
 COPY frontend .
 
-RUN yarn config set registry 'https://registry.npmmirror.com' && \
-    yarn install && \
-    yarn build
+RUN npm config set registry 'https://registry.npmmirror.com' && \
+    npm install && \
+    npm run build
 
 # 构建后端资源
 FROM m.daocloud.io/docker.io/golang:1.26 AS be-builder

@@ -17,8 +17,9 @@
                 </el-button>
             </template>
 
-            <template #tagPath="{ data }">
-                <resource-tags :tags="data.tags" />
+            <template #name="{ data }">
+                <TagCodePath :code="data.code" show-popover />
+                {{ data.name }}
             </template>
 
             <template #action="{ data }">
@@ -31,17 +32,17 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent, ref, Ref } from 'vue';
-import { ElMessage } from 'element-plus';
+import { TagResourceTypePath } from '@/common/commonEnum';
+import { TableColumn } from '@/components/pagetable';
 import PageTable from '@/components/pagetable/PageTable.vue';
+import { SearchItem } from '@/components/pagetable/SearchForm';
+import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle } from '@/hooks/useI18n';
+import { getTagPathSearchItem } from '@/views/ops/component/tag';
+import { ElMessage } from 'element-plus';
+import { defineAsyncComponent, ref, Ref } from 'vue';
 import { milvusApi, perms } from './api';
 import type { IMilvus } from './types';
-import { TableColumn } from '@/components/pagetable';
-import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle } from '@/hooks/useI18n';
-import { SearchItem } from '@/components/pagetable/SearchForm';
-import { getTagPathSearchItem } from '@/views/ops/component/tag';
-import { TagResourceTypePath } from '@/common/commonEnum';
-import ResourceTags from '../component/ResourceTags.vue';
+import TagCodePath from '../component/TagCodePath.vue';
 
 const MilvusEdit = defineAsyncComponent(() => import('./MilvusEdit.vue'));
 
@@ -57,8 +58,7 @@ const selectionData = ref([]);
 const searchItems = [SearchItem.input('keyword', 'common.keyword').withPlaceholder('db.keywordPlaceholder'), getTagPathSearchItem(TagResourceTypePath.Db)];
 
 const columns = ref([
-    TableColumn.new('tags[0].tagPath', 'tag.relateTag').isSlot('tagPath').setAddWidth(20),
-    TableColumn.new('name', 'common.name').setMinWidth(150),
+    TableColumn.new('name', 'common.name').isSlot('name').setAddWidth(15),
     TableColumn.new('host', 'milvus.host').setMinWidth(200),
     TableColumn.new('username', 'mq.kafka.username'),
     TableColumn.new('password', 'common.password'),

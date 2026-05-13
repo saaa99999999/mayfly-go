@@ -19,17 +19,22 @@
                 </el-button>
             </template>
 
+            <template #name="{ data }">
+                <TagCodePath :code="data.code" show-popover />
+                {{ data.name }}
+            </template>
+
             <template #ipPort="{ data }">
                 <el-link :disabled="data.status == -1" @click="showMachineStats(data)" type="primary" underline="never">
                     {{ `${data.ip}:${data.port}` }}
                 </el-link>
             </template>
 
-            <template #stat="{ data }">
+            <template #stats="{ data }">
                 <span v-if="!data.stat">-</span>
                 <div v-else>
                     <el-row>
-                        <el-text size="small" class="!text-[11px]">
+                        <el-text size="small" class="text-[11px]!">
                             {{ $t('machine.memberInfo') }}:
                             <span :class="getStatsFontClass(data.stat.memAvailable, data.stat.memTotal)"
                                 >{{ formatByteSize(data.stat.memAvailable, 1) }}/{{ formatByteSize(data.stat.memTotal, 1) }}
@@ -37,7 +42,7 @@
                         </el-text>
                     </el-row>
                     <el-row>
-                        <el-text class="!text-[11px]" size="small">
+                        <el-text class="text-[11px]!" size="small">
                             {{ $t('machine.cpuInfo') }}: <span :class="getStatsFontClass(data.stat.cpuIdle, 100)">{{ data.stat.cpuIdle.toFixed(0) }}%</span>
                         </el-text>
                     </el-row>
@@ -48,7 +53,7 @@
                 <span v-if="!data.stat?.fsInfos">-</span>
                 <div v-else>
                     <el-row v-for="(i, idx) in data.stat.fsInfos.slice(0, 2)" :key="i.mountPoint">
-                        <el-text class="!text-[11px]" size="small" :class="getStatsFontClass(i.free, i.used + i.free)">
+                        <el-text class="text-[11px]!" size="small" :class="getStatsFontClass(i.free, i.used + i.free)">
                             {{ i.mountPoint }} => {{ formatByteSize(i.free, 0) }}/{{ formatByteSize(i.used + i.free, 0) }}
                         </el-text>
 
@@ -59,7 +64,7 @@
                             </template>
 
                             <el-row v-for="i in data.stat.fsInfos.slice(2)" :key="i.mountPoint">
-                                <el-text class="!text-[11px]" size="small" :class="getStatsFontClass(i.free, i.used + i.free)">
+                                <el-text class="text-[11px]!" size="small" :class="getStatsFontClass(i.free, i.used + i.free)">
                                     {{ i.mountPoint }} => {{ formatByteSize(i.free, 0) }}/{{ formatByteSize(i.used + i.free, 0) }}
                                 </el-text>
                             </el-row>
@@ -80,10 +85,6 @@
                     style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
                     @change="changeStatus(data)"
                 ></el-switch>
-            </template>
-
-            <template #tagPath="{ data }">
-                <ResourceTags :tags="data.tags" />
             </template>
 
             <template #authCert="{ data }">
@@ -166,7 +167,7 @@
                 <el-descriptions-item :span="1.5" :label="$t('common.name')">{{ infoDialog.data.name }}</el-descriptions-item>
 
                 <el-descriptions-item :span="3" :label="$t('tag.relateTag')">
-                    <ResourceTags :tags="infoDialog.data.tags" />
+                    <TagCodePath :code="infoDialog.data.code" />
                 </el-descriptions-item>
 
                 <el-descriptions-item :span="2" label="IP">{{ infoDialog.data.ip }}</el-descriptions-item>
@@ -261,20 +262,20 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { getMachineTerminalSocketUrl, machineApi } from './api';
-import ResourceTags from '../component/ResourceTags.vue';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
-import { hasPerms } from '@/components/auth/auth';
-import { formatByteSize, formatDate } from '@/common/utils/format';
 import { TagResourceTypePath } from '@/common/commonEnum';
+import { formatByteSize, formatDate } from '@/common/utils/format';
+import { hasPerms } from '@/components/auth/auth';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
-import { getTagPathSearchItem } from '../component/tag';
-import { MachineProtocolEnum } from './enums';
-import { useI18n } from 'vue-i18n';
 import { useI18nDeleteConfirm, useI18nDeleteSuccessMsg } from '@/hooks/useI18n';
+import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
+import { getTagPathSearchItem } from '../component/tag';
+import TagCodePath from '../component/TagCodePath.vue';
+import { getMachineTerminalSocketUrl, machineApi } from './api';
+import { MachineProtocolEnum } from './enums';
 
 // 组件
 const TerminalDialog = defineAsyncComponent(() => import('@/components/terminal/TerminalDialog.vue'));
@@ -315,12 +316,11 @@ const searchItems = [
 ];
 
 const columns = [
-    TableColumn.new('tags[0].tagPath', 'tag.relateTag').isSlot('tagPath').setAddWidth(20),
-    TableColumn.new('name', 'common.name'),
+    TableColumn.new('name', 'common.name').isSlot('name').setAddWidth(15),
     TableColumn.new('ipPort', 'Ip:Port').isSlot().setAddWidth(55),
     TableColumn.new('authCerts[0].username', 'machine.acName').isSlot('authCert').setAddWidth(10),
     TableColumn.new('status', 'common.status').isSlot().setAddWidth(5),
-    TableColumn.new('stat', 'machine.runningStat').isSlot().setAddWidth(55),
+    TableColumn.new('stats', 'machine.runningStat').isSlot().setAddWidth(120),
     TableColumn.new('fs', 'machine.fs').isSlot().setAddWidth(25),
     TableColumn.new('remark', 'common.remark'),
     TableColumn.new('code', 'common.code'),

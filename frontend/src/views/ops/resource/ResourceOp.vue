@@ -49,7 +49,7 @@
                             :default-expanded-keys="state.defaultExpandedKeys"
                         >
                             <template #default="{ node, data }">
-                                <div v-if="data.type == TagResourceTypeEnum.Tag.value">
+                                <div class="select-none" v-if="data.type == TagResourceTypeEnum.Tag.value">
                                     <span v-for="(value, i) in data.label.split('/')" :key="i">
                                         <el-text class="mr-[1.5px]! ml-[1.5px]!" v-if="i != 0" tag="b" type="primary" size="large">/</el-text>
                                         <el-text>{{ value }}</el-text>

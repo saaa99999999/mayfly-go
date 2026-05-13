@@ -59,7 +59,7 @@
                 </template>
 
                 <template #tagPath="{ data }">
-                    <ResourceTags :tags="data.tags" />
+                    <TagCodePath :path="data.tags" show-popover />
                 </template>
 
                 <template #action="{ data }">
@@ -150,24 +150,24 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, defineAsyncComponent, reactive, ref, Ref, toRefs } from 'vue';
-import { dbApi } from './api';
+import { isTrue } from '@/common/assert';
 import config from '@/common/config';
 import { joinClientParams } from '@/common/request';
-import { isTrue } from '@/common/assert';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
+import { sleep } from '@/common/utils/loading';
 import { hasPerms } from '@/components/auth/auth';
+import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
+import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
+import { computed, defineAsyncComponent, reactive, ref, Ref, toRefs } from 'vue';
+import { useI18n } from 'vue-i18n';
+import TagCodePath from '../component/TagCodePath.vue';
+import { dbApi } from './api';
+import { DbInst } from './db';
 import DbSqlExecLog from './DbSqlExecLog.vue';
 import { DbType } from './dialect';
 import { getDbDialect } from './dialect/index';
-import ResourceTags from '../component/ResourceTags.vue';
-import { sleep } from '@/common/utils/loading';
 import { DbGetDbNamesMode } from './enums';
-import { DbInst } from './db';
-import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
-import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
-import { useI18n } from 'vue-i18n';
 
 const DbEdit = defineAsyncComponent(() => import('./DbEdit.vue'));
 

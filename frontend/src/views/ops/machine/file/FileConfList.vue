@@ -86,11 +86,12 @@ const props = defineProps({
     machineId: { type: Number },
     authCertName: { type: String },
     title: { type: String },
+    openFileManager: { type: Boolean, default: true }, // 是否打开文件管理器
 });
 
 const dialogVisible = defineModel<boolean>('visible', { default: false });
 
-const emit = defineEmits(['cancel', 'update:machineId']);
+const emit = defineEmits(['cancel', 'update:machineId', 'select']);
 
 const addFile = machineApi.addConf;
 const delFile = machineApi.delConf;
@@ -178,7 +179,13 @@ const deleteRow = async (idx: any, row: any) => {
 };
 
 const getConf = async (row: any) => {
-    if (row.type == 1) {
+    if (row.type != 1) {
+        showFileContent(row.id, row.path);
+        return;
+    }
+
+    // 如果打开文件管理器模式，在drawer中打开
+    if (props.openFileManager) {
         state.fileDialog.fileId = row.id;
         state.fileDialog.title = row.name;
         state.fileDialog.path = row.path;
@@ -187,7 +194,14 @@ const getConf = async (row: any) => {
         return;
     }
 
-    showFileContent(row.id, row.path);
+    // 否则触发select事件，让父组件在tab中打开
+    emit('select', {
+        fileId: row.id,
+        path: row.path,
+        name: row.name,
+        type: row.type,
+    });
+    dialogVisible.value = false;
 };
 
 const showFileContent = async (fileId: number, path: string) => {

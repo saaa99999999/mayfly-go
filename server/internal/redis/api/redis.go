@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"mayfly-go/internal/pkg/consts"
 	"mayfly-go/internal/pkg/utils"
 	"mayfly-go/internal/redis/api/form"
 	"mayfly-go/internal/redis/api/vo"
@@ -76,12 +75,6 @@ func (r *Redis) RedisList(rc *req.Ctx) {
 	res, err := r.redisApp.GetPageList(queryCond)
 	biz.ErrIsNil(err)
 	resVo := model.PageResultConv[*entity.Redis, *vo.Redis](res)
-	redisvos := resVo.List
-
-	// 填充标签信息
-	r.tagApp.FillTagInfo(tagentity.TagType(consts.ResourceTypeRedis), collx.ArrayMap(redisvos, func(rvo *vo.Redis) tagentity.ITagResource {
-		return rvo
-	})...)
 
 	rc.ResData = resVo
 }

@@ -30,11 +30,8 @@
                                 :color="EnumValue.getEnumByValue(TagResourceTypeEnum, data.type)?.extra.iconColor"
                             />
 
-                            <span class="!text-[13px] ml-1">
+                            <span class="text-[13px]! ml-1">
                                 {{ data.name }}
-                                <span style="color: #3c8dbc">【</span>
-                                {{ data.code }}
-                                <span style="color: #3c8dbc">】</span>
                                 <el-tag v-if="data.children !== null" size="small">{{ data.children.length }} </el-tag>
                             </span>
                         </span>

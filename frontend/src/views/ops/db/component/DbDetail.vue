@@ -11,8 +11,6 @@
             <el-descriptions-item :span="1" :label="$t('common.code')">{{ state.detail.code }}</el-descriptions-item>
             <el-descriptions-item :span="1" :label="$t('common.name')">{{ state.detail.name }}</el-descriptions-item>
 
-            <!-- <el-descriptions-item :span="3" :label="$t('tag.relateTag')"><ResourceTags :tags="state.detail.tags" /></el-descriptions-item> -->
-
             <el-descriptions-item :span="3" label="Host">
                 <SvgIcon :name="getDbDialect(state.detail.type).getInfo().icon" :size="20" />
                 {{ state.detail.host }}:{{ state.detail.port }}

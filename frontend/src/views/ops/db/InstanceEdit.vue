@@ -9,7 +9,7 @@
                 <el-divider content-position="left">{{ $t('common.basic') }}</el-divider>
 
                 <el-form-item prop="tagCodePaths" :label="$t('tag.relateTag')">
-                    <tag-tree-select multiple v-model="form.tagCodePaths" />
+                    <TagTreeSelect multiple :code="form.code" v-model="form.tagCodePaths" />
                 </el-form-item>
 
                 <el-form-item prop="name" :label="$t('common.name')" required>
@@ -195,7 +195,6 @@ watchEffect(() => {
     const dbInst: any = props.data;
     if (dbInst) {
         state.form = { ...dbInst };
-        state.form.tagCodePaths = dbInst.tags.map((t: any) => t.codePath) || [];
         state.extra = dbInst.extra || {};
     } else {
         state.form = { ...DefaultForm };

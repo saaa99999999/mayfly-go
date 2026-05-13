@@ -18,8 +18,9 @@
                 </el-button>
             </template>
 
-            <template #tagPath="{ data }">
-                <resource-tags :tags="data.tags" />
+            <template #name="{ data }">
+                <TagCodePath :code="data.code" show-popover />
+                {{ data.name }}
             </template>
 
             <template #action="{ data }">
@@ -33,7 +34,7 @@
                 <el-descriptions-item :span="1.5" label="id">{{ detailDialog.data.id }}</el-descriptions-item>
                 <el-descriptions-item :span="1.5" :label="$t('common.name')">{{ detailDialog.data.name }}</el-descriptions-item>
 
-                <el-descriptions-item :span="3" :label="$t('tag.relateTag')"><ResourceTags :tags="detailDialog.data.tags" /></el-descriptions-item>
+                <el-descriptions-item :span="3" :label="$t('tag.relateTag')"><TagCodePath :code="detailDialog.data.code" /></el-descriptions-item>
 
                 <el-descriptions-item :span="3" :label="$t('docker.addr')">{{ detailDialog.data.addr }}</el-descriptions-item>
 
@@ -57,17 +58,17 @@
 </template>
 
 <script lang="ts" setup>
-import { dockerApi } from './api';
-import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
-import { formatDate } from '@/common/utils/format';
-import ResourceTags from '../component/ResourceTags.vue';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
 import { TagResourceTypeEnum } from '@/common/commonEnum';
-import { useRoute } from 'vue-router';
-import { getTagPathSearchItem } from '../component/tag';
+import { formatDate } from '@/common/utils/format';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
 import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle } from '@/hooks/useI18n';
+import TagCodePath from '@/views/ops/component/TagCodePath.vue';
+import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
+import { useRoute } from 'vue-router';
+import { getTagPathSearchItem } from '../component/tag';
+import { dockerApi } from './api';
 
 const ContainerConfEdit = defineAsyncComponent(() => import('./CotainerConfEdit.vue'));
 
@@ -87,8 +88,7 @@ const searchItems = [
 ];
 
 const columns = ref([
-    TableColumn.new('tags[0].tagPath', 'tag.relateTag').isSlot('tagPath').setAddWidth(20),
-    TableColumn.new('name', 'common.name'),
+    TableColumn.new('name', 'common.name').isSlot('name').setAddWidth(15),
     TableColumn.new('addr', 'docker.addr'),
     TableColumn.new('remark', 'common.remark'),
     TableColumn.new('code', 'common.code'),

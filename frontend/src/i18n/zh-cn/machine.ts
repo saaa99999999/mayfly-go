@@ -24,6 +24,7 @@ export default {
         openTerminal: '打开终端',
         newTabOpenTerminal: '打开终端(新窗口)',
         fileManage: '文件管理',
+        fileTabPrefix: '文件-',
         scriptManage: '脚本管理',
         machineState: '机器状态',
         remoteFileDesktopManage: '远程桌面文件管理', // Remote desktop file management

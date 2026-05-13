@@ -107,7 +107,7 @@ func (m *machineAppImpl) SaveMachine(ctx context.Context, param *dto.SaveMachine
 		// 新增机器，默认启用状态
 		me.Status = entity.MachineStatusEnable
 		// 生成随机编号
-		me.Code = stringx.Rand(10)
+		me.Code = stringx.Rand(12)
 
 		return m.Tx(ctx, func(ctx context.Context) error {
 			return m.Insert(ctx, me)

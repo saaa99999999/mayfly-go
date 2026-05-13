@@ -1,201 +1,312 @@
-#bin/bash
+#!/bin/bash
+
+#==============================================
+# Mayfly-Go Release Build Tool
+# 前后端打包编译至指定目录，快速制作发行版
+#==============================================
+
+set -e  # 遇到错误立即退出
 
 #----------------------------------------------
-# 前后端打包编译至指定目录,即快速制作发行版
+# 全局配置
 #----------------------------------------------
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SERVER_DIR="${PROJECT_ROOT}/server"
+FRONTEND_DIR="${PROJECT_ROOT}/frontend"
+BINARY_NAME="mayfly-go"
 
-project_path=`pwd`
-# 构建后的二进制执行文件名
-exec_file_name="mayfly-go"
-# web项目目录
-web_folder="${project_path}/frontend"
-# server目录
-server_folder="${project_path}/server"
+# 构建目标配置：名称|操作系统|架构
+BUILD_TARGETS=(
+    "linux-amd64|linux|amd64"
+    "linux-arm64|linux|arm64"
+    "windows|windows|amd64"
+    "mac|darwin|amd64"
+)
 
-function echo_red() {
-    echo -e "\033[1;31m$1\033[0m"
-}
-
-function echo_green() {
-    echo -e "\033[1;32m$1\033[0m"
-}
-
-function echo_yellow() {
+#----------------------------------------------
+# 工具函数
+#----------------------------------------------
+print_header() {
     echo -e "\033[1;33m$1\033[0m"
 }
 
-function buildWeb() {
-    cd ${web_folder}
-    copy2Server=$1
-
-    echo_yellow "-------------------Start bundling frontends-------------------"
-    yarn run build
-    if [ "${copy2Server}" == "2" ] ; then
-        echo_green 'Copy the packaged static files to server/static/static'
-        rm -rf ${server_folder}/static/static && mkdir -p ${server_folder}/static/static && cp -r ${web_folder}/dist/* ${server_folder}/static/static
-    fi
-    echo_yellow ">>>>>>>>>>>>>>>>>>>End of packaging frontend<<<<<<<<<<<<<<<<<<<<\n"
+print_success() {
+    echo -e "\033[1;32m$1\033[0m"
 }
 
-function build() {
-    cd ${project_path}
+print_error() {
+    echo -e "\033[1;31m$1\033[0m" >&2
+}
 
-    # 打包产物的输出目录
-    toFolder=$1
-    os=$2
-    arch=$3
-    copyDocScript=$4
+print_info() {
+    echo -e "\033[1;34m$1\033[0m"
+}
 
-    echo_yellow "-------------------Start a bundle build - ${os}-${arch}-------------------"
+to_lower() {
+    echo "$1" | tr '[:upper:]' '[:lower:]'
+}
 
-    cd ${server_folder}
-    echo_green "Package build executables..."
+#----------------------------------------------
+# 构建函数
+#----------------------------------------------
+build_frontend() {
+    print_header "\n>>> Building frontend..."
+    
+    cd "${FRONTEND_DIR}"
+    npm run build
+    
+    # 拷贝到 server 静态目录
+    print_success ">>> Copying frontend assets to server/static/static"
+    rm -rf "${SERVER_DIR}/static/static"
+    mkdir -p "${SERVER_DIR}/static/static"
+    cp -r "${FRONTEND_DIR}/dist/"* "${SERVER_DIR}/static/static/"
+    
+    cd "${PROJECT_ROOT}"
+}
 
-    execFileName=${exec_file_name}
-    # 如果是windows系统,可执行文件需要添加.exe结尾
-    if [ "${os}" == "windows" ];then
-        execFileName="${execFileName}.exe"
+build_backend() {
+    local output_dir="$1"
+    local os_name="$2"
+    local arch="$3"
+    local copy_resources="$4"
+    
+    local binary_file="${BINARY_NAME}"
+    local target_name="${os_name}-${arch}"
+    
+    print_header "\n>>> Building backend: ${target_name}"
+    
+    # Windows 需要 .exe 后缀
+    if [ "${os_name}" = "windows" ]; then
+        binary_file="${BINARY_NAME}.exe"
     fi
+    
+    # 编译
+    cd "${SERVER_DIR}"
     go mod tidy
-    CGO_ENABLE=0 GOOS=${os} GOARCH=${arch} go build -trimpath -ldflags=-w -o ${execFileName} main.go
-
-    if [ -d ${toFolder} ] ; then
-        echo_green "The desired folder already exists. Clear the folder"
-        sudo rm -rf ${toFolder}
+    CGO_ENABLED=0 GOOS="${os_name}" GOARCH="${arch}" \
+        go build -trimpath -ldflags="-w" -o "${binary_file}" main.go
+    
+    # 准备输出目录
+    local bin_dir="${output_dir}/bin"
+    if [ -d "${output_dir}" ]; then
+        print_info "    Output directory exists, cleaning..."
+        rm -rf "${output_dir}"
     fi
-    echo_green "Create '${toFolder}' Directory"
-    mkdir ${toFolder}
-
-    echo_green "Move binary to '${toFolder}'"
-    mv ${server_folder}/${execFileName} ${toFolder}
-
-    # if [ "${copy2Server}" == "1" ] ; then
-    #     echo_green "拷贝前端静态页面至'${toFolder}/static'"
-    #     mkdir -p ${toFolder}/static && cp -r ${web_folder}/dist/* ${toFolder}/static
-    # fi
-
-    if [ "${copyDocScript}" == "1" ] ; then
-        echo_green "Copy resources such as scripts [config.yml.example、readme.txt、startup.sh、shutdown.sh]"
-        cp ${server_folder}/config.yml.example ${toFolder}
-        mv ${toFolder}/config.yml.example ${toFolder}/config.yml
-        cp ${server_folder}/readme.txt ${toFolder}
-        cp ${server_folder}/readme_en.txt ${toFolder}
-        cp ${server_folder}/resources/script/startup.sh ${toFolder}
-        cp ${server_folder}/resources/script/shutdown.sh ${toFolder}
+    mkdir -p "${bin_dir}"
+    
+    # 移动二进制文件到 bin 目录
+    mv "${SERVER_DIR}/${binary_file}" "${bin_dir}/"
+    
+    # 拷贝资源文件
+    if [ "${copy_resources}" = "1" ]; then
+        print_info "    Copying config and scripts..."
+        cp "${SERVER_DIR}/config.yml.example" "${output_dir}/config.yml"
+        cp "${SERVER_DIR}/readme.txt" "${output_dir}/"
+        cp "${SERVER_DIR}/readme_en.txt" "${output_dir}/"
+        cp "${SERVER_DIR}/resources/script/mayfly-go.sh" "${output_dir}/"
+        chmod +x "${output_dir}/mayfly-go.sh"
     fi
-
-    echo_yellow ">>>>>>>>>>>>>>>>>>> ${os}-${arch} - Bundle build complete <<<<<<<<<<<<<<<<<<<<\n"
+    
+    print_success ">>> Build complete: ${target_name}"
+    cd "${PROJECT_ROOT}"
 }
 
-function buildLinuxAmd64() {
-    build "$1/mayfly-go-linux-amd64" "linux" "amd64" $2
-}
-
-function buildLinuxArm64() {
-    build "$1/mayfly-go-linux-arm64" "linux" "arm64" $2
-}
-
-function buildWindows() {
-    build "$1/mayfly-go-windows" "windows" "amd64" $2
-}
-
-function buildMac() {
-    build "$1/mayfly-go-mac" "darwin" "amd64" $2
-}
-
-function buildDocker() {
-    echo_yellow "-------------------Start building the docker image-------------------"
-    imageVersion=$1
-    imageName="mayfly/mayfly-go:${imageVersion}"
-    docker build --no-cache --platform linux/amd64 --build-arg MAYFLY_GO_VERSION="${imageVersion}" -t "${imageName}" .
-    echo_green "The docker image is built -> [${imageName}]"
-    echo_yellow "-------------------Finished building the docker image-------------------"
-}
-
-function buildxDocker() {
-    echo_yellow "-------------------The docker buildx build image starts-------------------"
-    imageVersion=$1
-    imageName="ccr.ccs.tencentyun.com/mayfly/mayfly-go:${imageVersion}"
-    docker buildx build --no-cache --push --platform linux/amd64,linux/arm64 --build-arg MAYFLY_GO_VERSION="${imageVersion}" -t "${imageName}" .
-    echo_green "The docker multi-architecture version image is built -> [${imageName}]"
-    echo_yellow "-------------------The docker buildx image is finished-------------------"
-}
-
-function runBuild() {
-    read -p "Select build version [0 | Other->Other than docker image 1->linux-amd64 2->linux-arm64 3->windows 4->mac 5->docker 6->docker buildx]: " buildType
-
-    toPath="."
-    imageVersion="latest"
-    copyDocScript="1"
-
-    if [[ "${buildType}" != "5" ]] && [[ "${buildType}" != "6" ]] ; then
-        # 构建结果的目的路径
-        read -p "Please enter the build product output directory [default current path]: " toPath
-        if [ ! -d ${toPath} ] ; then
-            echo_red "Build product output directory does not exist!"
-            exit;
-        fi
-        if [ "${toPath}" == "" ] ; then
-            toPath="."
-        fi
-
-        read -p "Whether to copy documents & Scripts [0-> No 1-> Yes][Default yes]: " copyDocScript
-        if [ "${copyDocScript}" == "" ] ; then
-            copyDocScript="1"
-        fi
-
-        # 进入目标路径,并赋值全路径
-        cd ${toPath}
-        toPath=`pwd`
-
-        # read -p "是否构建前端[0|其他->否 1->是 2->构建并拷贝至server/static/static]: " runBuildWeb
-        runBuildWeb="2"
-        # 编译web前端
-        buildWeb ${runBuildWeb}
+build_docker() {
+    local version="$1"
+    local use_buildx="$2"
+    local image_name
+    local build_cmd
+    
+    if [ "${use_buildx}" = "1" ]; then
+        image_name="ccr.ccs.tencentyun.com/mayfly/mayfly-go:${version}"
+        build_cmd="docker buildx build --no-cache --push --platform linux/amd64,linux/arm64"
+        print_header "\n>>> Building Docker image (multi-arch): ${image_name}"
+    else
+        image_name="mayfly/mayfly-go:${version}"
+        build_cmd="docker build --no-cache --platform linux/amd64"
+        print_header "\n>>> Building Docker image: ${image_name}"
     fi
+    
+    ${build_cmd} --build-arg MAYFLY_GO_VERSION="${version}" -t "${image_name}" "${PROJECT_ROOT}"
+    print_success ">>> Docker image built: ${image_name}"
+}
 
-    if [[ "${buildType}" == "5" ]] || [[ "${buildType}" == "6" ]] ; then
-        read -p "Please enter the docker image version (default latest) : " imageVersion
+cleanup_frontend() {
+    print_info "\n>>> Cleaning up temporary frontend assets..."
+    rm -rf "${SERVER_DIR}/static/static/"{assets,config.js,index.html}
+    print_success ">>> Cleanup complete"
+}
 
-        if [ "${imageVersion}" == "" ] ; then
-            imageVersion="latest"
-        fi
+compress_package() {
+    local source_dir="$1"
+    local output_dir="$2"
+    local package_name
+    
+    package_name="$(basename "${source_dir}")"
+    
+    print_header "\n>>> Compressing package: ${package_name}"
+    
+    cd "${output_dir}"
+    
+    # 统一使用 zip 格式，跨平台兼容性最好
+    zip -r "${package_name}.zip" "${package_name}"/
+    rm -rf "${package_name}"
+    print_success ">>> Compressed: ${package_name}.zip"
+    
+    cd "${PROJECT_ROOT}"
+}
+
+#----------------------------------------------
+# 主流程
+#----------------------------------------------
+main() {
+    # 显示菜单
+    print_header "========================================"
+    print_header "   Mayfly-Go Release Build Tool"
+    print_header "========================================"
+    echo ""
+    echo "Build Options:"
+    echo "  [0] All Platforms (linux-amd64, linux-arm64, windows, mac)"
+    echo "  [1] Linux AMD64"
+    echo "  [2] Linux ARM64"
+    echo "  [3] Windows"
+    echo "  [4] macOS"
+    echo "  [5] Docker Image"
+    echo "  [6] Docker Multi-arch (buildx)"
+    echo ""
+    
+    read -p "Select build option [0-6] (default: 0): " build_type
+    build_type=${build_type:-0}
+    
+    # 验证输入
+    if ! [[ "${build_type}" =~ ^[0-6]$ ]]; then
+        print_error "Error: Invalid option. Please enter a number between 0 and 6."
+        exit 1
     fi
-
-    case ${buildType} in
-         "1")
-            buildLinuxAmd64 ${toPath} ${copyDocScript}
-        ;;
-         "2")
-            buildLinuxArm64 ${toPath} ${copyDocScript}
-        ;;
-        "3")
-            buildWindows ${toPath} ${copyDocScript}
-        ;;
-        "4")
-            buildMac ${toPath} ${copyDocScript}
-        ;;
+    
+    # 初始化配置
+    local output_dir="."
+    local docker_version="latest"
+    local copy_resources="1"
+    local compress_output="0"
+    local is_docker=0
+    
+    # Docker 构建
+    if [[ "${build_type}" == "5" || "${build_type}" == "6" ]]; then
+        is_docker=1
+        echo ""
+        read -p "Enter Docker image version (default: latest): " docker_version
+        docker_version=${docker_version:-latest}
+    else
+        # 二进制构建
+        echo ""
+        read -p "Enter output directory (default: current): " output_dir
+        output_dir=${output_dir:-.}
+        
+        # 验证并获取绝对路径
+        if [ "${output_dir}" != "." ] && [ ! -d "${output_dir}" ]; then
+            print_error "Error: Directory '${output_dir}' does not exist."
+            exit 1
+        fi
+        output_dir="$(cd "${output_dir}" && pwd)"
+        
+        echo ""
+        read -p "Copy config & scripts? [Y/n] (default: Y): " copy_input
+        if [ "$(to_lower "${copy_input}")" = "n" ]; then
+            copy_resources="0"
+        fi
+        
+        echo ""
+        read -p "Compress package? [y/N] (default: N): " compress_input
+        if [ "$(to_lower "${compress_input}")" = "y" ]; then
+            compress_output="1"
+        fi
+        
+        # 构建前端
+        echo ""
+        build_frontend
+    fi
+    
+    # 显示配置摘要
+    echo ""
+    print_header "Build Configuration:"
+    
+    # 获取构建类型名称
+    local type_names=("All Platforms" "Linux AMD64" "Linux ARM64" "Windows" "macOS" "Docker Image" "Docker Multi-arch")
+    echo "  Type: ${type_names[${build_type}]}"
+    
+    if [ "${is_docker}" = "1" ]; then
+        echo "  Version: ${docker_version}"
+    else
+        echo "  Output: ${output_dir}"
+        echo "  Resources: $([ "${copy_resources}" = "1" ] && echo "Yes" || echo "No")"
+        echo "  Compress: $([ "${compress_output}" = "1" ] && echo "Yes" || echo "No")"
+    fi
+    echo ""
+    
+    # 确认构建
+    read -p "Continue? [Y/n] (default: Y): " confirm
+    if [ "$(to_lower "${confirm}")" = "n" ]; then
+        print_info "Build cancelled."
+        exit 0
+    fi
+    
+    # 执行构建
+    echo ""
+    print_header "Starting build..."
+    
+    case "${build_type}" in
+        "1"|"2"|"3"|"4")
+            # 单个平台构建
+            local target="${BUILD_TARGETS[$((build_type-1))]}"
+            IFS='|' read -r name os arch <<< "${target}"
+            build_backend "${output_dir}/mayfly-go-${name}" "${os}" "${arch}" "${copy_resources}"
+            ;;
         "5")
-            buildDocker ${imageVersion}
-        ;;
+            build_docker "${docker_version}" "0"
+            ;;
         "6")
-            buildxDocker ${imageVersion}
-        ;;
+            build_docker "${docker_version}" "1"
+            ;;
         *)
-            buildLinuxAmd64 ${toPath} ${copyDocScript}
-            buildLinuxArm64 ${toPath} ${copyDocScript}
-            buildWindows ${toPath} ${copyDocScript}
-            buildMac ${toPath} ${copyDocScript}
-        ;;
+            # 构建所有平台
+            print_info "Building all platforms..."
+            for target in "${BUILD_TARGETS[@]}"; do
+                IFS='|' read -r name os arch <<< "${target}"
+                build_backend "${output_dir}/mayfly-go-${name}" "${os}" "${arch}" "${copy_resources}"
+            done
+            ;;
     esac
-
-    if [[ "${buildType}" != "5" ]] && [[ "${buildType}" != "6" ]] ; then
-        echo_green "Delete static assets under ['${server_folder}/static/static']."
-        # 删除静态资源文件，保留一个favicon.ico，否则后端启动会报错
-        rm -rf ${server_folder}/static/static/assets
-        rm -rf ${server_folder}/static/static/config.js
-        rm -rf ${server_folder}/static/static/index.html
+    
+    # 清理临时文件
+    if [ "${is_docker}" = "0" ]; then
+        cleanup_frontend
     fi
+    
+    # 压缩输出
+    if [ "${compress_output}" = "1" ] && [ "${is_docker}" = "0" ]; then
+        case "${build_type}" in
+            "1"|"2"|"3"|"4")
+                local target="${BUILD_TARGETS[$((build_type-1))]}"
+                IFS='|' read -r name os arch <<< "${target}"
+                compress_package "${output_dir}/mayfly-go-${name}" "${output_dir}"
+                ;;
+            *)
+                print_info "Compressing all packages..."
+                for target in "${BUILD_TARGETS[@]}"; do
+                    IFS='|' read -r name os arch <<< "${target}"
+                    compress_package "${output_dir}/mayfly-go-${name}" "${output_dir}"
+                done
+                ;;
+        esac
+    fi
+    
+    # 完成
+    echo ""
+    print_success "========================================"
+    print_success "   Build Completed Successfully!"
+    print_success "========================================"
 }
 
-runBuild
+# 执行主函数
+main

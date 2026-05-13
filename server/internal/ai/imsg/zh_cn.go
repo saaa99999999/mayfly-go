@@ -13,7 +13,7 @@ var Zh_CN = map[i18n.MsgId]string{
 	ExecSqlToolDesc:         "ExecSql【数据库SQL执行】",
 	ExecSqlToolInfo:         "【数据库】SQL执行 - 执行非查询类 SQL 语句（如 INSERT、UPDATE、DELETE 等）。适用于执行数据变更操作的场景。注意：仅限变更操作，禁止执行 SELECT、SHOW、DESC、EXPLAIN 等查询类 SQL。",
 	DbQueryDataToolDesc:     "DbQueryData【数据库SQL查询】",
-	DbQueryDataToolInfo:     "【数据库】SQL查询 - 执行只读类 SQL 语句（如 SELECT、SHOW、DESC、EXPLAIN 等）。适用于查询表数据、分析执行计划等场景。注意：仅限查询操作，禁止执行 INSERT、UPDATE、DELETE 等变更类 SQL。\n\n【重要】如果用户没有指定数据库ID(dbId)，请直接调用此工具并只提供SQL语句，系统会自动弹出资产选择界面让用户选择数据库。不要询问用户数据库ID！",
+	DbQueryDataToolInfo:     "【数据库】SQL查询 - 批量执行只读类 SQL 语句（如 SELECT、SHOW、DESC、EXPLAIN 等）。适用于查询表数据、分析执行计划等场景。支持一次查询多条SQL（最多10条），避免频繁调用。注意：仅限查询操作，禁止执行 INSERT、UPDATE、DELETE 等变更类 SQL。\n\n【重要】如果用户没有指定数据库ID(dbId)，请直接调用此工具并提供SQL语句数组，系统会自动弹出资产选择界面让用户选择数据库。不要询问用户数据库ID！",
 	DbQueryTableDDLToolDesc: "DbQueryTableDDL【查询数据库表DDL】",
 	DbQueryTableDDLToolInfo: "【数据库】表DDL查询工具 - 批量获取指定数据表的 DDL 定义，包含字段名、数据类型、约束、索引等完整元数据。支持一次查询多个表。适用于编写 SQL 前了解表结构、排查数据问题时查看表定义等场景。\n\n【重要】如果用户没有指定数据库ID(dbId)，请直接调用此工具并只提供表名列表，系统会自动弹出资产选择界面让用户选择数据库。不要询问用户数据库ID！",
 	DbInfoIncomplete:        "缺少数据库信息，请完善参数",

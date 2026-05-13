@@ -7,7 +7,6 @@ import (
 	"mayfly-go/internal/docker/application/dto"
 	"mayfly-go/internal/docker/dkm"
 	"mayfly-go/internal/docker/domain/entity"
-	"mayfly-go/internal/pkg/consts"
 	tagapp "mayfly-go/internal/tag/application"
 	tagentity "mayfly-go/internal/tag/domain/entity"
 	"mayfly-go/pkg/biz"
@@ -59,10 +58,6 @@ func (cc *ContainerConf) GetContainerPage(rc *req.Ctx) {
 	}
 
 	resVo := model.PageResultConv[*entity.Container, *vo.ContainerConf](res)
-	containerVos := resVo.List
-	cc.tagTreeApp.FillTagInfo(tagentity.TagType(consts.ResourceTypeContainer), collx.ArrayMap(containerVos, func(cvo *vo.ContainerConf) tagentity.ITagResource {
-		return cvo
-	})...)
 
 	rc.ResData = resVo
 }

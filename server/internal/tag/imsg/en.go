@@ -7,10 +7,8 @@ var En = map[i18n.MsgId]string{
 	LogTagSave:   "Tag Tree - Save",
 	LogTagDelete: "Tag Tree - Delete",
 
-	ErrTagCodeInvalid:         "code cannot contain '/'",
 	ErrNoAdminCreateTag:       "Non-administrators cannot add a root tag",
 	ErrNoPermissionCreateTag:  "No permission to add the tag",
-	ErrTagCodePathLikeExist:   "A tag at the beginning of the tag path already exists, modify the code",
 	ErrNoPermissionOpResource: "You do not have permission to manipulate this resource",
 	ErrNoPermissionDeleteTag:  "You do not have permission to delete the tag",
 	ErrConflictingCodePath:    "There are conflicting code paths",
