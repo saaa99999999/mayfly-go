@@ -18,11 +18,10 @@ import '@xterm/xterm/css/xterm.css';
 
 import config from '@/common/config';
 import { createWebSocket, joinClientParams } from '@/common/request';
-import { getToken } from '@/common/utils/storage';
-import { randomUuid } from '@/common/utils/string';
-import { machineApi, uploadFile, uploadFolder } from '@/views/ops/machine/api';
+import { downloadFile } from '@/common/utils/file';
 import { Contextmenu, ContextmenuItem } from '@/components/contextmenu';
 import { useThemeConfig } from '@/store/themeConfig';
+import { machineApi, uploadFile, uploadFolder } from '@/views/ops/machine/api';
 import { useDebounceFn, useEventListener } from '@vueuse/core';
 import { ElMessage } from 'element-plus';
 import { storeToRefs } from 'pinia';
@@ -31,8 +30,6 @@ import { useI18n } from 'vue-i18n';
 import TerminalSearch from './TerminalSearch.vue';
 import { TerminalStatus } from './common';
 import themes from './themes.js';
-import machine from '@/i18n/en/machine';
-import { downloadFile } from '@/common/utils/file';
 
 const { t } = useI18n();
 
@@ -57,7 +54,7 @@ const props = defineProps({
      */
     machineId: { type: Number, default: 0 },
     /**
-     * 认证证书名称（用于文件传输）
+     * 授权凭证名（用于文件传输）
      */
     authCertName: { type: String, default: '' },
     /**
@@ -375,50 +372,27 @@ const setupContextMenu = () => {
             return; // 直接返回，不显示任何菜单
         }
 
-        // 获取选中的文本
-        const selectedText = term.getSelection();
-
-        if (selectedText) {
-            // 如果有选中文本，可能是文件路径
-            showFileContextMenu(event, selectedText);
-        } else {
-            // 没有选中文本，显示通用菜单
-            showGeneralContextMenu(event);
-        }
+        showContextMenu(event, term.getSelection());
     });
 };
 
-// 显示文件下载右键菜单
-const showFileContextMenu = (event: MouseEvent, filePath: string) => {
-    state.contextmenu.selectedItem = filePath;
+// 显示组合右键菜单
+const showContextMenu = (event: MouseEvent, selectedText: string) => {
+    state.contextmenu.selectedItem = selectedText;
     state.contextmenu.dropdown = {
         x: event.clientX,
         y: event.clientY,
     };
 
+    // 始终添加上传文件和上传文件夹按钮
     state.contextmenu.items = [
         new ContextmenuItem('download', 'components.terminal.downloadSelectedFile')
             .withIcon('Download')
-            .withHideFunc(() => false)
+            .withHideFunc(() => !selectedText)
             .withOnClick(() => {
                 downloadSelectedFile(state.contextmenu.selectedItem);
                 contextmenuRef.value?.closeContextmenu();
             }),
-    ];
-
-    // 打开右键菜单
-    contextmenuRef.value?.openContextmenu({});
-};
-
-// 显示通用右键菜单（上传文件/文件夹）
-const showGeneralContextMenu = (event: MouseEvent) => {
-    state.contextmenu.selectedItem = '';
-    state.contextmenu.dropdown = {
-        x: event.clientX,
-        y: event.clientY,
-    };
-
-    state.contextmenu.items = [
         new ContextmenuItem('uploadFile', 'components.terminal.uploadFileToCurrentDir')
             .withIcon('Upload')
             .withHideFunc(() => false)
@@ -525,13 +499,11 @@ const uploadFilesToCurrentPath = async (files: FileList) => {
         const currentPath = await getCurrentPathOrDefault();
 
         const file = files[0];
-        const uploadId = randomUuid();
 
         // 使用统一的 HTTP 上传方法
         uploadFile(
             file,
             {
-                uploadId,
                 machineId: props.machineId as number,
                 authCertName: props.authCertName as string,
                 protocol: props.protocol,
@@ -559,13 +531,10 @@ const uploadFolderToCurrentPath = async (files: FileList) => {
         // 获取当前路径
         const currentPath = await getCurrentPathOrDefault();
 
-        const uploadId = randomUuid();
-
         // 使用文件夹上传
         uploadFolder(
             files,
             {
-                uploadId,
                 machineId: props.machineId as number,
                 authCertName: props.authCertName as string,
                 protocol: props.protocol,

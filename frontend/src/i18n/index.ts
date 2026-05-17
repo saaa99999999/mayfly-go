@@ -34,7 +34,7 @@ function initI18n() {
     });
 
     const themeConfig = getThemeConfig();
-    const globalI18n = themeConfig.globalI18n || "zh-cn";
+    const globalI18n = themeConfig?.globalI18n || 'zh-cn';
 
     // https://vue-i18n.intlify.dev/guide/essentials/fallback.html#explicit-fallback-with-one-locale
     return createI18n({
@@ -45,7 +45,7 @@ function initI18n() {
         silentFallbackWarn: true,
         fallbackWarn: false,
         locale: globalI18n,
-        fallbackLocale: "zh-cn",
+        fallbackLocale: 'zh-cn',
         messages,
     });
 }

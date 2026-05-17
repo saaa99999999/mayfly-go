@@ -313,6 +313,8 @@ func (m *MachineFile) UploadFile(rc *req.Ctx) {
 				progressMsgEvent := &msgdto.MsgTmplSendEvent{
 					TmplChannel: msgdto.MsgTmplMachineFileUploadProgress,
 					Params: collx.M{
+						"authCertName": authCertName,
+						"path":         path,
 						"uploadId":     uploadId,
 						"filename":     fileheader.Filename,
 						"uploadedSize": readSize,
@@ -417,6 +419,8 @@ func (m *MachineFile) UploadFolder(rc *req.Ctx) {
 		startMsgEvent := &msgdto.MsgTmplSendEvent{
 			TmplChannel: msgdto.MsgTmplMachineFolderUploadProgress,
 			Params: collx.M{
+				"authCertName":  authCertName,
+				"path":          basePath,
 				"uploadId":      uploadId,
 				"folderName":    folderName,
 				"totalFiles":    totalFiles,
@@ -531,6 +535,8 @@ func (m *MachineFile) UploadFolder(rc *req.Ctx) {
 								progressMsgEvent := &msgdto.MsgTmplSendEvent{
 									TmplChannel: msgdto.MsgTmplMachineFolderUploadProgress,
 									Params: collx.M{
+										"authCertName":   authCertName,
+										"path":           basePath,
 										"uploadId":       uploadId,
 										"folderName":     folderName,
 										"lastFile":       fullPath,

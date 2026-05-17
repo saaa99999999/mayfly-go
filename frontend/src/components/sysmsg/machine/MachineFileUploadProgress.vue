@@ -1,7 +1,18 @@
 <template>
     <div class="w-full py-1">
+        <el-row>
+            <TagCodePath :code="progress.authCertName" />
+        </el-row>
+
+        <!-- 文件路径 -->
+        <div v-if="progress.path" class="mb-3 px-1">
+            <span class="text-xs text-gray-500 dark:text-gray-400 truncate block" :title="progress.path">
+                {{ progress.path }}
+            </span>
+        </div>
+
         <!-- 文件名 -->
-        <div class="flex items-center gap-2 mb-3">
+        <div class="flex items-center gap-2 mb-2">
             <SvgIcon name="Document" :size="16" class="text-primary flex-shrink-0" />
             <span class="flex-1 text-sm font-semibold text-gray-700 dark:text-gray-200 truncate" :title="progress.filename">
                 {{ progress.filename }}
@@ -52,9 +63,12 @@
 <script lang="ts" setup>
 import { formatByteSize } from '@/common/utils/format';
 import { i18n } from '@/i18n';
+import TagCodePath from '@/views/ops/component/TagCodePath.vue';
 import { computed, ref } from 'vue';
 
 interface Progress {
+    authCertName: string; // 授权凭证名
+    path: string; // 文件路径
     filename: string;
     percent: number;
     uploadedSize: number;
@@ -69,6 +83,8 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
     progress: () => ({
+        authCertName: '',
+        path: '',
         filename: '',
         percent: 0,
         uploadedSize: 0,

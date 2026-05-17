@@ -1,44 +1,58 @@
 <template>
-    <div class="machine-folder-upload-progress">
-        <!-- 文件夹信息 -->
-        <div class="progress-header">
-            <span class="folder-name">{{ progress.folderName }}</span>
-            <span class="file-count">{{ progress.uploadedFiles }}/{{ progress.totalFiles }}</span>
+    <div class="w-full py-2 max-w-[500px]">
+        <el-row>
+            <TagCodePath :code="progress.authCertName" />
+        </el-row>
+
+        <!-- 文件路径 -->
+        <div v-if="progress.path" class="mb-3 px-1">
+            <span class="text-xs text-gray-500 dark:text-gray-400 truncate block" :title="progress.path">
+                {{ progress.path }}
+            </span>
         </div>
-        
+
+        <!-- 文件夹信息 -->
+        <div class="flex justify-between items-center mb-2">
+            <span class="font-semibold text-sm text-gray-700 dark:text-gray-200">{{ progress.folderName }}</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ progress.uploadedFiles }}/{{ progress.totalFiles }}</span>
+        </div>
+
         <!-- 整体进度条 -->
-        <el-progress
-            :percentage="percent"
-            :status="progress.status"
-            :stroke-width="10"
-        />
-        
+        <el-progress :percentage="percent" :status="progress.status" :stroke-width="10" />
+
         <!-- 整体进度信息 -->
-        <div class="progress-info">
-            <span class="size-info">{{ formatSize(progress.uploadedSize) }} / {{ formatSize(progress.totalSize) }}</span>
-            <span class="percent">{{ percent }}%</span>
+        <div class="mt-1.5 flex justify-between items-center">
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ formatSize(progress.uploadedSize) }} / {{ formatSize(progress.totalSize) }}</span>
+            <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">{{ percent }}%</span>
         </div>
 
         <!-- 正在上传的文件列表 -->
-        <div v-if="progress.uploadingFiles && progress.uploadingFiles.length > 0" class="uploading-files">
-            <div class="section-title">正在上传 ({{ progress.uploadingFiles.length }} 个并发):</div>
-            <div v-for="(file, index) in progress.uploadingFiles" :key="index" class="uploading-file">
-                <el-icon class="loading-icon"><Loading /></el-icon>
-                <span class="file-path">{{ file }}</span>
+        <div v-if="progress.uploadingFiles && progress.uploadingFiles.length > 0" class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+            <div class="text-xs font-semibold text-primary mb-2">{{ t('machine.uploading') }} ({{ t('machine.concurrentFiles', { count: progress.uploadingFiles.length }) }}):</div>
+            <div v-for="(file, index) in progress.uploadingFiles" :key="index" class="flex items-center gap-1.5 py-1 text-xs text-gray-600 dark:text-gray-300">
+                <el-icon class="animate-[rotating_2s_linear_infinite] text-primary"><Loading /></el-icon>
+                <span class="flex-1 truncate">{{ file }}</span>
             </div>
         </div>
 
         <!-- 最后完成的文件 -->
-        <div v-if="progress.lastFile && progress.status === 'uploading'" class="last-file">
-            <el-icon class="success-icon"><Check /></el-icon>
-            <span class="file-path">{{ progress.lastFile }}</span>
+        <div
+            v-if="progress.lastFile && progress.status === 'uploading'"
+            class="mt-2 flex items-center gap-1.5 px-2 py-1.5 bg-green-50 dark:bg-green-900/20 rounded text-xs"
+        >
+            <el-icon class="text-green-500"><Check /></el-icon>
+            <span class="text-green-600 dark:text-green-400 truncate">{{ progress.lastFile }}</span>
         </div>
     </div>
 </template>
 
 <script lang="ts" setup>
+import TagCodePath from '@/views/ops/component/TagCodePath.vue';
 import { Loading, Check } from '@element-plus/icons-vue';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     progress: {
@@ -64,111 +78,3 @@ const formatSize = (bytes: number): string => {
     return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
 };
 </script>
-
-<style lang="scss" scoped>
-.machine-folder-upload-progress {
-    padding: 8px 0;
-    max-width: 500px;
-    
-    .progress-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-        
-        .folder-name {
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--el-text-color-primary);
-        }
-        
-        .file-count {
-            font-size: 12px;
-            color: var(--el-text-color-secondary);
-        }
-    }
-    
-    .progress-info {
-        margin-top: 6px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        
-        .size-info {
-            font-size: 12px;
-            color: var(--el-text-color-secondary);
-        }
-        
-        .percent {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--el-text-color-primary);
-        }
-    }
-    
-    .uploading-files {
-        margin-top: 12px;
-        padding-top: 12px;
-        border-top: 1px solid var(--el-border-color-lighter);
-        
-        .section-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--el-color-primary);
-            margin-bottom: 8px;
-        }
-        
-        .uploading-file {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 0;
-            font-size: 11px;
-            color: var(--el-text-color-regular);
-            
-            .loading-icon {
-                animation: rotating 2s linear infinite;
-                color: var(--el-color-primary);
-            }
-            
-            .file-path {
-                flex: 1;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-        }
-    }
-    
-    .last-file {
-        margin-top: 8px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 8px;
-        background: var(--el-color-success-light-9);
-        border-radius: 4px;
-        font-size: 11px;
-        
-        .success-icon {
-            color: var(--el-color-success);
-        }
-        
-        .file-path {
-            color: var(--el-color-success);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-    }
-}
-
-@keyframes rotating {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-</style>

@@ -89,8 +89,8 @@ export function getMachineRdpSocketUrl(authCertName: any) {
  * 文件上传参数
  */
 export interface UploadParams {
-    /** 上传ID（前端生成，保证唯一性） */
-    uploadId: string;
+    /** 上传ID（可选，不传则内部自动生成） */
+    uploadId?: string;
     /** 机器ID */
     machineId: number;
     /** 认证证书名称 */
@@ -129,9 +129,12 @@ export interface UploadOptions {
 export async function uploadFile(file: File, params: UploadParams, options: UploadOptions = {}): Promise<void> {
     const { onProgress, onSuccess, onError } = options;
 
+    // 如果没有 uploadId，自动生成
+    const uploadId = params.uploadId || randomUuid();
+
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('uploadId', params.uploadId);
+    formData.append('uploadId', uploadId);
     formData.append('machineId', String(params.machineId));
     formData.append('authCertName', params.authCertName);
     formData.append('protocol', String(params.protocol));
@@ -192,8 +195,8 @@ export async function uploadFile(file: File, params: UploadParams, options: Uplo
  * 文件夹上传参数
  */
 export interface FolderUploadParams {
-    /** 上传ID（前端生成，保证唯一性） */
-    uploadId: string;
+    /** 上传ID（可选，不传则内部自动生成） */
+    uploadId?: string;
     /** 机器ID */
     machineId: number;
     /** 认证证书名称 */
@@ -226,8 +229,11 @@ export interface FolderUploadOptions {
 export async function uploadFolder(files: FileList | File[], params: FolderUploadParams, options: FolderUploadOptions = {}): Promise<void> {
     const { onSuccess, onError } = options;
 
+    // 如果没有 uploadId，自动生成
+    const uploadId = params.uploadId || randomUuid();
+
     const formData = new FormData();
-    formData.append('uploadId', params.uploadId);
+    formData.append('uploadId', uploadId);
     formData.append('basePath', params.path);
     formData.append('machineId', String(params.machineId));
     formData.append('authCertName', params.authCertName);

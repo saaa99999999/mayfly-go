@@ -306,21 +306,20 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, defineAsyncComponent, onMounted, reactive, ref, toRefs } from 'vue';
 import { ElInput, ElMessage } from 'element-plus';
+import { computed, defineAsyncComponent, onMounted, reactive, ref, toRefs } from 'vue';
 import { machineApi, uploadFile, uploadFolder } from '../api';
-import { randomUuid } from '@/common/utils/string';
 
-import { joinClientParams } from '@/common/request';
-import config from '@/common/config';
 import { isTrue, notBlank } from '@/common/assert';
-import { getToken } from '@/common/utils/storage';
-import { convertToBytes, formatByteSize } from '@/common/utils/format';
+import config from '@/common/config';
+import { joinClientParams } from '@/common/request';
 import { getMachineConfig } from '@/common/sysconfig';
-import { MachineProtocolEnum } from '../enums';
+import { convertToBytes, formatByteSize } from '@/common/utils/format';
+import { getToken } from '@/common/utils/storage';
 import { fuzzyMatchField } from '@/common/utils/string';
-import { useI18n } from 'vue-i18n';
 import { useI18nDeleteConfirm, useI18nDeleteSuccessMsg } from '@/hooks/useI18n';
+import { useI18n } from 'vue-i18n';
+import { MachineProtocolEnum } from '../enums';
 
 const MachineFileContent = defineAsyncComponent(() => import('./MachineFileContent.vue'));
 
@@ -792,14 +791,10 @@ function handleFolderUpload(e: any) {
 
     console.log('[MachineFile] Folder upload:', files.length, 'files, total size:', totalFileSize);
 
-    // 生成唯一的 uploadId
-    const uploadId = randomUuid();
-
     // 使用文件夹上传接口
     uploadFolder(
         files,
         {
-            uploadId,
             machineId: props.machineId as number,
             authCertName: props.authCertName as string,
             protocol: props.protocol as number,
@@ -835,14 +830,10 @@ const handleFileUpload = (content: any) => {
         return;
     }
 
-    // 生成唯一的 uploadId
-    const uploadId = randomUuid();
-
     // 上传文件
     uploadFile(
         file,
         {
-            uploadId,
             machineId: props.machineId as number,
             authCertName: props.authCertName as string,
             protocol: props.protocol as number,

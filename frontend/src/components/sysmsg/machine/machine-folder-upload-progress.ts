@@ -12,6 +12,8 @@ const folderUploadNotifyMap = new Map<string, any>();
 const buildMachineFolderUploadProgressProps = (): any => {
     return {
         progress: reactive({
+            authCertName: '', // 授权凭证名
+            path: '', // 文件路径
             folderName: '',
             totalFiles: 0,
             uploadedFiles: 0,
@@ -43,7 +45,7 @@ export async function registerFolderUploadProgressHandler() {
         if (!notify) {
             // 首次创建通知
             const props = buildMachineFolderUploadProgressProps();
-            
+
             const notificationInstance = ElNotification({
                 title: '文件夹上传',
                 message: h(MachineFolderUploadProgress, props),
@@ -92,6 +94,8 @@ export async function registerFolderUploadProgressHandler() {
 
         // 更新进度
         if (content.status === 'uploading') {
+            notify.props.progress.authCertName = content.authCertName || '';
+            notify.props.progress.path = content.path || '';
             notify.props.progress.folderName = content.folderName || '';
             notify.props.progress.totalFiles = content.totalFiles || 0;
             notify.props.progress.uploadedFiles = content.uploadedFiles || 0;

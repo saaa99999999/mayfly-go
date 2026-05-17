@@ -43,7 +43,7 @@ var (
 		entity.MsgSubtypeMachineFileUploadSuccess,
 		entity.MsgStatusRead,
 		imsg.MachineFileUploadSuccessMsg,
-		MsgChannelSite, MsgChannelWs)
+		MsgChannelSite)
 
 	MsgTmplMachineFileUploadFail = newMsgTmpl(entity.MsgTypeNotify,
 		entity.MsgSubtypeMachineFileUploadFail,

@@ -12,6 +12,8 @@ const fileUploadNotifyMap: Map<string, any> = new Map();
 const buildMachineFileUploadProgressProps = (): any => {
     return {
         progress: reactive({
+            authCertName: '', // 授权凭证名
+            path: '', // 文件路径
             filename: '',
             uploadedSize: 0,
             totalSize: 0,
@@ -32,7 +34,7 @@ export async function registerMachineFileUploadProgress() {
         // 上传完成或失败，关闭通知
         if (content.status === 'complete' || content.status === 'error') {
             const notify = fileUploadNotifyMap.get(uploadId);
-            
+
             if (notify && notify.notification) {
                 // 更新最终状态
                 notify.props.progress.status = content.status === 'complete' ? 'success' : 'exception';
@@ -71,6 +73,8 @@ export async function registerMachineFileUploadProgress() {
         }
 
         // 更新进度
+        notify.props.progress.authCertName = content.authCertName || '';
+        notify.props.progress.path = content.path || '';
         notify.props.progress.filename = content.filename || notify.props.progress.filename;
         notify.props.progress.uploadedSize = content.uploadedSize || 0;
         notify.props.progress.totalSize = content.totalSize || 0;
