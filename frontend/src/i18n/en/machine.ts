@@ -141,10 +141,20 @@ export default {
         fileExceedsSysConf: 'The uploaded file exceeds the system configuration [{uploadMaxFileSize}]',
         fileUploadSuccess: 'Machine file upload successful',
         fileUploadFail: 'Machine file upload failed',
+        fileUpload: 'File Upload',
 
         // Folder upload progress
         folderUploadProgress: 'Folder Upload Progress',
+        folderUpload: 'Folder Upload',
         uploading: 'Uploading',
         concurrentFiles: '{count} concurrent',
+
+        // Upload notifications
+        uploadNotifications: {
+            title: 'Upload Notifications',
+            closeAll: 'Close All',
+            folders: '{count} folders',
+            files: '{count} files',
+        },
     },
 };

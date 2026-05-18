@@ -54,6 +54,8 @@ export default {
         previousStep: '上一步',
         nextStep: '下一步',
         copy: '复制',
+        paste: '粘贴',
+        pasteFailed: '粘贴失败',
         copySuccess: '复制成功',
         copyCell: '复制单元格',
         search: '搜索',
@@ -361,6 +363,14 @@ export default {
         iconSelector: {
             title: '请选择图标',
             placeholder: '请输入内容搜索图标或者选择图标',
+        },
+        
+        // 系统消息通知
+        sysmsg: {
+            notifications: {
+                title: '系统通知',
+                closeAll: '全部关闭',
+            },
         },
     },
 };

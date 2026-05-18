@@ -142,10 +142,20 @@ export default {
         fileExceedsSysConf: '上传的文件超过系统配置的【{uploadMaxFileSize}】',
         fileUploadSuccess: '机器文件上传成功',
         fileUploadFail: '机器文件上传失败',
+        fileUpload: '文件上传',
 
         // 文件夹上传进度
         folderUploadProgress: '文件夹上传进度',
+        folderUpload: '文件夹上传',
         uploading: '正在上传',
         concurrentFiles: '{count} 个并发',
+
+        // 上传通知
+        uploadNotifications: {
+            title: '上传通知',
+            closeAll: '全部关闭',
+            folders: '{count} 个文件夹',
+            files: '{count} 个文件',
+        },
     },
 };

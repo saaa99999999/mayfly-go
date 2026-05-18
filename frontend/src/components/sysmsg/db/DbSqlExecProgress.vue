@@ -1,21 +1,56 @@
 <template>
-    <el-descriptions border size="small" :title="`${props.progress.title}`">
-        <el-descriptions-item label="时间">{{ state.elapsedTime }}</el-descriptions-item>
-        <el-descriptions-item label="已处理">{{ progress.executedStatements }}</el-descriptions-item>
-    </el-descriptions>
+    <div class="w-full py-1">
+        <el-row> <TagCodePath :code="progress.dbCode" /> / {{ progress.dbName }} </el-row>
+
+        <!-- 文件名 -->
+        <div class="flex items-center gap-2 mb-2 mt-2">
+            <SvgIcon name="Document" :size="16" class="text-primary flex-shrink-0" />
+            <span class="flex-1 text-sm font-semibold text-gray-700 dark:text-gray-200 truncate" :title="progress.title">
+                {{ progress.title }}
+            </span>
+            <!-- 取消按钮 -->
+            <el-button v-if="!progress.terminated && progress.status !== 'cancelled'" type="danger" size="small" text @click="handleCancel">
+                <SvgIcon name="Close" :size="14" />
+                {{ $t('common.cancel') }}
+            </el-button>
+        </div>
+
+        <!-- 详细信息 -->
+        <el-descriptions border size="small">
+            <el-descriptions-item :label="$t('db.executedStatements')">{{ progress.executedStatements }}</el-descriptions-item>
+            <el-descriptions-item :label="$t('db.elapsedTime')">{{ state.elapsedTime }}</el-descriptions-item>
+        </el-descriptions>
+    </div>
 </template>
 <script lang="ts" setup>
 import { onMounted, onUnmounted, reactive } from 'vue';
 import { formatTime } from 'element-plus/es/components/countdown/src/utils';
+import TagCodePath from '@/views/ops/component/TagCodePath.vue';
 
-const props = defineProps({
-    progress: {
-        type: Object,
-        default: () => ({
-            title: '',
-            executedStatements: 0,
-        }),
-    },
+interface Progress {
+    dbCode: string;
+    dbName: string;
+    title: string;
+    executedStatements: number;
+    terminated: boolean;
+    status?: string;
+}
+
+interface Props {
+    progress?: Progress;
+    onCancel?: () => void;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    progress: () => ({
+        dbCode: '',
+        dbName: '',
+        title: '',
+        executedStatements: 0,
+        terminated: false,
+        status: '',
+    }),
+    onCancel: undefined,
 });
 
 const state = reactive({
@@ -38,4 +73,11 @@ onUnmounted(async () => {
         timer = undefined;
     }
 });
+
+// 处理取消执行
+const handleCancel = () => {
+    if (props.onCancel) {
+        props.onCancel();
+    }
+};
 </script>

@@ -1,5 +1,17 @@
-import request from './request';
 import { RequestOptions, useApiFetch } from '@/hooks/useRequest';
+import config from './config';
+import request, { joinClientParams } from './request';
+import { getToken } from './utils/storage';
+
+/**
+ * 文件上传选项
+ */
+export interface UploadOptions {
+    /** 成功回调 */
+    onSuccess?: () => void;
+    /** 错误回调 */
+    onError?: (error: Error) => void;
+}
 
 /**
  * 可用于各模块定义各自api请求
@@ -77,6 +89,51 @@ class Api<T = any, P = any> {
         return request.xhrReq(this.method, this.url, param, options);
     }
 
+    /**
+     * 文件上传请求
+     * @param formData FormData 对象（调用方自行构建，包含文件和其他参数）
+     * @param options 上传选项
+     * @returns { abort: () => void } 返回中止方法
+     */
+    upload(formData: FormData, options: UploadOptions = {}): { abort: () => void } {
+        const { onSuccess, onError } = options;
+
+        const url = `${config.baseApiUrl}${this.url}?${joinClientParams()}`;
+
+        // 创建 AbortController 用于取消请求
+        const abortController = new AbortController();
+
+        // 发起 fetch 请求
+        fetch(url, {
+            method: 'POST',
+            body: formData,
+            signal: abortController.signal,
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response;
+            })
+            .then(() => {
+                onSuccess?.();
+            })
+            .catch((error) => {
+                // 如果是主动取消，不触发错误回调
+                if (error.name === 'AbortError') {
+                    return;
+                }
+                onError?.(new Error(`upload failed: ${error.message}`));
+            });
+
+        // 返回中止方法
+        return {
+            abort: () => {
+                abortController.abort();
+            },
+        };
+    }
+
     /**    静态方法     **/
 
     /**
@@ -118,6 +175,14 @@ class Api<T = any, P = any> {
      */
     static newDelete<T = any, P = any>(url: string): Api<T, P> {
         return Api.create<T, P>(url, 'delete');
+    }
+
+    /**
+     * 创建文件上传 api
+     * @param url url
+     */
+    static newUpload<T = any, P = any>(url: string): Api<T, P> {
+        return Api.create<T, P>(url, 'upload');
     }
 }
 

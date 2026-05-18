@@ -28,4 +28,5 @@ type SqlReaderExec struct {
 	Filename string
 
 	ClientId string // 客户端id，若存在则会向其发送执行进度消息
+	UploadId string // 上传id，用于记录上传进度
 }

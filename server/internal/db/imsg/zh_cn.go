@@ -20,6 +20,7 @@ var Zh_CN = map[i18n.MsgId]string{
 
 	ErrExistRunFailSql:      "存在执行错误的sql",
 	ErrNeedSubmitWorkTicket: "该操作需要提交工单审批执行",
+	ErrSqlExecCancelled:     "SQL执行已取消",
 
 	// db transfer
 	LogDtsSave:         "dts-保存数据迁移任务",

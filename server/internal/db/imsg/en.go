@@ -20,6 +20,7 @@ var En = map[i18n.MsgId]string{
 
 	ErrExistRunFailSql:      "There is an execution error in sql",
 	ErrNeedSubmitWorkTicket: "This operation needs to submit a work ticket for approval",
+	ErrSqlExecCancelled:     "SQL execution cancelled",
 
 	// db transfer
 	LogDtsSave:         "dts - Save data transfer task",

@@ -1,5 +1,7 @@
 import Api from '@/common/Api';
 import { AesEncrypt } from '@/common/crypto';
+import { joinClientParams } from '@/common/request';
+import { registerSqlExecAborter } from '@/components/sysmsg/db/db-sql-exec-progress';
 
 export const dbApi = {
     // 获取权限列表
@@ -79,3 +81,48 @@ export const encryptField = async (param: any, field: string) => {
     }
     return param;
 };
+
+/**
+ * 上传SQL文件并执行
+ * @param file 文件对象
+ * @param params 上传参数
+ * @param options 上传选项
+ * @returns { uploadId: string; abort: () => void } 返回包含 uploadId 和中止方法的对象
+ */
+export function uploadSqlFile(
+    file: File,
+    params: {
+        dbId: number;
+        dbName: string;
+    },
+    options: {
+        onSuccess?: () => void;
+        onError?: (error: Error) => void;
+    } = {}
+): { uploadId: string; abort: () => void } {
+    // 生成 uploadId
+    const uploadId = `sql_exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('db', params.dbName);
+    formData.append('uploadId', uploadId);
+
+    // 创建 Api 实例
+    const api = Api.newPost(`/dbs/${params.dbId}/exec-sql-file`);
+
+    // 使用 Api.upload 发起请求
+    const { abort } = api.upload(formData, {
+        onSuccess: () => {
+            options.onSuccess?.();
+        },
+        onError: (error) => {
+            options.onError?.(error);
+        },
+    });
+
+    // 注册取消器（在获取到abort方法后）
+    registerSqlExecAborter(uploadId, abort);
+
+    return { uploadId, abort };
+}

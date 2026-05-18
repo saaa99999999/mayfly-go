@@ -1,11 +1,4 @@
-import Api from '@/common/Api';
-import { joinClientParams } from '@/common/request';
-import config from '@/common/config';
-import { randomUuid } from '@/common/utils/string';
-import { getToken } from '@/common/utils/storage';
-import { i18n } from '@/i18n';
-
-const t = i18n.global.t;
+import Api, { UploadOptions } from '@/common/Api';
 
 export const machineApi = {
     // 获取权限列表
@@ -41,7 +34,8 @@ export const machineApi = {
     cpFile: Api.newPost('/machines/{machineId}/files/{fileId}/cp'),
     renameFile: Api.newPost('/machines/{machineId}/files/{fileId}/rename'),
     mvFile: Api.newPost('/machines/{machineId}/files/{fileId}/mv'),
-    uploadFile: Api.newPost('/machines/{machineId}/files/{fileId}/upload?' + joinClientParams()),
+    uploadFile: Api.newUpload('/machines/{machineId}/files/{fileId}/upload'),
+    uploadFolder: Api.newPost('/machines/{machineId}/files/{fileId}/upload-folder'),
     fileContent: Api.newGet('/machines/{machineId}/files/{fileId}/read'),
     downloadFile: Api.newGet('/machines/{machineId}/files/{fileId}/download'),
     createFile: Api.newPost('/machines/{machineId}/files/{id}/create-file'),
@@ -103,20 +97,6 @@ export interface UploadParams {
     path: string;
     /** 文件名 */
     filename: string;
-    /** 相对路径（文件夹上传时使用） */
-    relativePath?: string;
-}
-
-/**
- * 文件上传选项
- */
-export interface UploadOptions {
-    /** 进度回调 */
-    onProgress?: (percent: number, uploadedSize: number, totalSize: number, speed: string) => void;
-    /** 成功回调 */
-    onSuccess?: () => void;
-    /** 错误回调 */
-    onError?: (error: Error) => void;
 }
 
 /**
@@ -124,13 +104,11 @@ export interface UploadOptions {
  * @param file 文件对象
  * @param params 上传参数
  * @param options 上传选项
- * @returns Promise<void>
+ * @returns { uploadId: string; abort: () => void } 返回包含 uploadId 和中止方法的对象
  */
-export async function uploadFile(file: File, params: UploadParams, options: UploadOptions = {}): Promise<void> {
-    const { onProgress, onSuccess, onError } = options;
-
-    // 如果没有 uploadId，自动生成
-    const uploadId = params.uploadId || randomUuid();
+export function uploadFile(file: File, params: UploadParams, options: UploadOptions = {}): { uploadId: string; abort: () => void } {
+    // 业务层生成 uploadId
+    const uploadId = params.uploadId || `upload_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     const formData = new FormData();
     formData.append('file', file);
@@ -141,54 +119,9 @@ export async function uploadFile(file: File, params: UploadParams, options: Uplo
     formData.append('fileId', String(params.fileId));
     formData.append('path', params.path);
 
-    if (params.relativePath) {
-        formData.append('relativePath', params.relativePath);
-    }
+    const { abort } = machineApi.uploadFile.upload(formData, options);
 
-    const token = getToken();
-    const url = `${config.baseApiUrl}/machines/${params.machineId}/files/${params.fileId}/upload?token=${token}`;
-
-    try {
-        const xhr = new XMLHttpRequest();
-
-        // 进度回调
-        xhr.upload.onprogress = (event) => {
-            if (event.lengthComputable && onProgress) {
-                const percent = Math.round((event.loaded / event.total) * 100);
-                const elapsed = (Date.now() - startTime) / 1000;
-                const speedBytes = elapsed > 0 ? event.loaded / elapsed : 0;
-                let speed = '0 B/s';
-                if (speedBytes < 1024) {
-                    speed = `${speedBytes.toFixed(0)} B/s`;
-                } else if (speedBytes < 1024 * 1024) {
-                    speed = `${(speedBytes / 1024).toFixed(1)} KB/s`;
-                } else {
-                    speed = `${(speedBytes / (1024 * 1024)).toFixed(1)} MB/s`;
-                }
-                onProgress(percent, event.loaded, event.total, speed);
-            }
-        };
-
-        // 完成回调
-        xhr.onload = () => {
-            if (xhr.status === 200) {
-                onSuccess?.();
-            } else {
-                onError?.(new Error(t('common.uploadFailed', { error: `HTTP ${xhr.status}` })));
-            }
-        };
-
-        // 错误回调
-        xhr.onerror = () => {
-            onError?.(new Error(t('common.uploadFailed', { error: '网络错误' })));
-        };
-
-        const startTime = Date.now();
-        xhr.open('POST', url);
-        xhr.send(formData);
-    } catch (error: any) {
-        onError?.(new Error(t('common.uploadFailed', { error: error.message })));
-    }
+    return { uploadId, abort };
 }
 
 /**
@@ -210,27 +143,15 @@ export interface FolderUploadParams {
 }
 
 /**
- * 文件夹上传选项
- */
-export interface FolderUploadOptions {
-    /** 成功回调 */
-    onSuccess?: () => void;
-    /** 错误回调 */
-    onError?: (error: Error) => void;
-}
-
-/**
- * 上传文件夹（使用 /upload-folder 接口）
+ * 上传文件夹(使用 /upload-folder 接口)
  * @param files 文件列表
  * @param params 上传参数
  * @param options 上传选项
- * @returns Promise<void>
+ * @returns { uploadId: string; abort: () => void } 返回包含 uploadId 和中止方法的对象
  */
-export async function uploadFolder(files: FileList | File[], params: FolderUploadParams, options: FolderUploadOptions = {}): Promise<void> {
-    const { onSuccess, onError } = options;
-
-    // 如果没有 uploadId，自动生成
-    const uploadId = params.uploadId || randomUuid();
+export function uploadFolder(files: FileList | File[], params: FolderUploadParams, options: UploadOptions = {}): { uploadId: string; abort: () => void } {
+    // 业务层生成 uploadId
+    const uploadId = params.uploadId || `upload_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     const formData = new FormData();
     formData.append('uploadId', uploadId);
@@ -253,29 +174,8 @@ export async function uploadFolder(files: FileList | File[], params: FolderUploa
         formData.append('paths', path);
     });
 
-    const token = getToken();
-    const url = `${config.baseApiUrl}/machines/${params.machineId}/files/${params.fileId}/upload-folder?token=${token}`;
+    // 使用 Api.upload 发起请求
+    const { abort } = machineApi.uploadFolder.upload(formData, options);
 
-    try {
-        const xhr = new XMLHttpRequest();
-
-        // 完成回调
-        xhr.onload = () => {
-            if (xhr.status === 200) {
-                onSuccess?.();
-            } else {
-                onError?.(new Error(t('common.uploadFailed', { error: `HTTP ${xhr.status}` })));
-            }
-        };
-
-        // 错误回调
-        xhr.onerror = () => {
-            onError?.(new Error(t('common.uploadFailed', { error: '网络错误' })));
-        };
-
-        xhr.open('POST', url);
-        xhr.send(formData);
-    } catch (error: any) {
-        onError?.(new Error(t('common.uploadFailed', { error: error.message })));
-    }
+    return { uploadId, abort };
 }

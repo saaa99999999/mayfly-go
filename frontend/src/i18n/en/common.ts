@@ -54,6 +54,8 @@ export default {
         previousStep: 'Previous Step',
         nextStep: 'Next Step',
         copy: 'Copy',
+        paste: 'Paste',
+        pasteFailed: 'Paste failed',
         copySuccess: 'Copy Success',
         copyCell: 'Copy Cell',
 
@@ -352,6 +354,14 @@ export default {
         iconSelector: {
             title: 'please select the icon',
             placeholder: 'please enter content search icon or select icon',
+        },
+        
+        // System message notifications
+        sysmsg: {
+            notifications: {
+                title: 'System Notifications',
+                closeAll: 'Close All',
+            },
         },
     },
 };

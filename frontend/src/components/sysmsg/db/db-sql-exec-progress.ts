@@ -1,56 +1,90 @@
-import ProgressNotify from './DbSqlExecProgress.vue';
-import { ElNotification } from 'element-plus';
-import { h, reactive } from 'vue';
+import DbSqlExecProgress from './DbSqlExecProgress.vue';
+import { createOrUpdateNotification, completeNotification, activeNotifications } from '../global-notification-manager';
 import syssocket from '@/common/syssocket';
+import { reactive, nextTick } from 'vue';
 
-const sqlExecNotifyMap: Map<string, any> = new Map();
+// 存储SQL执行任务的取消方法
+const sqlExecAborters = new Map<string, { abort: () => void; progress?: any }>();
 
-// 构建 props（私有函数，不导出）
-const buildProgressProps = (): any => {
-    return {
-        progress: {
-            title: {
-                type: String,
-            },
-            executedStatements: {
-                type: Number,
-            },
-        },
-    };
-};
+// 存储待注册的 abort 方法（等待 WebSocket 消息到达）
+const pendingSqlExecAborters = new Map<string, () => void>();
 
 export async function registerDbSqlExecProgress() {
     await syssocket.registerMsgHandler('sqlScriptRunProgress', function (message: any) {
         const content = message.params;
         const id = content.id;
-        let progress = sqlExecNotifyMap.get(id);
+
+        // SQL执行完成
         if (content.terminated) {
-            if (progress != undefined) {
-                progress.notification?.close();
-                sqlExecNotifyMap.delete(id);
-                progress = undefined;
-            }
+            completeNotification(id, 1000);
+            sqlExecAborters.delete(id);
             return;
         }
 
-        if (progress == undefined) {
-            progress = {
-                props: reactive(buildProgressProps()),
-                notification: undefined,
-            };
-        }
+        // 构建组件props
+        const props = {
+            progress: reactive({
+                title: content.title || '',
+                executedStatements: content.executedStatements || 0,
+                terminated: content.terminated || false,
+                status: content.status || '',
+                dbCode: content.dbCode || '',
+                dbName: content.dbName || '',
+            }),
+            onCancel: () => {
+                const aborter = sqlExecAborters.get(id);
+                if (aborter) {
+                    aborter.abort();
 
-        progress.props.progress.title = content.title;
-        progress.props.progress.executedStatements = content.executedStatements;
-        if (!sqlExecNotifyMap.has(id)) {
-            progress.notification = ElNotification({
-                duration: 0,
-                title: message.title,
-                message: h(ProgressNotify, progress.props),
-                type: 'info',
-                showClose: false,
-            });
-            sqlExecNotifyMap.set(id, progress);
+                    // 更新通知状态为取消
+                    if (aborter.progress) {
+                        nextTick(() => {
+                            aborter.progress.status = 'cancelled';
+                            aborter.progress.terminated = true;
+                        });
+
+                        // 延迟后关闭通知
+                        setTimeout(() => {
+                            completeNotification(id, 1000);
+                            sqlExecAborters.delete(id);
+                        }, 1500);
+                    } else {
+                        sqlExecAborters.delete(id);
+                    }
+                }
+            },
+        };
+
+        // 创建或更新通知
+        createOrUpdateNotification(id, 'sqlScriptRun', content, DbSqlExecProgress, props, {
+            title: message.title || 'db.sqlExecute',
+            onCancel: props.onCancel,
+        });
+
+        // 如果有待注册的 abort 方法，现在注册
+        const pendingAbort = pendingSqlExecAborters.get(id);
+        if (pendingAbort) {
+            sqlExecAborters.set(id, { abort: pendingAbort, progress: props.progress });
+            pendingSqlExecAborters.delete(id);
         }
     });
+}
+
+/**
+ * 注册SQL执行任务的取消方法
+ * @param execId 执行ID
+ * @param abort 取消方法
+ */
+export function registerSqlExecAborter(execId: string, abort: () => void) {
+    // 先检查通知是否已经存在
+    const task = activeNotifications.get(execId);
+    const progress = task?.componentProps?.progress || null;
+
+    if (progress) {
+        // 通知已存在，直接注册
+        sqlExecAborters.set(execId, { abort, progress });
+    } else {
+        // 通知还未创建，保存为 pending
+        pendingSqlExecAborters.set(execId, abort);
+    }
 }

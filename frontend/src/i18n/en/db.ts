@@ -225,6 +225,14 @@ export default {
 
         running: 'Running',
         waitRun: 'Wait Run',
+        
+        // SQL execution
+        sqlExecute: 'SQL Execution',
+        executedStatements: 'Executed',
+        elapsedTime: 'Elapsed',
+        scriptFileUploadSuccess: 'SQL file [{filename}] executed successfully',
+        scriptFileUploadCancelled: 'SQL file [{filename}] execution cancelled',
+        scriptFileUploadFailed: 'SQL file [{filename}] execution failed: {error}',
     },
     es: {
         keywordPlaceholder: 'host / name / code',

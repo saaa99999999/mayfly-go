@@ -27,6 +27,7 @@ type DbInfo struct {
 
 	InstanceId uint64 // 实例id
 	Id         uint64 // dbId
+	DbCode     string
 	Name       string
 
 	Type     DbType // 类型，mysql postgres等

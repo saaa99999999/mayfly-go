@@ -309,6 +309,8 @@
 import { ElInput, ElMessage } from 'element-plus';
 import { computed, defineAsyncComponent, onMounted, reactive, ref, toRefs } from 'vue';
 import { machineApi, uploadFile, uploadFolder } from '../api';
+import { registerUploadAborter } from '@/components/sysmsg/machine/machine-file-upload-progress';
+import { registerFolderUploadAborter } from '@/components/sysmsg/machine/machine-folder-upload-progress';
 
 import { isTrue, notBlank } from '@/common/assert';
 import config from '@/common/config';
@@ -789,10 +791,8 @@ function handleFolderUpload(e: any) {
         return;
     }
 
-    console.log('[MachineFile] Folder upload:', files.length, 'files, total size:', totalFileSize);
-
     // 使用文件夹上传接口
-    uploadFolder(
+    const { uploadId, abort } = uploadFolder(
         files,
         {
             machineId: props.machineId as number,
@@ -814,6 +814,9 @@ function handleFolderUpload(e: any) {
         }
     );
 
+    // 注册取消方法
+    registerFolderUploadAborter(uploadId, abort);
+
     // 清空已选择的文件夹
     const folderEle: any = document.getElementById('folderUploadInput');
     if (folderEle) {
@@ -831,7 +834,7 @@ const handleFileUpload = (content: any) => {
     }
 
     // 上传文件
-    uploadFile(
+    const { uploadId, abort } = uploadFile(
         file,
         {
             machineId: props.machineId as number,
@@ -853,6 +856,9 @@ const handleFileUpload = (content: any) => {
             },
         }
     );
+
+    // 注册取消方法
+    registerUploadAborter(uploadId, abort);
 };
 
 const uploadSuccess = (res: any) => {

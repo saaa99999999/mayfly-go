@@ -19,7 +19,10 @@ import '@xterm/xterm/css/xterm.css';
 import config from '@/common/config';
 import { createWebSocket, joinClientParams } from '@/common/request';
 import { downloadFile } from '@/common/utils/file';
+import { copyToClipboard } from '@/common/utils/string';
 import { Contextmenu, ContextmenuItem } from '@/components/contextmenu';
+import { registerUploadAborter } from '@/components/sysmsg/machine/machine-file-upload-progress';
+import { registerFolderUploadAborter } from '@/components/sysmsg/machine/machine-folder-upload-progress';
 import { useThemeConfig } from '@/store/themeConfig';
 import { machineApi, uploadFile, uploadFolder } from '@/views/ops/machine/api';
 import { useDebounceFn, useEventListener } from '@vueuse/core';
@@ -367,11 +370,6 @@ const setupContextMenu = () => {
     terminalRef.value.addEventListener('contextmenu', async (event: MouseEvent) => {
         event.preventDefault();
 
-        // 如果没有 machineId，不显示文件传输菜单
-        if (!props.machineId || !props.authCertName) {
-            return; // 直接返回，不显示任何菜单
-        }
-
         showContextMenu(event, term.getSelection());
     });
 };
@@ -386,26 +384,41 @@ const showContextMenu = (event: MouseEvent, selectedText: string) => {
 
     // 始终添加上传文件和上传文件夹按钮
     state.contextmenu.items = [
+        new ContextmenuItem('copy', 'common.copy')
+            .withIcon('CopyDocument')
+            .withHideFunc(() => !selectedText)
+            .withOnClick(() => {
+                copyToClipboard(selectedText);
+            }),
+        new ContextmenuItem('paste', 'common.paste').withIcon('Document').withOnClick(async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    term.paste(text);
+                    focus();
+                }
+            } catch (err) {
+                console.log(err);
+                ElMessage.error(t('common.pasteFailed'));
+            }
+        }),
         new ContextmenuItem('download', 'components.terminal.downloadSelectedFile')
             .withIcon('Download')
             .withHideFunc(() => !selectedText)
             .withOnClick(() => {
                 downloadSelectedFile(state.contextmenu.selectedItem);
-                contextmenuRef.value?.closeContextmenu();
             }),
         new ContextmenuItem('uploadFile', 'components.terminal.uploadFileToCurrentDir')
             .withIcon('Upload')
-            .withHideFunc(() => false)
+            .withHideFunc(() => !props.machineId || !props.authCertName)
             .withOnClick(() => {
                 triggerFilesUpload();
-                contextmenuRef.value?.closeContextmenu();
             }),
         new ContextmenuItem('uploadFolder', 'components.terminal.uploadFolderToCurrentDir')
             .withIcon('Upload')
-            .withHideFunc(() => false)
+            .withHideFunc(() => !props.machineId || !props.authCertName)
             .withOnClick(() => {
                 triggerFolderUpload();
-                contextmenuRef.value?.closeContextmenu();
             }),
     ];
 
@@ -501,7 +514,7 @@ const uploadFilesToCurrentPath = async (files: FileList) => {
         const file = files[0];
 
         // 使用统一的 HTTP 上传方法
-        uploadFile(
+        const { uploadId, abort } = uploadFile(
             file,
             {
                 machineId: props.machineId as number,
@@ -520,6 +533,9 @@ const uploadFilesToCurrentPath = async (files: FileList) => {
                 },
             }
         );
+
+        // 注册取消方法
+        registerUploadAborter(uploadId, abort);
     } catch (error: any) {
         ElMessage.error(t('components.terminal.uploadFailed', { error: error.message }));
     }
@@ -532,7 +548,7 @@ const uploadFolderToCurrentPath = async (files: FileList) => {
         const currentPath = await getCurrentPathOrDefault();
 
         // 使用文件夹上传
-        uploadFolder(
+        const { uploadId, abort } = uploadFolder(
             files,
             {
                 machineId: props.machineId as number,
@@ -550,6 +566,9 @@ const uploadFolderToCurrentPath = async (files: FileList) => {
                 },
             }
         );
+
+        // 注册取消方法
+        registerFolderUploadAborter(uploadId, abort);
     } catch (error: any) {
         ElMessage.error(t('components.terminal.uploadFailed', { error: error.message }));
     }

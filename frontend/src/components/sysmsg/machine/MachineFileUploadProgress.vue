@@ -17,43 +17,46 @@
             <span class="flex-1 text-sm font-semibold text-gray-700 dark:text-gray-200 truncate" :title="progress.filename">
                 {{ progress.filename }}
             </span>
+            <!-- 取消按钮 -->
+            <el-button v-if="progress.status === '' || progress.status === 'uploading'" type="danger" size="small" text @click="handleCancel">
+                <SvgIcon name="Close" :size="14" />
+                {{ $t('common.cancel') }}
+            </el-button>
         </div>
 
         <!-- 进度条 -->
         <div class="flex items-center gap-2 mb-3">
             <div class="flex-1">
-                <el-progress :percentage="percent" :status="progress.status" :stroke-width="10" :show-text="false" />
+                <el-progress :percentage="percent" :status="progressStatus" :stroke-width="10" :show-text="false" />
             </div>
             <span class="text-sm font-bold text-primary min-w-[45px] text-right"> {{ percent }}% </span>
         </div>
 
         <!-- 详细信息 -->
-        <div class="bg-gray-50 dark:bg-gray-800 rounded-md p-3">
-            <div class="flex items-center justify-between mb-2 text-xs">
-                <span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 font-medium">
-                    <SvgIcon name="Upload" :size="14" />
-                    {{ t('components.terminal.machineFileUpload.uploaded') }}
-                </span>
-                <span class="font-mono font-semibold text-gray-800 dark:text-gray-200">
-                    {{ formatByteSize(progress.uploadedSize) }}
-                </span>
-            </div>
-            <div class="flex items-center justify-between mb-2 text-xs">
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-md px-3 py-2">
+            <div class="flex items-center justify-between text-xs gap-4">
                 <span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 font-medium">
                     <SvgIcon name="Files" :size="14" />
-                    {{ t('components.terminal.machineFileUpload.totalSize') }}
+                    {{ $t('components.terminal.machineFileUpload.totalSize') }}
+                    <span class="font-mono font-semibold text-gray-800 dark:text-gray-200">
+                        {{ formatByteSize(progress.totalSize) }}
+                    </span>
                 </span>
-                <span class="font-mono font-semibold text-gray-800 dark:text-gray-200">
-                    {{ formatByteSize(progress.totalSize) }}
+
+                <span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 font-medium">
+                    <SvgIcon name="Upload" :size="14" />
+                    {{ $t('components.terminal.machineFileUpload.uploaded') }}
+                    <span class="font-mono font-semibold text-gray-800 dark:text-gray-200">
+                        {{ formatByteSize(progress.uploadedSize) }}
+                    </span>
                 </span>
-            </div>
-            <div class="flex items-center justify-between text-xs">
+
                 <span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 font-medium">
                     <SvgIcon name="Odometer" :size="14" />
-                    {{ t('components.terminal.machineFileUpload.speed') }}
-                </span>
-                <span class="font-mono font-semibold text-primary">
-                    {{ speed }}
+                    {{ $t('components.terminal.machineFileUpload.speed') }}
+                    <span class="font-mono font-semibold text-primary">
+                        {{ speed }}
+                    </span>
                 </span>
             </div>
         </div>
@@ -62,7 +65,6 @@
 
 <script lang="ts" setup>
 import { formatByteSize } from '@/common/utils/format';
-import { i18n } from '@/i18n';
 import TagCodePath from '@/views/ops/component/TagCodePath.vue';
 import { computed, ref } from 'vue';
 
@@ -74,11 +76,12 @@ interface Progress {
     uploadedSize: number;
     totalSize: number;
     timestamp?: number; // 时间戳，用于计算速度
-    status: '' | 'success' | 'exception' | 'warning';
+    status: '' | 'complete' | 'error' | 'uploading';
 }
 
 interface Props {
     progress?: Progress;
+    onCancel?: () => void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -92,9 +95,20 @@ const props = withDefaults(defineProps<Props>(), {
         timestamp: 0,
         status: '',
     }),
+    onCancel: undefined,
 });
 
-const t = i18n.global.t;
+const progressStatus = computed(() => {
+    if (props.progress.status === 'complete') {
+        return 'success';
+    } else if (props.progress.status === 'error') {
+        return 'danger';
+    } else if (props.progress.status === 'uploading') {
+        return 'primary';
+    } else {
+        return '';
+    }
+});
 
 // 计算百分比
 const percent = computed(() => {
@@ -141,4 +155,11 @@ const speed = computed(() => {
         return `${(speedBytes / (1024 * 1024)).toFixed(1)} MB/s`;
     }
 });
+
+// 处理取消上传
+const handleCancel = () => {
+    if (props.onCancel) {
+        props.onCancel();
+    }
+};
 </script>

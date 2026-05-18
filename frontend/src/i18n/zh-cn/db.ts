@@ -219,5 +219,13 @@ export default {
 
         running: '运行中',
         waitRun: '待运行',
+        
+        // SQL执行
+        sqlExecute: 'SQL执行',
+        executedStatements: '已执行',
+        elapsedTime: '已用时',
+        scriptFileUploadSuccess: 'SQL文件【{filename}】执行成功',
+        scriptFileUploadCancelled: 'SQL文件【{filename}】执行已取消',
+        scriptFileUploadFailed: 'SQL文件【{filename}】执行失败: {error}',
     },
 };

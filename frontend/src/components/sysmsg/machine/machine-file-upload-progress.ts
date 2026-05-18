@@ -1,27 +1,13 @@
 import syssocket from '@/common/syssocket';
-import { reactive, h } from 'vue';
-import { ElNotification } from 'element-plus';
+import { createOrUpdateNotification, completeNotification, activeNotifications } from '../global-notification-manager';
 import MachineFileUploadProgress from './MachineFileUploadProgress.vue';
+import { reactive, nextTick } from 'vue';
 
-// 文件上传进度通知映射表（key: uploadId, value: 通知实例）
-const fileUploadNotifyMap: Map<string, any> = new Map();
+// 存储上传任务的取消方法
+const uploadAborters = new Map<string, { abort: () => void; progress?: any }>();
 
-/**
- * 构建机器文件上传进度组件属性
- */
-const buildMachineFileUploadProgressProps = (): any => {
-    return {
-        progress: reactive({
-            authCertName: '', // 授权凭证名
-            path: '', // 文件路径
-            filename: '',
-            uploadedSize: 0,
-            totalSize: 0,
-            timestamp: 0,
-            status: '', // '' | 'success' | 'exception'
-        }),
-    };
-};
+// 存储待注册的 abort 方法（等待 WebSocket 消息到达）
+const pendingAborters = new Map<string, () => void>();
 
 /**
  * 注册机器文件上传进度消息处理
@@ -31,77 +17,79 @@ export async function registerMachineFileUploadProgress() {
         const content = message.params;
         const uploadId = content.uploadId;
 
-        // 上传完成或失败，关闭通知
+        // 上传完成或失败
         if (content.status === 'complete' || content.status === 'error') {
-            const notify = fileUploadNotifyMap.get(uploadId);
-
-            if (notify && notify.notification) {
-                // 更新最终状态
-                notify.props.progress.status = content.status === 'complete' ? 'success' : 'exception';
-                notify.props.progress.percent = content.status === 'complete' ? 100 : notify.props.progress.percent;
-
-                // 强制更新 VNode
-                try {
-                    if (notify.notification.state) {
-                        notify.notification.state.message = h(MachineFileUploadProgress, notify.props);
-                    } else if (notify.notification.vm) {
-                        notify.notification.vm.exposed?.message?.(h(MachineFileUploadProgress, notify.props));
-                    }
-                } catch (e) {
-                    console.warn('[MachineFileUpload] Failed to update notification VNode:', e);
-                }
-
-                // 1秒后关闭通知
-                setTimeout(() => {
-                    if (notify.notification) {
-                        notify.notification.close();
-                    }
-                    fileUploadNotifyMap.delete(uploadId);
-                }, 1000);
-            }
+            completeNotification(uploadId, 1000);
+            uploadAborters.delete(uploadId);
             return;
         }
 
-        // 获取或创建通知
-        let notify = fileUploadNotifyMap.get(uploadId);
-        if (!notify) {
-            notify = {
-                props: buildMachineFileUploadProgressProps(),
-                notification: undefined,
-            };
-            fileUploadNotifyMap.set(uploadId, notify);
-        }
+        // 构建组件props
+        const props = {
+            progress: reactive({
+                authCertName: content.authCertName || '',
+                path: content.path || '',
+                filename: content.filename || '',
+                uploadedSize: content.uploadedSize || 0,
+                totalSize: content.totalSize || 0,
+                timestamp: content.timestamp || 0,
+                status: content.status || 'uploading',
+            }),
+            onCancel: () => {
+                const aborter = uploadAborters.get(uploadId);
+                if (aborter) {
+                    aborter.abort();
 
-        // 更新进度
-        notify.props.progress.authCertName = content.authCertName || '';
-        notify.props.progress.path = content.path || '';
-        notify.props.progress.filename = content.filename || notify.props.progress.filename;
-        notify.props.progress.uploadedSize = content.uploadedSize || 0;
-        notify.props.progress.totalSize = content.totalSize || 0;
-        notify.props.progress.timestamp = content.timestamp || 0;
-        notify.props.progress.status = 'uploading';
+                    // 更新通知状态为取消
+                    if (aborter.progress) {
+                        nextTick(() => {
+                            aborter.progress.status = 'error';
+                            aborter.progress.filename = '已取消: ' + (aborter.progress.filename || '');
+                        });
 
-        // 首次创建通知
-        if (!notify.notification) {
-            notify.notification = ElNotification({
-                duration: 0,
-                title: message.title || '机器文件上传',
-                message: h(MachineFileUploadProgress, notify.props),
-                showClose: true,
-                offset: 60,
-                customClass: 'machine-file-upload-notification',
-            });
-        } else {
-            // 已存在通知，强制更新 message
-            try {
-                if (notify.notification.state) {
-                    notify.notification.state.message = h(MachineFileUploadProgress, notify.props);
-                } else if (notify.notification.vm) {
-                    notify.notification.vm.exposed?.message?.(h(MachineFileUploadProgress, notify.props));
+                        // 延迟后关闭通知
+                        setTimeout(() => {
+                            completeNotification(uploadId, 1000);
+                            uploadAborters.delete(uploadId);
+                        }, 1500);
+                    } else {
+                        uploadAborters.delete(uploadId);
+                    }
                 }
-            } catch (e) {
-                console.warn('[MachineFileUpload] Failed to update notification VNode:', e);
-            }
+            },
+        };
+
+        // 创建或更新上传通知
+        createOrUpdateNotification(uploadId, 'machineFileUpload', content, MachineFileUploadProgress, props, {
+            title: message.title || 'machine.fileUpload',
+            onCancel: props.onCancel,
+        });
+
+        // 如果有待注册的 abort 方法，现在注册
+        const pendingAbort = pendingAborters.get(uploadId);
+        if (pendingAbort) {
+            console.log('[MachineFileUpload] Registering pending aborter for uploadId:', uploadId);
+            uploadAborters.set(uploadId, { abort: pendingAbort, progress: props.progress });
+            pendingAborters.delete(uploadId);
         }
     });
+}
+
+/**
+ * 注册上传任务的取消方法
+ * @param uploadId 上传ID
+ * @param abort 取消方法
+ */
+export function registerUploadAborter(uploadId: string, abort: () => void) {
+    // 先检查通知是否已经存在
+    const task = activeNotifications.get(uploadId);
+    const progress = task?.componentProps?.progress || null;
+
+    if (progress) {
+        // 通知已存在，直接注册
+        uploadAborters.set(uploadId, { abort, progress });
+    } else {
+        // 通知还未创建，保存为 pending
+        pendingAborters.set(uploadId, abort);
+    }
 }

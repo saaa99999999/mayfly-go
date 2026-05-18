@@ -88,7 +88,6 @@ type machineFileAppImpl struct {
 
 var _ MachineFile = (*machineFileAppImpl)(nil)
 
-
 // 分页获取机器文件配置信息列表
 func (m *machineFileAppImpl) GetPageList(condition *entity.MachineFile, pageParam model.PageParam, orderBy ...string) (*model.PageResult[*entity.MachineFile], error) {
 	return m.GetRepo().GetPageList(condition, pageParam, orderBy...)
@@ -305,7 +304,17 @@ func (m *machineFileAppImpl) UploadFile(ctx context.Context, opParam *dto.Machin
 			return nil, err
 		}
 		defer file.Close()
-		io.Copy(file, reader)
+
+		// 使用 io.Copy 并检查错误
+		_, err = io.Copy(file, reader)
+		if err != nil {
+			// 检查是否是连接断开导致的错误
+			if ctx.Err() != nil {
+				logx.WarnfContext(ctx, "Upload file cancelled by client: %s", filename)
+				return nil, ctx.Err()
+			}
+			return nil, fmt.Errorf("copy file error: %w", err)
+		}
 		return &mcm.MachineInfo{Name: opParam.AuthCertName, Ip: opParam.AuthCertName}, nil
 	}
 
@@ -319,7 +328,17 @@ func (m *machineFileAppImpl) UploadFile(ctx context.Context, opParam *dto.Machin
 		return mi, err
 	}
 	defer createfile.Close()
-	io.Copy(createfile, reader)
+
+	// 使用 io.Copy 并检查错误
+	_, err = io.Copy(createfile, reader)
+	if err != nil {
+		// 检查是否是连接断开导致的错误
+		if ctx.Err() != nil {
+			logx.WarnfContext(ctx, "Upload file cancelled by client: %s", filename)
+			return mi, ctx.Err()
+		}
+		return mi, fmt.Errorf("copy file error: %w", err)
+	}
 	return mi, err
 }
 

@@ -18,6 +18,9 @@
         <router-view v-if="!themeConfig.isWatermark" />
 
         <Setings />
+        
+        <!-- 全局系统通知悬浮按钮 -->
+        <GlobalNotificationFab />
     </el-config-provider>
 </template>
 
@@ -31,6 +34,7 @@ import { useI18n } from 'vue-i18n';
 import EnumValue from './common/Enum';
 import { I18nEnum } from './common/commonEnum';
 import { saveThemeConfig } from './common/utils/storage';
+import GlobalNotificationFab from '@/components/sysmsg/GlobalNotificationFab.vue';
 
 const Setings = defineAsyncComponent(() => import('@/layout/navBars/breadcrumb/setings.vue'));
 

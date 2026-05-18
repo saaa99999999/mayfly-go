@@ -20,6 +20,7 @@
                         class="sql-file-exec"
                         :before-upload="beforeUpload"
                         :on-success="execSqlFileSuccess"
+                        :http-request="handleSqlFileUpload"
                         :headers="{ Authorization: token }"
                         :action="getUploadSqlFileUrl()"
                         :show-file-list="false"
@@ -141,7 +142,7 @@ import { editor } from 'monaco-editor';
 
 import DbTableData from '@/views/ops/db/component/table/DbTableData.vue';
 import { DbInst } from '../../db';
-import { dbApi } from '../../api';
+import { dbApi, uploadSqlFile } from '../../api';
 
 import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
 import { joinClientParams } from '@/common/request';
@@ -769,6 +770,29 @@ const replaceSelection = (str: string, selection: any) => {
 
 const beforeUpload = (file: File) => {
     ElMessage.success(t('db.scriptFileUploadRunning', { filename: file.name }));
+};
+
+// 自定义SQL文件上传处理
+const handleSqlFileUpload = (options: any) => {
+    const { file } = options;
+
+    const { uploadId, abort } = uploadSqlFile(
+        file,
+        {
+            dbId: props.dbId as number,
+            dbName: props.dbName as string,
+        },
+        {
+            onSuccess: () => {
+                ElMessage.success(t('db.scriptFileUploadSuccess', { filename: file.name }));
+            },
+            onError: (error) => {
+                ElMessage.error(t('db.scriptFileUploadFailed', { filename: file.name, error: error.message }));
+            },
+        }
+    );
+
+    return { abort };
 };
 
 // 执行sql成功

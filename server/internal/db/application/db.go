@@ -187,6 +187,7 @@ func (d *dbAppImpl) GetDbConn(ctx context.Context, dbId uint64, dbName string) (
 		}
 		di.CodePath = d.tagApp.ListTagPathByTypeAndCode(int8(tagentity.TagTypeDb), db.Code)
 		di.Id = db.Id
+		di.DbCode = db.Code
 
 		checkDb := di.GetDatabase()
 		if db.GetDatabaseMode == entity.DbGetDatabaseModeAssign && !strings.Contains(" "+db.Database+" ", " "+checkDb+" ") {

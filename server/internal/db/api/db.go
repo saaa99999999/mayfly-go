@@ -166,15 +166,17 @@ func (d *Db) ExecSql(rc *req.Ctx) {
 
 // 执行sql文件
 func (d *Db) ExecSqlFile(rc *req.Ctx) {
-	multipart, err := rc.GetRequest().MultipartReader()
-	biz.ErrIsNilAppendErr(err, "failed to read sql file: %s")
-	file, err := multipart.NextPart()
+	fileheader, err := rc.FormFile("file")
+	biz.ErrIsNilAppendErr(err, "read form file error: %s")
+
+	file, err := fileheader.Open()
 	biz.ErrIsNilAppendErr(err, "failed to read sql file: %s")
 	defer file.Close()
-	filename := file.FileName()
+	filename := fileheader.Filename
 	dbId := getDbId(rc)
-	dbName := getDbName(rc)
 	clientId := rc.Query("clientId")
+	dbName := rc.PostForm("db")
+	uploadId := rc.PostForm("uploadId")
 
 	dbConn, err := d.dbApp.GetDbConn(rc.MetaCtx, dbId, dbName)
 	biz.ErrIsNil(err)
@@ -186,6 +188,7 @@ func (d *Db) ExecSqlFile(rc *req.Ctx) {
 		Filename: filename,
 		DbConn:   dbConn,
 		ClientId: clientId,
+		UploadId: uploadId,
 	}))
 }
 

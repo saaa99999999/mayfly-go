@@ -100,6 +100,13 @@ type progressReader struct {
 }
 
 func (r *progressReader) Read(p []byte) (n int, err error) {
+	// 先检查 context 是否已取消
+	select {
+	case <-r.ctx.Done():
+		return 0, r.ctx.Err()
+	default:
+	}
+
 	n, err = r.reader.Read(p)
 	if n > 0 {
 		r.readSize += int64(n)
@@ -339,6 +346,27 @@ func (m *MachineFile) UploadFile(rc *req.Ctx) {
 	mi, err = m.machineFileApp.UploadFile(ctx, opForm, fileheader.Filename, reader)
 	rc.ReqParam = collx.Kvs("machine", mi, "path", fmt.Sprintf("%s/%s", path, fileheader.Filename))
 
+	// 检查是否是取消操作
+	if err != nil {
+		logx.ErrorfContext(ctx, "[UploadFile] Upload error: %v, uploadId: %s, ctx.Err: %v", err, uploadId, ctx.Err())
+		if ctx.Err() != nil {
+			logx.InfofContext(ctx, "File upload cancelled by client: %s, uploadId: %s", fileheader.Filename, uploadId)
+			// 发送取消通知
+			if hasProgressNotify {
+				progressMsgEvent := &msgdto.MsgTmplSendEvent{
+					TmplChannel: msgdto.MsgTmplMachineFileUploadProgress,
+					Params: collx.M{
+						"uploadId": uploadId,
+						"status":   "error",
+					},
+					ReceiverIds: []uint64{contextx.GetLoginAccount(ctx).Id},
+				}
+				global.EventBus.Publish(ctx, event.EventTopicMsgTmplSend, progressMsgEvent)
+			}
+			return
+		}
+	}
+
 	// 发送完成通知
 	if hasProgressNotify && err == nil {
 		progressMsgEvent := &msgdto.MsgTmplSendEvent{
@@ -477,7 +505,7 @@ func (m *MachineFile) UploadFolder(rc *req.Ctx) {
 		for _, chunk := range chunks {
 			wg.Go(func() {
 				defer gox.Recover(func(e error) {
-					logx.Errorf("upload folder error: %s", e)
+					logx.ErrorfContext(ctx, "upload folder error: %s", e)
 				})
 
 				for _, file := range chunk {
@@ -495,7 +523,7 @@ func (m *MachineFile) UploadFolder(rc *req.Ctx) {
 
 					createfile, err := sftpCli.Create(fmt.Sprintf("%s/%s/%s", basePath, dir, fileHeader.Filename))
 					if err != nil {
-						logx.Errorf("create file error: %s", err)
+						logx.ErrorfContext(ctx, "create file error: %s", err)
 						file.Close()
 
 						// 从正在上传列表移除
@@ -539,7 +567,6 @@ func (m *MachineFile) UploadFolder(rc *req.Ctx) {
 										"path":           basePath,
 										"uploadId":       uploadId,
 										"folderName":     folderName,
-										"lastFile":       fullPath,
 										"totalFiles":     totalFiles,
 										"uploadedFiles":  uploadedFiles,
 										"totalSize":      totalSize,
@@ -559,7 +586,14 @@ func (m *MachineFile) UploadFolder(rc *req.Ctx) {
 					_, err = io.Copy(createfile, reader)
 
 					if err != nil {
-						logx.Errorf("copy file error: %s", err)
+						logx.ErrorfContext(ctx, "copy file error: %s, uploadId: %s", err, uploadId)
+						// 检查是否是取消操作
+						if ctx.Err() != nil {
+							logx.InfofContext(ctx, "Folder upload cancelled by client, uploadId: %s", uploadId)
+							file.Close()
+							createfile.Close()
+							return
+						}
 					}
 
 					// 累加已上传大小

@@ -184,21 +184,23 @@ func (d *dbSqlExecAppImpl) ExecReader(ctx context.Context, execReader *dto.SqlRe
 	clientId := execReader.ClientId
 	filename := stringx.Truncate(execReader.Filename, 20, 10, "...")
 	la := contextx.GetLoginAccount(ctx)
-	needSendMsg := la != nil && clientId != ""
+	needSendMsg := la != nil && clientId != "" && execReader.UploadId != ""
 
 	startTime := time.Now()
 	executedStatements := 0
-	progressId := stringx.Rand(32)
 
+	dbInfo := dbConn.Info
 	msgEvent := &msgdto.MsgTmplSendEvent{
 		TmplChannel: msgdto.MsgTmplSqlScriptRunSuccess,
-		Params:      collx.M{"filename": filename, "dbId": dbConn.Info.Id, "dbName": dbConn.Info.Name},
+		Params:      collx.M{"filename": filename, "dbId": dbInfo.Id, "dbName": dbInfo.Name},
 	}
 
 	progressMsgEvent := &msgdto.MsgTmplSendEvent{
 		TmplChannel: msgdto.MsgTmplSqlScriptRunProgress,
 		Params: collx.M{
-			"id":                 progressId,
+			"id":                 execReader.UploadId,
+			"dbCode":             dbInfo.DbCode,
+			"dbName":             dbInfo.Name,
 			"title":              filename,
 			"executedStatements": executedStatements,
 			"terminated":         false,
@@ -233,6 +235,16 @@ func (d *dbSqlExecAppImpl) ExecReader(ctx context.Context, execReader *dto.SqlRe
 	// 使用方言切割器进行 SQL 切割
 	splitter := dbConn.GetDialect().GetSQLSplitter()
 	err := splitter.SplitSQL(execReader.Reader, func(sql string) error {
+		// 检查context是否已取消
+		if ctx.Err() != nil {
+			if needSendMsg {
+				progressMsgEvent.Params["executedStatements"] = executedStatements
+				progressMsgEvent.Params["status"] = "cancelled"
+				global.EventBus.Publish(ctx, event.EventTopicMsgTmplSend, progressMsgEvent)
+			}
+			return errorx.NewBizI(ctx, imsg.ErrSqlExecCancelled)
+		}
+
 		if executedStatements%50 == 0 {
 			if needSendMsg {
 				progressMsgEvent.Params["executedStatements"] = executedStatements
