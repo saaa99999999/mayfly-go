@@ -56,17 +56,17 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, toRefs, reactive, watch, onMounted } from 'vue';
-import { cronJobApi, machineApi } from '../api';
-import { CronJobStatusEnum, CronJobSaveExecResTypeEnum } from '../enums';
-import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
+import { TagResourceTypeEnum } from '@/common/commonEnum';
+import { Rules } from '@/common/rule';
 import CrontabInput from '@/components/crontab/CrontabInput.vue';
 import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
-import TagTreeCheck from '../../component/TagTreeCheck.vue';
-import { TagResourceTypeEnum } from '@/common/commonEnum';
 import EnumSelect from '@/components/enumselect/EnumSelect.vue';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
-import { Rules } from '@/common/rule';
+import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
+import { onMounted, reactive, ref, toRefs, watch } from 'vue';
+import TagTreeCheck from '../../component/TagTreeCheck.vue';
+import { cronJobApi, machineApi } from '../api';
+import { CronJobSaveExecResTypeEnum, CronJobStatusEnum } from '../enums';
 
 const props = defineProps({
     visible: {
@@ -136,7 +136,7 @@ const btnOk = async () => {
         await useI18nFormValidate(formRef);
         state.submitDisabled = true;
         await cronJobApi.save.request(state.form);
-        useI18nSaveSuccessMsg();
+        Msg.saveSuccess();
         emit('submitSuccess');
         cancel();
     } finally {

@@ -57,11 +57,11 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, reactive, watch, useTemplateRef } from 'vue';
-import { accountApi } from '../api';
-import { randomPassword } from '@/common/utils/string';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
 import { Rules } from '@/common/rule';
+import { randomPassword } from '@/common/utils/string';
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
+import { reactive, toRefs, useTemplateRef, watch } from 'vue';
+import { accountApi } from '../api';
 
 const props = defineProps({
     account: {
@@ -126,7 +126,7 @@ watch(props, (newValue: any) => {
 const onConfirm = async () => {
     await useI18nFormValidate(accountFormRef);
     await saveAccountExec();
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     emit('val-change', state.form);
     //重置表单域
     accountFormRef.value.resetFields();

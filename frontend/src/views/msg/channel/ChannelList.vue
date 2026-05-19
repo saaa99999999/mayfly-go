@@ -26,12 +26,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, toRefs, reactive, onMounted, Ref } from 'vue';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
 import { hasPerms } from '@/components/auth/auth';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
-import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle } from '@/hooks/useI18n';
+import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
+import { onMounted, reactive, ref, Ref, toRefs } from 'vue';
 import { channelApi } from '../api';
 import { ChannelStatusEnum, ChannelTypeEnum } from '../enums';
 import ChannelEdit from './ChannelEdit.vue';
@@ -106,7 +106,7 @@ const editChannel = (data: any) => {
 const deleteChannel = async () => {
     await useI18nDeleteConfirm(state.selectionData.map((x: any) => x.code).join('、'));
     await channelApi.del.request({ id: state.selectionData.map((x: any) => x.id).join(',') });
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     search();
 };
 </script>

@@ -19,20 +19,21 @@ import '@xterm/xterm/css/xterm.css';
 import config from '@/common/config';
 import { createWebSocket, joinClientParams } from '@/common/request';
 import { downloadFile } from '@/common/utils/file';
-import { copyToClipboard } from '@/common/utils/string';
+import { copyToClipboard, pasteFromClipboard } from '@/common/utils/string';
 import { Contextmenu, ContextmenuItem } from '@/components/contextmenu';
 import { registerUploadAborter } from '@/components/sysmsg/machine/machine-file-upload-progress';
 import { registerFolderUploadAborter } from '@/components/sysmsg/machine/machine-folder-upload-progress';
 import { useThemeConfig } from '@/store/themeConfig';
 import { machineApi, uploadFile, uploadFolder } from '@/views/ops/machine/api';
 import { useDebounceFn, useEventListener } from '@vueuse/core';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { storeToRefs } from 'pinia';
 import { nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import TerminalSearch from './TerminalSearch.vue';
 import { TerminalStatus } from './common';
 import themes from './themes.js';
+import { Msg } from '@/hooks/useI18n';
 
 const { t } = useI18n();
 
@@ -391,15 +392,27 @@ const showContextMenu = (event: MouseEvent, selectedText: string) => {
                 copyToClipboard(selectedText);
             }),
         new ContextmenuItem('paste', 'common.paste').withIcon('Document').withOnClick(async () => {
+            let text = '';
             try {
-                const text = await navigator.clipboard.readText();
-                if (text) {
-                    term.paste(text);
-                    focus();
+                // 尝试从剪贴板读取
+                text = await pasteFromClipboard();
+            } catch (error) {
+                // 读取失败（非 HTTPS 环境），弹出输入框让用户手动粘贴
+                try {
+                    const { value: manualText } = await ElMessageBox.prompt(t('components.terminal.pasteManualHint'), t('components.terminal.manualPaste'), {
+                        confirmButtonText: t('common.confirm'),
+                        cancelButtonText: t('common.cancel'),
+                        inputType: 'textarea',
+                        inputPlaceholder: t('components.terminal.pasteHere'),
+                    });
+                    text = manualText;
+                } catch {
+                    // 用户取消
                 }
-            } catch (err) {
-                console.log(err);
-                ElMessage.error(t('common.pasteFailed'));
+            }
+            if (text) {
+                term.paste(text);
+                focus();
             }
         }),
         new ContextmenuItem('download', 'components.terminal.downloadSelectedFile')
@@ -429,7 +442,7 @@ const showContextMenu = (event: MouseEvent, selectedText: string) => {
 // 下载选中的文件
 const downloadSelectedFile = async (filePath: string) => {
     if (!props.machineId || !props.authCertName) {
-        ElMessage.error(t('components.terminal.downloadFailed', { error: '缺少机器信息' }));
+        Msg.error('components.terminal.downloadFailed', { error: '缺少机器信息' });
         return;
     }
 
@@ -453,6 +466,7 @@ const downloadSelectedFile = async (filePath: string) => {
                 path: fullPath,
             });
         } catch (error: any) {
+            Msg.error('components.terminal.downloadFailed', { error: error.message });
             return;
         }
 
@@ -461,9 +475,9 @@ const downloadSelectedFile = async (filePath: string) => {
             `${config.baseApiUrl}/machines/${props.machineId}/files/${props.fileId}/download?path=${encodeURIComponent(fullPath)}&machineId=${props.machineId}&authCertName=${props.authCertName}&fileId=${props.fileId}&protocol=${props.protocol}&${joinClientParams()}`
         );
 
-        ElMessage.success(t('components.terminal.startDownload', { file: fullPath }));
+        Msg.success('components.terminal.startDownload', { file: fullPath });
     } catch (error: any) {
-        ElMessage.error(t('components.terminal.downloadFailed', { error: error.message }));
+        Msg.error('components.terminal.downloadFailed', { error: error.message });
     }
 };
 
@@ -526,10 +540,10 @@ const uploadFilesToCurrentPath = async (files: FileList) => {
             },
             {
                 onSuccess: () => {
-                    ElMessage.success(t('components.terminal.uploadSuccess'));
+                    Msg.success('components.terminal.uploadSuccess');
                 },
                 onError: (error) => {
-                    ElMessage.error(t('components.terminal.uploadFailed', { error: error.message }));
+                    Msg.error('components.terminal.uploadFailed', { error: error.message });
                 },
             }
         );
@@ -537,7 +551,7 @@ const uploadFilesToCurrentPath = async (files: FileList) => {
         // 注册取消方法
         registerUploadAborter(uploadId, abort);
     } catch (error: any) {
-        ElMessage.error(t('components.terminal.uploadFailed', { error: error.message }));
+        Msg.error('components.terminal.uploadFailed', { error: error.message });
     }
 };
 
@@ -559,10 +573,10 @@ const uploadFolderToCurrentPath = async (files: FileList) => {
             },
             {
                 onSuccess: () => {
-                    ElMessage.success(t('components.terminal.uploadSuccess'));
+                    Msg.success('components.terminal.uploadSuccess');
                 },
                 onError: (error: Error) => {
-                    ElMessage.error(t('components.terminal.uploadFailed', { error: error.message }));
+                    Msg.error('components.terminal.uploadFailed', { error: error.message });
                 },
             }
         );
@@ -570,7 +584,7 @@ const uploadFolderToCurrentPath = async (files: FileList) => {
         // 注册取消方法
         registerFolderUploadAborter(uploadId, abort);
     } catch (error: any) {
-        ElMessage.error(t('components.terminal.uploadFailed', { error: error.message }));
+        Msg.error('components.terminal.uploadFailed', { error: error.message });
     }
 };
 
@@ -616,7 +630,7 @@ const getCurrentPath = (): Promise<string> => {
 // 处理文件拖拽上传
 const handleFileDrop = async (items: DataTransferItemList) => {
     if (!props.machineId || !props.authCertName) {
-        ElMessage.error(t('components.terminal.uploadFailed', { error: '缺少机器信息' }));
+        Msg.error('components.terminal.uploadFailed', { error: '缺少机器信息' });
         return;
     }
 

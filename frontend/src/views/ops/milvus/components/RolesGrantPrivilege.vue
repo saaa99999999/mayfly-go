@@ -43,7 +43,11 @@
             </el-form-item>
 
             <!-- 数据库列表选择 - 仅数据库权限且为权限组授权模式显示 -->
-            <el-form-item :label="$t('milvus.databaseScope')" v-if="privilegeGroupTypeTab === 'database' && privilegeForm.grantType === 'privilegeGroup'" style="max-height: 400px">
+            <el-form-item
+                :label="$t('milvus.databaseScope')"
+                v-if="privilegeGroupTypeTab === 'database' && privilegeForm.grantType === 'privilegeGroup'"
+                style="max-height: 400px"
+            >
                 <el-row :gutter="16" style="width: 100%">
                     <el-col :span="24">
                         <el-card shadow="never" :body-style="{ padding: '0' }">
@@ -61,7 +65,7 @@
                                     >
                                         <div style="display: flex; align-items: center; justify-content: space-between">
                                             <span
-                                            ><strong>{{ $t('milvus.allDatabases') }} (*)</strong></span
+                                                ><strong>{{ $t('milvus.allDatabases') }} (*)</strong></span
                                             >
                                             <el-tag v-if="isDatabaseAuthorized('*')" size="small" type="success">
                                                 {{ $t('milvus.authorized') }}
@@ -93,7 +97,14 @@
             </el-form-item>
 
             <!-- 数据库和Collection左右列表选择 - Collection权限、自定义权限组、或具体权限授权模式显示 -->
-            <el-form-item :label="$t('milvus.databaseScope')" v-if="((privilegeGroupTypeTab === 'collection' || privilegeGroupTypeTab === 'custom') && privilegeForm.grantType === 'privilegeGroup') || privilegeForm.grantType === 'privilege'" style="max-height: 400px">
+            <el-form-item
+                :label="$t('milvus.databaseScope')"
+                v-if="
+                    ((privilegeGroupTypeTab === 'collection' || privilegeGroupTypeTab === 'custom') && privilegeForm.grantType === 'privilegeGroup') ||
+                    privilegeForm.grantType === 'privilege'
+                "
+                style="max-height: 400px"
+            >
                 <el-row :gutter="16" style="width: 100%">
                     <!-- 左侧：数据库列表 -->
                     <el-col :span="12">
@@ -112,7 +123,7 @@
                                     >
                                         <div style="display: flex; align-items: center; justify-content: space-between">
                                             <span
-                                            ><strong>{{ $t('milvus.allDatabases') }} (*)</strong></span
+                                                ><strong>{{ $t('milvus.allDatabases') }} (*)</strong></span
                                             >
                                             <el-tag v-if="isDatabaseAuthorized('*')" size="small" type="success">
                                                 {{ $t('milvus.authorized') }}
@@ -166,7 +177,7 @@
                                     >
                                         <div style="display: flex; align-items: center; justify-content: space-between">
                                             <span
-                                            ><strong>{{ $t('milvus.allCollections') }} (*)</strong></span
+                                                ><strong>{{ $t('milvus.allCollections') }} (*)</strong></span
                                             >
                                             <el-tag v-if="isCollectionAuthorized('*')" size="small" type="success">
                                                 {{ $t('milvus.authorized') }}
@@ -247,12 +258,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
-import { ElMessage } from 'element-plus';
+import { Msg } from '@/hooks/useI18n';
+import { computed, ref, watch } from 'vue';
 import { milvusApi } from '../api';
-import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
 const props = defineProps<{
     milvusId: number;
 }>();
@@ -266,23 +275,23 @@ const PRIVILEGE_GROUP_CATEGORIES = {
     CLUSTER: {
         name: 'cluster',
         label: '集群权限',
-        groupNames: ['ClusterReadOnly', 'ClusterReadWrite', 'ClusterAdmin']
+        groupNames: ['ClusterReadOnly', 'ClusterReadWrite', 'ClusterAdmin'],
     },
     DATABASE: {
         name: 'database',
         label: '数据库权限',
-        groupNames: ['DatabaseReadOnly', 'DatabaseReadWrite', 'DatabaseAdmin']
+        groupNames: ['DatabaseReadOnly', 'DatabaseReadWrite', 'DatabaseAdmin'],
     },
     COLLECTION: {
         name: 'collection',
         label: 'Collection权限',
-        groupNames: ['CollectionReadOnly', 'CollectionReadWrite', 'CollectionAdmin']
+        groupNames: ['CollectionReadOnly', 'CollectionReadWrite', 'CollectionAdmin'],
     },
     CUSTOM: {
         name: 'custom',
         label: '自定义权限组',
-        groupNames: [] // 其余所有权限组
-    }
+        groupNames: [], // 其余所有权限组
+    },
 };
 
 // Tab页签控制
@@ -381,7 +390,6 @@ const databaseAuthCount = computed(() => getAuthorizedCountByType('database'));
 const collectionAuthCount = computed(() => getAuthorizedCountByType('collection'));
 const customAuthCount = computed(() => getAuthorizedCountByType('custom'));
 
-
 const getPrivilegeAuthCount = () => {
     const version = privilegeStateVersion.value;
     let totalCount = 0;
@@ -428,7 +436,7 @@ const filteredPrivilegeGroups = computed(() => {
         const fixedGroupNames = [
             ...PRIVILEGE_GROUP_CATEGORIES.CLUSTER.groupNames,
             ...PRIVILEGE_GROUP_CATEGORIES.DATABASE.groupNames,
-            ...PRIVILEGE_GROUP_CATEGORIES.COLLECTION.groupNames
+            ...PRIVILEGE_GROUP_CATEGORIES.COLLECTION.groupNames,
         ];
         return allGroups.filter((g: any) => !fixedGroupNames.includes(g.GroupName));
     }
@@ -478,9 +486,7 @@ const isDatabaseAuthorized = (dbName: string) => {
     const dbKey = `${currentTab}:${currentGrantType}:${dbName}:*`;
     const dbSaved = dbCollectionPrivileges.value.get(dbKey);
     if (dbSaved) {
-        const hasValidGroup = dbSaved.selectedPrivilegeGroups.some(groupName =>
-            isPrivilegeGroupBelongsToTab(groupName, currentTab)
-        );
+        const hasValidGroup = dbSaved.selectedPrivilegeGroups.some((groupName) => isPrivilegeGroupBelongsToTab(groupName, currentTab));
         if (hasValidGroup || dbSaved.selectedPrivileges.length > 0) {
             return true;
         }
@@ -496,9 +502,7 @@ const isDatabaseAuthorized = (dbName: string) => {
 
         // 只检查当前 Tab 和授权方式下，该数据库的 collection
         if (keyTab === currentTab && keyGrantType === currentGrantType && keyDbName === dbName && keyCollName !== '*') {
-            const hasValidGroup = saved.selectedPrivilegeGroups.some(groupName =>
-                isPrivilegeGroupBelongsToTab(groupName, currentTab)
-            );
+            const hasValidGroup = saved.selectedPrivilegeGroups.some((groupName) => isPrivilegeGroupBelongsToTab(groupName, currentTab));
             if (hasValidGroup || saved.selectedPrivileges.length > 0) {
                 return true;
             }
@@ -507,9 +511,7 @@ const isDatabaseAuthorized = (dbName: string) => {
 
     // 如果当前正在选择该数据库，检查当前表单状态
     if (privilegeForm.value.selectedDatabase === dbName) {
-        const hasValidGroup = privilegeForm.value.selectedPrivilegeGroups.some(groupName =>
-            isPrivilegeGroupBelongsToTab(groupName, currentTab)
-        );
+        const hasValidGroup = privilegeForm.value.selectedPrivilegeGroups.some((groupName) => isPrivilegeGroupBelongsToTab(groupName, currentTab));
         if (hasValidGroup || privilegeForm.value.selectedPrivileges.length > 0) {
             return true;
         }
@@ -548,9 +550,7 @@ const isCollectionAuthorized = (collName: string) => {
 
     // 如果缓存中有该 scope 的记录，需要验证权限组是否属于当前 Tab 类型
     if (saved) {
-        const hasValidPrivilegeGroup = saved.selectedPrivilegeGroups.some(groupName =>
-            isPrivilegeGroupBelongsToTab(groupName, currentTab)
-        );
+        const hasValidPrivilegeGroup = saved.selectedPrivilegeGroups.some((groupName) => isPrivilegeGroupBelongsToTab(groupName, currentTab));
 
         if (currentTab === 'privilege') {
             return saved.selectedPrivileges.length > 0;
@@ -568,9 +568,7 @@ const isCollectionAuthorized = (collName: string) => {
         if (currentTab === 'privilege') {
             return privilegeForm.value.selectedPrivileges.length > 0;
         }
-        const hasValidPrivilegeGroup = privilegeForm.value.selectedPrivilegeGroups.some(groupName =>
-            isPrivilegeGroupBelongsToTab(groupName, currentTab)
-        );
+        const hasValidPrivilegeGroup = privilegeForm.value.selectedPrivilegeGroups.some((groupName) => isPrivilegeGroupBelongsToTab(groupName, currentTab));
         return hasValidPrivilegeGroup || privilegeForm.value.selectedPrivileges.length > 0;
     }
 
@@ -588,9 +586,7 @@ const isCollectionAuthorized = (collName: string) => {
                         return true;
                     }
                 } else {
-                    const hasValidPrivilegeGroup = saved.selectedPrivilegeGroups.some(groupName =>
-                        isPrivilegeGroupBelongsToTab(groupName, currentTab)
-                    );
+                    const hasValidPrivilegeGroup = saved.selectedPrivilegeGroups.some((groupName) => isPrivilegeGroupBelongsToTab(groupName, currentTab));
                     if (hasValidPrivilegeGroup || saved.selectedPrivileges.length > 0) {
                         return true;
                     }
@@ -740,26 +736,29 @@ watch(privilegeGroupTypeTab, (newTab, oldTab) => {
     restoreScopePrivileges();
 });
 
-watch(() => privilegeForm.value.grantType, (newType, oldType) => {
-    // 先设置标志位，阻止第一个 watch 触发保存空数据
-    isRestoringScope.value = true;
+watch(
+    () => privilegeForm.value.grantType,
+    (newType, oldType) => {
+        // 先设置标志位，阻止第一个 watch 触发保存空数据
+        isRestoringScope.value = true;
 
-    if (oldType) {
-        const oldTabType = oldType === 'privilege' ? 'privilege' : privilegeGroupTypeTab.value;
-        const oldKey = `${oldTabType}:${oldType}:${privilegeForm.value.selectedDatabase}:${privilegeForm.value.selectedCollection}`;
-        dbCollectionPrivileges.value.set(oldKey, {
-            grantType: oldType as any,
-            selectedPrivilegeGroups: [...privilegeForm.value.selectedPrivilegeGroups],
-            selectedPrivileges: [...privilegeForm.value.selectedPrivileges],
-        });
+        if (oldType) {
+            const oldTabType = oldType === 'privilege' ? 'privilege' : privilegeGroupTypeTab.value;
+            const oldKey = `${oldTabType}:${oldType}:${privilegeForm.value.selectedDatabase}:${privilegeForm.value.selectedCollection}`;
+            dbCollectionPrivileges.value.set(oldKey, {
+                grantType: oldType as any,
+                selectedPrivilegeGroups: [...privilegeForm.value.selectedPrivilegeGroups],
+                selectedPrivileges: [...privilegeForm.value.selectedPrivileges],
+            });
+        }
+
+        // 恢复新授权方式的状态
+        restoreScopePrivileges();
+
+        // 恢复标志位
+        isRestoringScope.value = false;
     }
-
-    // 恢复新授权方式的状态
-    restoreScopePrivileges();
-
-    // 恢复标志位
-    isRestoringScope.value = false;
-});
+);
 
 const initAllScopePrivileges = (privs: any[]) => {
     const scopeMap = new Map<string, any[]>();
@@ -864,9 +863,7 @@ const loadCurrentScopePrivileges = () => {
     if (currentGrantType === 'privilegeGroup') {
         // 只保留属于当前 Tab 类型的权限组，避免跨 Tab 类型的权限组误显
         const currentTab = getScopeTabType();
-        privilegeForm.value.selectedPrivilegeGroups = selectedGroups.filter(groupName =>
-            isPrivilegeGroupBelongsToTab(groupName, currentTab)
-        );
+        privilegeForm.value.selectedPrivilegeGroups = selectedGroups.filter((groupName) => isPrivilegeGroupBelongsToTab(groupName, currentTab));
         privilegeForm.value.selectedPrivileges = [];
     } else {
         privilegeForm.value.selectedPrivilegeGroups = [];
@@ -1047,7 +1044,6 @@ const currentRolePrivileges = computed(() => {
     return privilegeDialog.value.currentRoleData?.privileges || [];
 });
 
-
 // 加载权限组
 const loadPrivilegeGroups = async () => {
     if (privilegeGroups.value.length) {
@@ -1056,9 +1052,6 @@ const loadPrivilegeGroups = async () => {
     try {
         const res = await milvusApi.getPrivilegeGroups(props.milvusId);
         privilegeGroups.value = res || [];
-
-
-
     } catch (error: any) {
         privilegeGroups.value = [];
     }
@@ -1229,7 +1222,7 @@ const submitPrivilege = async () => {
     // 检查是否有变更
     const hasChanges = Object.keys(finalPrivileges).length > 0;
     if (!hasChanges) {
-        ElMessage.warning('没有权限变更');
+        Msg.warning('没有权限变更');
         return;
     }
 
@@ -1240,7 +1233,7 @@ const submitPrivilege = async () => {
             privileges: finalPrivileges,
         });
 
-        ElMessage.success(t('milvus.grantSuccess'));
+        Msg.success('milvus.grantSuccess');
         privilegeDialog.value.visible = false;
         emit('privilege-saved');
     } finally {

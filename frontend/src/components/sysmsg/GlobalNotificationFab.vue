@@ -1,6 +1,6 @@
 <template>
     <div 
-        v-if="globalNotificationState.hasActiveNotifications" 
+        v-if="globalNotificationState.activeCount > 0" 
         class="fixed z-[2000]"
         :style="{ bottom: position.bottom + 'px', right: position.right + 'px' }"
     >

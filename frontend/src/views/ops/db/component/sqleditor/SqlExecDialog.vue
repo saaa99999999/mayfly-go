@@ -15,16 +15,17 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, ref, reactive, onMounted } from 'vue';
 import { dbApi } from '@/views/ops/db/api';
-import { ElDialog, ElButton, ElInput, ElMessage, InputInstance } from 'element-plus';
+import { ElButton, ElDialog, ElInput, InputInstance } from 'element-plus';
+import { onMounted, reactive, ref, toRefs } from 'vue';
 // import base style
 import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
 import { format as sqlFormatter } from 'sql-formatter';
 
-import { SqlExecProps } from './SqlExecBox';
 import { isTrue } from '@/common/assert';
+import { Msg } from '@/hooks/useI18n';
 import { i18n } from '@/i18n';
+import { SqlExecProps } from './SqlExecBox';
 
 const props = withDefaults(defineProps<SqlExecProps>(), {});
 
@@ -63,12 +64,12 @@ const runSql = async () => {
         for (let re of res) {
             if (re.errorMsg) {
                 isSuccess = false;
-                ElMessage.error(`${re.sql} ==>: ${re.errorMsg}`);
+                Msg.error(`${re.sql} ==>: ${re.errorMsg}`);
             }
         }
 
         isTrue(isSuccess, 'exist run faild sql');
-        ElMessage.success(i18n.global.t('db.execSuccess'));
+        Msg.success('db.execSuccess');
     } catch (e) {
         runSuccess = false;
     } finally {

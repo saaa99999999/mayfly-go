@@ -78,21 +78,20 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, reactive, Ref, ref, useTemplateRef, watch } from 'vue';
-import { getDbDialect } from '@/views/ops/db/dialect';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
-import { ElMessage } from 'element-plus';
-import { hasPerms } from '@/components/auth/auth';
-import TerminalLog from '@/components/terminal/TerminalLog.vue';
-import DbSelectTree from '@/views/ops/db/component/DbSelectTree.vue';
-import { getClientId } from '@/common/utils/storage';
-import FileInfo from '@/components/file/FileInfo.vue';
-import { useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nFormValidate, useI18nOperateSuccessMsg } from '@/hooks/useI18n';
-import { useI18n } from 'vue-i18n';
 import { Rules } from '@/common/rule';
+import { getClientId } from '@/common/utils/storage';
+import { hasPerms } from '@/components/auth/auth';
+import FileInfo from '@/components/file/FileInfo.vue';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
+import TerminalLog from '@/components/terminal/TerminalLog.vue';
+import { Msg, useI18nDeleteConfirm, useI18nFormValidate } from '@/hooks/useI18n';
+import DbSelectTree from '@/views/ops/db/component/DbSelectTree.vue';
+import { getDbDialect } from '@/views/ops/db/dialect';
 import { dbTransferApi } from '@/views/ops/db/transfer/api';
 import { DbTransferFileStatusEnum } from '@/views/ops/db/transfer/enums';
+import { onMounted, reactive, Ref, ref, useTemplateRef, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
@@ -175,18 +174,18 @@ const state = reactive({
         onConfirm: async function () {
             await useI18nFormValidate(runFormRef);
             if (state.runDialog.runForm.targetDbType !== state.runDialog.runForm.dbType) {
-                ElMessage.warning(t('db.targetDbTypeSelectError', { dbType: state.runDialog.runForm.dbType }));
+                Msg.warning('db.targetDbTypeSelectError', { dbType: state.runDialog.runForm.dbType });
                 return false;
             }
             state.runDialog.runForm.clientId = getClientId();
             await dbTransferApi.dbTransferFileRun.request(state.runDialog.runForm);
-            useI18nOperateSuccessMsg();
+            Msg.operateSuccess();
             state.runDialog.onCancel();
             await search();
         },
         onSelectRunTargetDb: function (param: any) {
             if (param.type !== state.runDialog.runForm.dbType) {
-                ElMessage.warning(t('db.targetDbTypeSelectError', { dbType: state.runDialog.runForm.dbType }));
+                Msg.warning('db.targetDbTypeSelectError', { dbType: state.runDialog.runForm.dbType });
             }
         },
     },
@@ -205,7 +204,7 @@ const onDel = async function () {
     try {
         await useI18nDeleteConfirm(state.selectionData.map((x: any) => x.fileKey).join('、'));
         await dbTransferApi.dbTransferFileDel.request({ fileId: state.selectionData.map((x: any) => x.id).join(',') });
-        useI18nDeleteSuccessMsg();
+        Msg.deleteSuccess();
         await search();
     } catch (err) {
         //

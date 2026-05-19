@@ -22,9 +22,9 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, reactive, Ref, ref, toRefs, watch, defineAsyncComponent } from 'vue';
+import { Msg } from '@/hooks/useI18n';
+import { computed, defineAsyncComponent, reactive, Ref, ref, toRefs, watch } from 'vue';
 import { machineApi } from '../api';
-import { useI18nSaveSuccessMsg } from '@/hooks/useI18n';
 
 const MonacoEditor = defineAsyncComponent(() => import('@/components/monaco/MonacoEditor.vue'));
 
@@ -95,7 +95,7 @@ const updateContent = async () => {
             authCertName: props.authCertName,
             protocol: props.protocol,
         });
-        useI18nSaveSuccessMsg();
+        Msg.saveSuccess();
         handleClose();
         fileContent.value = '';
     } finally {

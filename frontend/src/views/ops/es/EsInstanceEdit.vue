@@ -73,8 +73,7 @@
 import { TagResourceTypeEnum } from '@/common/commonEnum';
 import { Rules } from '@/common/rule';
 import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
-import { ElMessage } from 'element-plus';
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
 import { reactive, toRefs, useTemplateRef, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ResourceAuthCertTableEdit from '../component/ResourceAuthCertTableEdit.vue';
@@ -97,7 +96,7 @@ const props = defineProps({
 const dialogVisible = defineModel<boolean>('visible', { default: false });
 
 //定义事件
-const emit = defineEmits(['update:visible', 'cancel', 'val-change']);
+const emit = defineEmits(['cancel', 'val-change']);
 
 const rules = {
     tagCodePaths: [Rules.requiredSelect('tag.relateTag')],
@@ -162,18 +161,18 @@ const onTestConn = async (authCert: any) => {
     }
     await testConnExec(submitForm);
     state.form.version = testConnRes.value.version.number;
-    ElMessage.success(t('es.connSuccess'));
+    Msg.success('es.connSuccess');
 };
 
 const onConfirm = async () => {
     if (!state.form.version) {
-        ElMessage.warning(t('es.shouldTestConn'));
+        Msg.warning('es.shouldTestConn');
         return;
     }
 
     await useI18nFormValidate(dbFormRef);
     await saveInstanceExec(getReqForm());
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     state.form.id = saveInstanceRes as any;
     emit('val-change', state.form);
     onCancel();

@@ -53,19 +53,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import { ElMessage, FormInstance } from 'element-plus';
-import { milvusApi, timezones } from '../api';
 import { Rules } from '@/common/rule';
-import { useI18n } from 'vue-i18n';
-import { useI18nConfirm } from '@/hooks/useI18n';
+import { Msg, useI18nConfirm } from '@/hooks/useI18n';
 import { useMilvusStore } from '@/views/ops/milvus/resource/store';
+import { FormInstance } from 'element-plus';
 import { storeToRefs } from 'pinia';
+import { onMounted, ref, watch } from 'vue';
+import { milvusApi, timezones } from '../api';
 
 const milvusStore = useMilvusStore();
 const { dbs } = storeToRefs(milvusStore);
 
-const { t } = useI18n();
 const props = defineProps<{
     milvusId: number;
 }>();
@@ -133,7 +131,7 @@ const submitCreate = async () => {
                 properties.timezone = configForm.value.timezone;
             }
             await milvusApi.createDatabase(props.milvusId, { properties, name: createForm.value.name });
-            ElMessage.success(t('milvus.createdSuccess'));
+            Msg.success('milvus.createdSuccess');
             createDialog.value.visible = false;
             await loadList();
         } finally {
@@ -145,7 +143,7 @@ const submitCreate = async () => {
 const handleDrop = async (row: any) => {
     await useI18nConfirm('milvus.confirmDeleteDatabase', { name: row.name });
     await milvusApi.dropDatabase(props.milvusId, row.name);
-    ElMessage.success(t('milvus.deletedSuccess'));
+    Msg.success('milvus.deletedSuccess');
     await loadList();
 };
 
@@ -167,7 +165,7 @@ const submitConfig = async () => {
             properties.timezone = configForm.value.timezone;
         }
         await milvusApi.alterDatabase(props.milvusId, configDialog.value.currentDb, { properties, name: configDialog.value.currentDb });
-        ElMessage.success(t('milvus.savedSuccess'));
+        Msg.success('milvus.savedSuccess');
         configDialog.value.visible = false;
         await loadList();
     } finally {

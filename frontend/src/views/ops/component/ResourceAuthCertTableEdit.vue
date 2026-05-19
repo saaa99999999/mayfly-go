@@ -48,15 +48,12 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, reactive } from 'vue';
-import { AuthCertTypeEnum, AuthCertCiphertextTypeEnum } from '../tag/enums';
-import { resourceAuthCertApi } from '../tag/api';
 import EnumTag from '@/components/enumtag/EnumTag.vue';
+import { Msg } from '@/hooks/useI18n';
+import { onMounted, reactive } from 'vue';
+import { resourceAuthCertApi } from '../tag/api';
+import { AuthCertCiphertextTypeEnum, AuthCertTypeEnum } from '../tag/enums';
 import ResourceAuthCertEdit from './ResourceAuthCertEdit.vue';
-import { ElMessage } from 'element-plus';
-import { useI18n } from 'vue-i18n';
-
-const { t } = useI18n();
 
 const props = defineProps({
     resourceType: { type: Number },
@@ -127,7 +124,7 @@ const btnOk = async (authCert: any) => {
     }
 
     if (authCerts.value?.filter((x: any) => x.username == authCert.username).length > 0) {
-        ElMessage.error(t('ac.usernameExist'));
+        Msg.error('ac.usernameExist');
         return;
     }
 

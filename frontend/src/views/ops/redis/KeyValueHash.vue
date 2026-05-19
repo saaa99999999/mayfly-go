@@ -61,11 +61,11 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { ref, onMounted, reactive, toRefs } from 'vue';
 import { notBlank } from '@/common/assert';
+import { Msg } from '@/hooks/useI18n';
+import { onMounted, reactive, ref, toRefs } from 'vue';
 import FormatViewer from './FormatViewer.vue';
 import { RedisInst } from './redis';
-import { useI18nDeleteSuccessMsg, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
 
 const props = defineProps({
     redis: {
@@ -144,7 +144,7 @@ const hscan = async (resetTableData = false, resetCursor = false) => {
 const hdel = async (field: any, index: any) => {
     await props.redis.runCmd(['HDEL', state.key, field]);
 
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     state.hashValues.splice(index, 1);
     state.total--;
 };
@@ -164,7 +164,7 @@ const confirmEditData = async () => {
     const value = formatViewerRef.value.getContent();
 
     const res = await props.redis.runCmd(['HSET', state.key, field, value]);
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     // 响应0则为被覆盖，则重新scan
     if (res == 0) {
         hscan(true, true);

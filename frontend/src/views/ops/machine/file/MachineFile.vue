@@ -306,11 +306,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ElInput, ElMessage } from 'element-plus';
-import { computed, defineAsyncComponent, onMounted, reactive, ref, toRefs } from 'vue';
-import { machineApi, uploadFile, uploadFolder } from '../api';
 import { registerUploadAborter } from '@/components/sysmsg/machine/machine-file-upload-progress';
 import { registerFolderUploadAborter } from '@/components/sysmsg/machine/machine-folder-upload-progress';
+import { Msg } from '@/hooks/useI18n';
+import { ElInput } from 'element-plus';
+import { computed, defineAsyncComponent, onMounted, reactive, ref, toRefs } from 'vue';
+import { machineApi, uploadFile, uploadFolder } from '../api';
 
 import { isTrue, notBlank } from '@/common/assert';
 import config from '@/common/config';
@@ -319,7 +320,7 @@ import { getMachineConfig } from '@/common/sysconfig';
 import { convertToBytes, formatByteSize } from '@/common/utils/format';
 import { getToken } from '@/common/utils/storage';
 import { fuzzyMatchField } from '@/common/utils/string';
-import { useI18nDeleteConfirm, useI18nDeleteSuccessMsg } from '@/hooks/useI18n';
+import { useI18nDeleteConfirm } from '@/hooks/useI18n';
 import { useI18n } from 'vue-i18n';
 import { MachineProtocolEnum } from '../enums';
 
@@ -479,7 +480,7 @@ const pasteFile = async () => {
             toPath: state.nowPath,
             protocol: props.protocol,
         });
-        ElMessage.success(t('machine.pasteSuccess'));
+        Msg.success('machine.pasteSuccess');
         state.copyOrMvFile.paths = [];
         refresh();
     } finally {
@@ -524,7 +525,7 @@ const fileRename = async (row: any) => {
             newname: state.nowPath + pathSep + row.name,
             protocol: props.protocol,
         });
-        ElMessage.success(t('machine.renameSuccess'));
+        Msg.success('machine.renameSuccess');
         await refresh();
     } catch (e) {
         row.name = state.renameFile.oldname;
@@ -751,7 +752,7 @@ const deleteFile = async (files: any) => {
             authCertName: props.authCertName,
             protocol: props.protocol,
         });
-        useI18nDeleteSuccessMsg();
+        Msg.deleteSuccess();
         refresh();
     } catch (e) {
         //
@@ -803,13 +804,13 @@ function handleFolderUpload(e: any) {
         },
         {
             onSuccess: () => {
-                ElMessage.success(t('machine.uploadSuccess'));
+                Msg.success('machine.uploadSuccess');
                 setTimeout(() => {
                     refresh();
                 }, 1000);
             },
             onError: (error) => {
-                ElMessage.error(error.message);
+                Msg.error(error.message);
             },
         }
     );
@@ -846,13 +847,13 @@ const handleFileUpload = (content: any) => {
         },
         {
             onSuccess: () => {
-                ElMessage.success(t('machine.uploadSuccess'));
+                Msg.success('machine.uploadSuccess');
                 setTimeout(() => {
                     refresh();
                 }, 1000);
             },
             onError: (error: Error) => {
-                ElMessage.error(error.message);
+                Msg.error(error.message);
             },
         }
     );
@@ -863,7 +864,7 @@ const handleFileUpload = (content: any) => {
 
 const uploadSuccess = (res: any) => {
     if (res.code !== 200) {
-        ElMessage.error(res.msg);
+        Msg.error(res.msg);
     }
 };
 
@@ -874,7 +875,7 @@ const beforeUpload = (file: File) => {
 const checkUploadFileSize = (fileSize: number) => {
     const bytes = convertToBytes(state.machineConfig.uploadMaxFileSize);
     if (fileSize > bytes) {
-        ElMessage.error(t('machine.fileExceedsSysConf', { uploadMaxFileSize: state.machineConfig.uploadMaxFileSize }));
+        Msg.error('machine.fileExceedsSysConf', { uploadMaxFileSize: state.machineConfig.uploadMaxFileSize });
         return false;
     }
     return true;

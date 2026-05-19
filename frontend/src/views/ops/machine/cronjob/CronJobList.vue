@@ -40,21 +40,17 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, toRefs, reactive, onMounted, defineAsyncComponent, Ref } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { cronJobApi } from '../api';
-import PageTable from '@/components/pagetable/PageTable.vue';
 import { TableColumn } from '@/components/pagetable';
-import { CronJobStatusEnum, CronJobSaveExecResTypeEnum } from '../enums';
+import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
+import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
+import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
 import TagCodePath from '../../component/TagCodePath.vue';
-import { useI18n } from 'vue-i18n';
-import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle } from '@/hooks/useI18n';
+import { cronJobApi } from '../api';
+import { CronJobSaveExecResTypeEnum, CronJobStatusEnum } from '../enums';
 
 const CronJobEdit = defineAsyncComponent(() => import('./CronJobEdit.vue'));
 const CronJobExecList = defineAsyncComponent(() => import('./CronJobExecList.vue'));
-
-const { t } = useI18n();
 
 const perms = {
     saveCronJob: 'machine:cronjob:save',
@@ -118,14 +114,14 @@ const openFormDialog = async (data: any) => {
 
 const runCronJob = async (data: any) => {
     await cronJobApi.run.request({ key: data.key });
-    ElMessage.success(t('machine.runSuccess'));
+    Msg.success('machine.runSuccess');
 };
 
 const deleteCronJob = async () => {
     try {
         await useI18nDeleteConfirm(state.selectionData.map((x: any) => x.name).join('、'));
         await cronJobApi.delete.request({ id: state.selectionData.map((x: any) => x.id).join(',') });
-        useI18nDeleteSuccessMsg();
+        Msg.deleteSuccess();
         search();
     } catch (err) {
         //

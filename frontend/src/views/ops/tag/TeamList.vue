@@ -107,28 +107,20 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, toRefs, reactive, onMounted, Ref } from 'vue';
-import { tagApi } from './api';
 import { notBlank } from '@/common/assert';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
-import { SearchItem } from '@/components/pagetable/SearchForm';
-import AccountSelectFormItem from '@/views/system/account/components/AccountSelectFormItem.vue';
-import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
-import TagTreeCheck from '../component/TagTreeCheck.vue';
-import TagCodePath from '../component/TagCodePath.vue';
-import { formatDate } from '@/common/utils/format';
-import { useI18n } from 'vue-i18n';
-import {
-    useI18nCreateTitle,
-    useI18nDeleteConfirm,
-    useI18nDeleteSuccessMsg,
-    useI18nEditTitle,
-    useI18nFormValidate,
-    useI18nOperateSuccessMsg,
-    useI18nSaveSuccessMsg,
-} from '@/hooks/useI18n';
 import { Rules } from '@/common/rule';
+import { formatDate } from '@/common/utils/format';
+import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
+import { SearchItem } from '@/components/pagetable/SearchForm';
+import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle, useI18nFormValidate } from '@/hooks/useI18n';
+import AccountSelectFormItem from '@/views/system/account/components/AccountSelectFormItem.vue';
+import { onMounted, reactive, ref, Ref, toRefs } from 'vue';
+import { useI18n } from 'vue-i18n';
+import TagCodePath from '../component/TagCodePath.vue';
+import TagTreeCheck from '../component/TagTreeCheck.vue';
+import { tagApi } from './api';
 
 const { t } = useI18n();
 
@@ -229,7 +221,7 @@ const onSaveTeam = async () => {
     form.validityStartDate = formatDate(form.validityDate[0]);
     form.validityEndDate = formatDate(form.validityDate[1]);
     await tagApi.saveTeam.request(form);
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     search();
     onCancelSaveTeam();
 };
@@ -245,7 +237,7 @@ const onCancelSaveTeam = () => {
 const onDeleteTeam = async () => {
     await useI18nDeleteConfirm(state.selectionData.map((x: any) => x.name).join('、'));
     await tagApi.delTeam.request({ id: state.selectionData.map((x: any) => x.id).join(',') });
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     search();
 };
 
@@ -259,7 +251,7 @@ const onShowMembers = async (team: any) => {
 
 const onDeleteMember = async (data: any) => {
     await tagApi.delTeamMem.request(data);
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
     // 重新赋值成员列表
     setMemebers();
 };
@@ -281,7 +273,7 @@ const onAddMember = async () => {
     notBlank(memForm.accountIds, t('team.selectAccountTips'));
 
     await tagApi.saveTeamMem.request(memForm);
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     setMemebers();
     onCancelAddMember();
 };

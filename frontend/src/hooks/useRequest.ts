@@ -1,16 +1,16 @@
-import router from '@/router';
+import Api from '@/common/Api';
+import config from '@/common/config';
+import openApi from '@/common/openApi';
+import { Result, ResultEnum } from '@/common/request';
 import { clearUser, getClientId, getRefreshToken, getToken, saveRefreshToken, saveToken } from '@/common/utils/storage';
 import { templateResolve } from '@/common/utils/string';
-import { ElMessage } from 'element-plus';
-import { createFetch, UseFetchReturn } from '@vueuse/core';
-import Api from '@/common/Api';
-import { Result, ResultEnum } from '@/common/request';
-import config from '@/common/config';
-import { ref, unref } from 'vue';
+import router from '@/router';
 import { URL_401 } from '@/router/staticRouter';
-import openApi from '@/common/openApi';
 import { useThemeConfig } from '@/store/themeConfig';
+import { createFetch, UseFetchReturn } from '@vueuse/core';
 import JSONBig from 'json-bigint';
+import { ref, unref } from 'vue';
+import { Msg } from './useI18n';
 
 const baseUrl: string = config.baseApiUrl;
 
@@ -181,23 +181,23 @@ async function execCustomFetch(uaf: UseFetchReturn<any>, reqOptions?: RequestOpt
 
             const respStatus = uaf.response.value?.status;
             if (respStatus == 404) {
-                ElMessage.error('url not found');
+                Msg.error('url not found');
                 return rejectPromise;
             }
             if (respStatus == 500) {
-                ElMessage.error('server error');
+                Msg.error('server error');
                 return rejectPromise;
             }
 
             console.error(e);
-            ElMessage.error('network error');
+            Msg.error('network error');
             return rejectPromise;
         }
     }
 
     const result: Result & { error: any; status: number } = uaf.data.value as any;
     if (!result) {
-        ElMessage.error('network request failed');
+        Msg.error('network request failed');
         return Promise.reject(result);
     }
     // es代理请求
@@ -258,7 +258,7 @@ async function execCustomFetch(uaf: UseFetchReturn<any>, reqOptions?: RequestOpt
 
     // 如果返回的code不为成功，则会返回对应的错误msg，则直接统一通知即可。忽略登录超时或没有权限的提示（直接跳转至401页面）
     if (result.msg && resultCode != ResultEnum.NO_PERMISSION) {
-        ElMessage.error(result.msg);
+        Msg.error(result.msg);
         uaf.error.value = new Error(result.msg);
     }
 

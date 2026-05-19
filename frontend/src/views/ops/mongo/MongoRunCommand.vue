@@ -49,10 +49,10 @@
 </template>
 
 <script lang="ts" setup>
-import { mongoApi } from './api';
-import { watch, defineAsyncComponent, toRefs, reactive } from 'vue';
-import { ElMessage } from 'element-plus';
+import { Msg } from '@/hooks/useI18n';
+import { defineAsyncComponent, reactive, toRefs, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { mongoApi } from './api';
 
 const MonacoEditor = defineAsyncComponent(() => import('@/components/monaco/MonacoEditor.vue'));
 
@@ -198,7 +198,7 @@ const onRunCommand = async () => {
         command: orderCmds,
     });
     state.runCmdDialog.cmdRes = JSON.stringify(res, null, 4);
-    ElMessage.success(t('mongo.runSuccess'));
+    Msg.success('mongo.runSuccess');
 };
 </script>
 

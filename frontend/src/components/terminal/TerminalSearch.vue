@@ -45,9 +45,9 @@
 </template>
 <script lang="ts" setup>
 import { ref, toRefs, nextTick, reactive } from 'vue';
-import { ElMessage } from 'element-plus';
 import { SearchAddon, ISearchOptions } from '@xterm/addon-search';
 import { useI18n } from 'vue-i18n';
+import { Msg } from '@/hooks/useI18n';
 
 const { t } = useI18n();
 
@@ -110,7 +110,7 @@ function searchKeywords(direction: any) {
         res = props.searchAddon?.findPrevious(state.search.value, getSearchOptions(option));
     }
     if (!res) {
-        ElMessage.info(t('components.terminal.noMatchMsg'));
+        Msg.info('components.terminal.noMatchMsg');
     }
 }
 

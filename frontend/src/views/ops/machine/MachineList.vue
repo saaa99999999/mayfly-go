@@ -268,7 +268,7 @@ import { hasPerms } from '@/components/auth/auth';
 import { TableColumn } from '@/components/pagetable';
 import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
-import { useI18nDeleteConfirm, useI18nDeleteSuccessMsg } from '@/hooks/useI18n';
+import { Msg, useI18nDeleteConfirm } from '@/hooks/useI18n';
 import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
@@ -503,7 +503,7 @@ const deleteMachine = async () => {
     try {
         await useI18nDeleteConfirm(state.selectionData.map((x: any) => x.name).join('、'));
         await machineApi.del.request({ id: state.selectionData.map((x: any) => x.id).join(',') });
-        useI18nDeleteSuccessMsg();
+        Msg.deleteSuccess();
         search();
     } catch (err) {
         //

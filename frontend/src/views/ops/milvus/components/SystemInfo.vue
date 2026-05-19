@@ -1,6 +1,5 @@
 <template>
     <div class="system-info-container">
-
         <!-- 核心指标卡片 -->
         <el-row :gutter="16" class="metrics-row">
             <el-col :xs="24" :sm="12" :md="8" :lg="6">
@@ -95,11 +94,7 @@
                 </div>
             </template>
             <el-collapse v-model="activeResourceGroups">
-                <el-collapse-item
-                    v-for="rg in resourceGroups"
-                    :key="rg.Name || rg.name"
-                    :name="rg.Name || rg.name"
-                >
+                <el-collapse-item v-for="rg in resourceGroups" :key="rg.Name || rg.name" :name="rg.Name || rg.name">
                     <template #title>
                         <div class="rg-collapse-title">
                             <span class="rg-name">{{ rg.Name || rg.name }}</span>
@@ -114,12 +109,7 @@
 
                     <el-descriptions :column="2" border size="small">
                         <el-descriptions-item :label="$t('milvus.capacity')">
-                            <el-progress
-                                :percentage="getCapacityPercentage(rg)"
-                                :color="getCapacityColor(rg)"
-                                :stroke-width="8"
-                                style="width: 150px"
-                            />
+                            <el-progress :percentage="getCapacityPercentage(rg)" :color="getCapacityColor(rg)" :stroke-width="8" style="width: 150px" />
                             <span class="ml-2">{{ getCapacityPercentage(rg) }}%</span>
                         </el-descriptions-item>
                         <el-descriptions-item :label="$t('milvus.availableNodes')">
@@ -152,7 +142,7 @@
                         <div class="rg-section-title">{{ $t('milvus.loadedCollections') }} ({{ getLoadedReplicaCount(rg) }})</div>
                         <div class="collection-tags">
                             <el-tag
-                                v-for="(count, name) in (rg.NumLoadedReplica ?? rg.numLoadedReplica ?? {})"
+                                v-for="(count, name) in rg.NumLoadedReplica ?? rg.numLoadedReplica ?? {}"
                                 :key="name"
                                 size="small"
                                 type="success"
@@ -183,14 +173,7 @@
                 <el-table-column prop="create_time" :label="$t('milvus.createTime')" min-width="180" align="center" />
                 <el-table-column :label="$t('milvus.properties')" min-width="200">
                     <template #default="{ row }">
-                        <el-tag
-                            v-for="(value, key) in row.properties"
-                            :key="key"
-                            size="small"
-                            class="mr-1 mb-1"
-                        >
-                            {{ key }}: {{ value }}
-                        </el-tag>
+                        <el-tag v-for="(value, key) in row.properties" :key="key" size="small" class="mr-1 mb-1"> {{ key }}: {{ value }} </el-tag>
                     </template>
                 </el-table-column>
             </el-table>
@@ -207,13 +190,7 @@
                 </div>
             </template>
             <el-descriptions :column="2" border size="small">
-                <el-descriptions-item
-                    v-for="(config, index) in systemConfig"
-                    :key="index"
-                    :label="config.name"
-                    label-align="left"
-                    align="right"
-                >
+                <el-descriptions-item v-for="(config, index) in systemConfig" :key="index" :label="config.name" label-align="left" align="right">
                     <el-tag v-if="isBoolean(config.value)" :type="config.value === 'true' ? 'success' : 'info'" size="small">
                         {{ config.value }}
                     </el-tag>
@@ -225,11 +202,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import { ElMessage } from 'element-plus';
-import { InfoFilled, FirstAidKit, Refresh, Collection, DocumentCopy, Warning, Box, Setting } from '@element-plus/icons-vue';
-import { milvusApi } from '../api';
+import { Msg } from '@/hooks/useI18n';
+import { Box, Collection, DocumentCopy, FirstAidKit, InfoFilled, Setting, Warning } from '@element-plus/icons-vue';
+import { onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { milvusApi } from '../api';
 
 const { t } = useI18n();
 
@@ -260,7 +237,7 @@ const loadVersion = async () => {
         const res = await milvusApi.getVersion(props.milvusId);
         version.value = res || t('milvus.unknown');
     } catch (error: any) {
-        ElMessage.error(error.message || t('milvus.getVersionFailed'));
+        Msg.error(error.message || 'milvus.getVersionFailed');
     } finally {
         versionLoading.value = false;
     }
@@ -289,7 +266,7 @@ const checkHealth = async () => {
                 return {
                     name: reason.name || reason.Name || reason,
                     message: reason.message || reason.Message || '',
-                    healthy: reason.healthy !== undefined ? reason.healthy : !reason.message
+                    healthy: reason.healthy !== undefined ? reason.healthy : !reason.message,
                 };
             });
         } else {
@@ -298,7 +275,7 @@ const checkHealth = async () => {
     } catch (error: any) {
         healthStatus.value = false;
         healthDetails.value = [{ name: 'Connection Error', message: error.message, healthy: false }];
-        ElMessage.error(error.message || t('milvus.checkHealthFailed'));
+        Msg.error(error.message || 'milvus.checkHealthFailed');
     } finally {
         healthLoading.value = false;
     }
@@ -392,13 +369,7 @@ const loadSystemConfig = async () => {
 const loadAll = async () => {
     loading.value = true;
     try {
-        await Promise.all([
-            loadVersion(),
-            checkHealth(),
-            loadDatabases(),
-            loadResourceGroups(),
-            loadCollections(),
-        ]);
+        await Promise.all([loadVersion(), checkHealth(), loadDatabases(), loadResourceGroups(), loadCollections()]);
         await loadSystemConfig();
     } finally {
         loading.value = false;
@@ -433,9 +404,12 @@ onMounted(() => {
     loadAll();
 });
 
-watch(() => props.milvusId, () => {
-    loadAll();
-});
+watch(
+    () => props.milvusId,
+    () => {
+        loadAll();
+    }
+);
 </script>
 
 <style scoped>
@@ -466,11 +440,11 @@ watch(() => props.milvusId, () => {
 }
 
 .metric-card.is-healthy {
-    border-left: 4px solid #67C23A;
+    border-left: 4px solid #67c23a;
 }
 
 .metric-card.is-unhealthy {
-    border-left: 4px solid #F56C6C;
+    border-left: 4px solid #f56c6c;
 }
 
 .metric-icon {
@@ -488,17 +462,17 @@ watch(() => props.milvusId, () => {
 
 .metric-icon.version {
     background-color: #ecf5ff;
-    color: #409EFF;
+    color: #409eff;
 }
 
 .metric-icon.healthy {
     background-color: #f0f9eb;
-    color: #67C23A;
+    color: #67c23a;
 }
 
 .metric-icon.unhealthy {
     background-color: #fef0f0;
-    color: #F56C6C;
+    color: #f56c6c;
 }
 
 .metric-icon.database {

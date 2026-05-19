@@ -43,12 +43,13 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { reactive, watch, toRefs, onMounted } from 'vue';
-import { redisApi } from './api';
-import { ElMessage, ElMessageBox } from 'element-plus';
 import { formatTime } from '@/common/utils/format';
-import { RedisInst } from './redis';
+import { Msg } from '@/hooks/useI18n';
+import { ElMessageBox } from 'element-plus';
+import { onMounted, reactive, toRefs, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { redisApi } from './api';
+import { RedisInst } from './redis';
 
 const { t } = useI18n();
 
@@ -104,7 +105,7 @@ const renameKey = async () => {
     }
     // RENAME key newkey
     await props.redis.runCmd(['RENAME', state.oldKey, state.ki.key]);
-    ElMessage.success(t('redis.settingSuccess'));
+    Msg.success('redis.settingSuccess');
     emit('changeKey');
 };
 
@@ -130,14 +131,14 @@ const ttlKey = async () => {
 
     // EXPIRE key seconds [NX | XX | GT | LT]
     await props.redis.runCmd(['EXPIRE', state.ki.key, state.ki.timed]);
-    ElMessage.success(t('redis.settingSuccess'));
+    Msg.success('redis.settingSuccess');
     emit('changeKey');
 };
 
 const persistKey = async () => {
     // PERSIST key
     await props.redis.runCmd(['PERSIST', state.keyInfo.key]);
-    ElMessage.success(t('redis.settingSuccess'));
+    Msg.success('redis.settingSuccess');
     emit('changeKey');
 };
 

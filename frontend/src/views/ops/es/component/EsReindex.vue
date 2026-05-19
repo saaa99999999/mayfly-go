@@ -39,10 +39,10 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-import { ref } from 'vue';
+import { Msg } from '@/hooks/useI18n';
 import { esApi } from '@/views/ops/es/api';
-import { ElMessage } from 'element-plus';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const visible = defineModel<boolean>('visible');
@@ -78,7 +78,7 @@ const doBasicReindex = async () => {
 
     let res = await esApi.proxyReq('POST', props.instId, `/_reindex${wfc}`, data);
     // FIXME 如果是异步，返回异步任务id，添加到任务列表中，可以在任务列表中查看状态
-    ElMessage.success(t('common.operateSuccess'));
+    Msg.operateSuccess();
 };
 </script>
 

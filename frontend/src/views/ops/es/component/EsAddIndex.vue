@@ -44,11 +44,11 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-import { ref, watch } from 'vue';
-import { esApi } from '@/views/ops/es/api';
 import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
-import { ElMessage } from 'element-plus';
+import { Msg } from '@/hooks/useI18n';
+import { esApi } from '@/views/ops/es/api';
+import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
@@ -133,11 +133,11 @@ const confirm = async () => {
     await formRef.value.validate();
     loading.value = true;
     if (!formData.value.idxName) {
-        ElMessage.warning(t('es.requireIndexName'));
+        Msg.warning('es.requireIndexName');
         return;
     }
     await esApi.proxyReq('put', props.instId, `/${formData.value.idxName}`, JSON.parse(formData.value.mappings));
-    ElMessage.success(t('common.saveSuccess'));
+    Msg.saveSuccess();
     emit('success');
     loading.value = false;
     visible.value = false;

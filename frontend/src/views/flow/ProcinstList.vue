@@ -52,17 +52,17 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, toRefs, reactive, Ref, defineAsyncComponent } from 'vue';
-import { procinstApi } from './api';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
-import { SearchItem } from '@/components/pagetable/SearchForm';
-import ProcinstDetail from './ProcinstDetail.vue';
-import { FlowBizType, ProcinstBizStatus, ProcinstStatus } from './enums';
 import { formatTime } from '@/common/utils/format';
-import { useI18nDetailTitle, useI18nOperateSuccessMsg } from '@/hooks/useI18n';
-import { useI18n } from 'vue-i18n';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
+import { SearchItem } from '@/components/pagetable/SearchForm';
+import { Msg, useI18nDetailTitle } from '@/hooks/useI18n';
 import { useUserInfo } from '@/store/userInfo';
+import { defineAsyncComponent, reactive, ref, Ref, toRefs } from 'vue';
+import { useI18n } from 'vue-i18n';
+import ProcinstDetail from './ProcinstDetail.vue';
+import { procinstApi } from './api';
+import { FlowBizType, ProcinstBizStatus, ProcinstStatus } from './enums';
 
 const { t } = useI18n();
 
@@ -130,7 +130,7 @@ const search = async () => {
 
 const procinstCancel = async (data: any) => {
     await procinstApi.cancel.request({ id: data.id });
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
     search();
 };
 

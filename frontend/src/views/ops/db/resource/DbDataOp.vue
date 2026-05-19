@@ -165,23 +165,23 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, getCurrentInstance, h, inject, onBeforeUnmount, onMounted, reactive, ref, toRefs, useTemplateRef, watch } from 'vue';
-import { ElCheckbox, ElMessage, ElMessageBox } from 'element-plus';
-import { DbInst, DbThemeConfig, registerDbCompletionItemProvider, TabInfo, TabType } from '../db';
-import { ResourceOpCtx } from '@/views/ops/component/tag';
-import { dbApi } from '../api';
-import { dispposeCompletionItemProvider } from '@/components/monaco/completionItemProvider';
-import SvgIcon from '@/components/svgIcon/index.vue';
 import { Contextmenu, ContextmenuItem } from '@/components/contextmenu';
-import { getDbDialect } from '../dialect/index';
-import { useEventListener, useStorage } from '@vueuse/core';
-import SqlExecBox from '@/views/ops/db/component/sqleditor/SqlExecBox';
-import { format as sqlFormatter } from 'sql-formatter';
+import { dispposeCompletionItemProvider } from '@/components/monaco/completionItemProvider';
 import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
-import { useI18n } from 'vue-i18n';
-import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle, useI18nOperateSuccessMsg } from '@/hooks/useI18n';
-import { ResourceOpCtxKey } from '@/views/ops/resource/resource';
+import SvgIcon from '@/components/svgIcon/index.vue';
+import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
+import { ResourceOpCtx } from '@/views/ops/component/tag';
+import SqlExecBox from '@/views/ops/db/component/sqleditor/SqlExecBox';
 import { DbDataOpComp } from '@/views/ops/db/resource';
+import { ResourceOpCtxKey } from '@/views/ops/resource/resource';
+import { useEventListener, useStorage } from '@vueuse/core';
+import { ElCheckbox, ElMessageBox } from 'element-plus';
+import { format as sqlFormatter } from 'sql-formatter';
+import { defineAsyncComponent, getCurrentInstance, h, inject, onBeforeUnmount, onMounted, reactive, ref, toRefs, useTemplateRef } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { dbApi } from '../api';
+import { DbInst, DbThemeConfig, registerDbCompletionItemProvider, TabInfo, TabType } from '../db';
+import { getDbDialect } from '../dialect/index';
 
 const DbTableOp = defineAsyncComponent(() => import('../component/table/DbTableOp.vue'));
 const DbSqlEditor = defineAsyncComponent(() => import('../component/sqleditor/DbSqlEditor.vue'));
@@ -313,7 +313,7 @@ const loadTableData = async (db: any, dbName: string, tableName: string) => {
 // 新建查询tab
 const addQueryTab = async (db: any, dbName: string, sqlName: string = '') => {
     if (!dbName || !db.id) {
-        ElMessage.warning(t('db.noDbInstMsg'));
+        Msg.warning('db.noDbInstMsg');
         return;
     }
     await changeDb(db, dbName);
@@ -364,7 +364,7 @@ const addQueryTab = async (db: any, dbName: string, sqlName: string = '') => {
 const addTablesOpTab = async (db: any) => {
     const dbName = db.db;
     if (!db || !db.id) {
-        ElMessage.warning(t('db.noDbInstMsg'));
+        Msg.warning('db.noDbInstMsg');
         return;
     }
     await changeDb(db, dbName);
@@ -470,7 +470,7 @@ const deleteSql = async (dbId: any, db: string, sqlName: string) => {
     try {
         await useI18nDeleteConfirm(sqlName);
         await dbApi.deleteDbSql.request({ id: dbId, db: db, name: sqlName });
-        useI18nDeleteSuccessMsg();
+        Msg.deleteSuccess();
         reloadSqls(dbId, db);
     } catch (err) {
         //
@@ -523,11 +523,11 @@ const onDeleteTable = async (data: any) => {
         for (let re of res) {
             if (re.errorMsg) {
                 success = false;
-                ElMessage.error(`${re.sql} -> ${re.errorMsg}`);
+                Msg.error(`${re.sql} -> ${re.errorMsg}`);
             }
         }
         if (success) {
-            useI18nDeleteSuccessMsg();
+            Msg.deleteSuccess();
             setTimeout(() => {
                 parentKey && reloadNode(parentKey);
             }, 1000);
@@ -558,7 +558,7 @@ const onRenameTable = async (data: any) => {
     tableData.tableName = promptValue.value;
     let sql = nowDbInst.value.getDialect().getModifyTableInfoSql(tableData);
     if (!sql) {
-        ElMessage.warning(t('db.noChange'));
+        Msg.warning('db.noChange');
         return;
     }
 
@@ -599,7 +599,7 @@ const onCopyTable = async (data: any) => {
             if (action === 'confirm') {
                 // 执行sql
                 dbApi.copyTable.request({ id, db, tableName, copyData: checked.value }).then(() => {
-                    useI18nOperateSuccessMsg();
+                    Msg.operateSuccess();
                     setTimeout(() => {
                         parentKey && reloadNode(parentKey);
                     }, 1000);
@@ -632,7 +632,7 @@ const getNowDbInfo = () => {
 
 const loadTables = async (dbInfo: any) => {
     if (!dbInfo || !dbInfo.id) {
-        ElMessage.warning(t('db.noDbInstMsg'));
+        Msg.warning('db.noDbInstMsg');
         return;
     }
     let { id, db } = dbInfo;

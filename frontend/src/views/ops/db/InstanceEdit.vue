@@ -109,23 +109,19 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, reactive, toRefs, useTemplateRef, watchEffect } from 'vue';
-import { dbApi } from './api';
-import { ElMessage } from 'element-plus';
-import SshTunnelSelect from '../component/SshTunnelSelect.vue';
-import { DbType, getDbDialect, getDbDialectMap } from './dialect';
-import SvgIcon from '@/components/svgIcon/index.vue';
-import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
-import { TagResourceTypeEnum } from '@/common/commonEnum';
-import ResourceAuthCertTableEdit from '../component/ResourceAuthCertTableEdit.vue';
-import { AuthCertCiphertextTypeEnum } from '../tag/enums';
-import TagTreeSelect from '../component/TagTreeSelect.vue';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
-import { useI18n } from 'vue-i18n';
 import { notBlankI18n } from '@/common/assert';
+import { TagResourceTypeEnum } from '@/common/commonEnum';
 import { Rules } from '@/common/rule';
-
-const { t } = useI18n();
+import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
+import SvgIcon from '@/components/svgIcon/index.vue';
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
+import { computed, reactive, toRefs, useTemplateRef, watchEffect } from 'vue';
+import ResourceAuthCertTableEdit from '../component/ResourceAuthCertTableEdit.vue';
+import SshTunnelSelect from '../component/SshTunnelSelect.vue';
+import TagTreeSelect from '../component/TagTreeSelect.vue';
+import { AuthCertCiphertextTypeEnum } from '../tag/enums';
+import { dbApi } from './api';
+import { DbType, getDbDialect, getDbDialectMap } from './dialect';
 
 const props = defineProps({
     data: {
@@ -208,14 +204,14 @@ const testConn = async (authCert: any) => {
         ...submitForm.value,
         authCerts: [authCert],
     });
-    ElMessage.success(t('db.connSuccess'));
+    Msg.success('db.connSuccess');
 };
 
 const btnOk = async () => {
     await useI18nFormValidate(dbFormRef);
     notBlankI18n(submitForm.value.authCerts, 'db.acName');
     await saveInstanceExec(submitForm.value);
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     state.form.id = saveInstanceRes as any;
     emit('val-change', state.form);
     cancel();

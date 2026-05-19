@@ -28,11 +28,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { Msg } from '@/hooks/useI18n';
+import { ElMessageBox } from 'element-plus';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { milvusApi } from '../api';
 import { IPrivilegeGroup } from '../types';
-import { useI18n } from 'vue-i18n';
 import PrivilegeGroupEdit from './PrivilegeGroupEdit.vue';
 
 const { t } = useI18n();
@@ -99,7 +100,7 @@ const handleDelete = async () => {
     for (const group of selectedGroups.value) {
         await milvusApi.dropPrivilegeGroup(props.milvusId, group.GroupName);
     }
-    ElMessage.success(t('milvus.privilegeGroupDeleteSuccess'));
+    Msg.success('milvus.privilegeGroupDeleteSuccess');
     await loadList();
 };
 

@@ -19,7 +19,7 @@
     <img src="https://img.shields.io/docker/pulls/mayflygo/mayfly-go.svg?label=docker%20pulls&color=fac858" alt="docker pulls"/>
   </a>
   <a href="https://github.com/golang/go" target="_blank">
-    <img src="https://img.shields.io/badge/Golang-1.22%2B-yellow.svg" alt="golang"/>
+    <img src="https://img.shields.io/badge/Golang-1.26%2B-yellow.svg" alt="golang"/>
   </a>
   <a href="https://cn.vuejs.org" target="_blank">
     <img src="https://img.shields.io/badge/Vue-3.x-green.svg" alt="vue">
@@ -28,7 +28,24 @@
 
 ## Preface
 
-Web-based **Unified Management and Operation Platform**, integrating comprehensive operation support for Linux systems (including terminal management [terminal playback, command filtering], file management, script execution, process monitoring, and cronjob settings). It also provides data operation, data synchronization, and data migration for multiple databases (such as MySQL, PostgreSQL, Oracle, SQL Server, Dameng, Gauss, SQLite, ClickHouse, etc.). Additionally, it supports Redis operations (standalone, sentinel, and cluster modes) and MongoDB, Elasticsearch, Kafka, Milvus management, combined with work order process approval functionality to offer enterprises an all-in-one solution for operations and management.
+Web-based **Unified Resource Management Platform**, integrating comprehensive operation support for Linux systems (including terminal management [terminal playback, command filtering], file management, script execution, process monitoring, and cronjob settings). It also provides data operation, data synchronization, and data migration for various databases, caches, search engines, and vector databases. Combined with work order process approval functionality, it offers enterprises an all-in-one solution for operations and management.
+
+### 🗄️ Supported Databases
+
+#### Relational Databases
+
+|  Database  | Status |  Database  | Status | Database | Status |
+| :--------: | :----: | :--------: | :----: | :------: | :----: |
+|   MySQL    |   ✅   | PostgreSQL |   ✅   |  Oracle  |   ✅   |
+| SQL Server |   ✅   |   Dameng   |   ✅   |  Gauss   |   ✅   |
+|   SQLite   |   ✅   | ClickHouse |   ✅   |          |        |
+
+#### Non-Relational Databases
+
+|   Database    | Status | Database | Status |
+| :-----------: | :----: | :------: | :----: |
+|    MongoDB    |   ✅   |  Redis   |   ✅   |
+| Elasticsearch |   ✅   |  Milvus  |   ✅   |
 
 ## Development languages and major frameworks
 

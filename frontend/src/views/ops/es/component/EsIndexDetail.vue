@@ -62,11 +62,10 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-import { defineAsyncComponent, reactive, ref, watch } from 'vue';
+import { Msg, useI18nDeleteConfirm } from '@/hooks/useI18n';
 import { esApi } from '@/views/ops/es/api';
-import { ElMessage } from 'element-plus';
-import { useI18nDeleteConfirm } from '@/hooks/useI18n';
+import { defineAsyncComponent, reactive, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 const MonacoEditor = defineAsyncComponent(() => import('@/components/monaco/MonacoEditor.vue'));
 
 const { t } = useI18n();
@@ -114,7 +113,7 @@ const onOk = async () => {
         }
 
         await esApi.proxyReq('put', state.instId, `/${state.idxName}/_settings`, { index: settings });
-        ElMessage.success(t('common.saveSuccess'));
+        Msg.saveSuccess();
     }
 };
 
@@ -168,14 +167,14 @@ const onRemoveAlias = async (name: string) => {
     await useI18nDeleteConfirm(`${t('es.aliases')}: ${name}`);
 
     await esApi.proxyReq('delete', state.instId, `/${state.idxName}/_alias/${name}`);
-    ElMessage.success(t('common.deleteSuccess'));
+    Msg.deleteSuccess();
     await refreshAlias();
 };
 
 const onSubmitAddAlias = async () => {
     aliasLoading.value = true;
     await esApi.proxyReq('put', state.instId, `/${state.idxName}/_alias/${state.aliasesForm.name}`);
-    ElMessage.success(t('common.saveSuccess'));
+    Msg.saveSuccess();
     await refreshAlias();
     dialogFormVisible.value = false;
     aliasLoading.value = false;

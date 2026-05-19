@@ -230,9 +230,9 @@ import { getFileUrl, getUploadFileUrl } from '@/common/request';
 import { formatAxis, formatDate } from '@/common/utils/format';
 import { saveUser } from '@/common/utils/storage';
 import SvgIcon from '@/components/svgIcon/index.vue';
+import { Msg } from '@/hooks/useI18n';
 import { useAutoOpenResource } from '@/store/autoOpenResource';
 import { useUserInfo } from '@/store/userInfo';
-import { ElMessage } from 'element-plus';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import TagCodePath from '../ops/component/TagCodePath.vue';
@@ -296,7 +296,7 @@ const getAccountInfo = async () => {
 
 const beforeAvatarUpload = (rawFile: any) => {
     if (rawFile.size >= 512 * 1024) {
-        ElMessage.error('头像不能超过512KB!');
+        Msg.error('头像不能超过512KB!');
         return false;
     }
     return true;

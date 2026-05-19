@@ -1,6 +1,6 @@
+import { Msg } from '@/hooks/useI18n';
+import { i18n } from '@/i18n';
 import { v1 as uuidv1 } from 'uuid';
-import Clipboard from 'clipboard';
-import { ElMessage } from 'element-plus';
 
 /**
  * 模板字符串解析，如：template = 'hahaha{name}_{id}' ,param = {name: 'hh', id: 1}
@@ -112,41 +112,66 @@ export function randomUuid() {
 }
 
 /**
+ * 从剪贴板粘贴文本
+ * @returns Promise<string> 剪贴板中的文本
+ * @throws Error 当无法访问剪贴板时抛出异常
+ */
+export async function pasteFromClipboard(): Promise<string> {
+    // navigator clipboard 需要https等安全上下文
+    if (navigator.clipboard && window.isSecureContext) {
+        // navigator clipboard 从剪贴板读文本
+        try {
+            const text = await navigator.clipboard.readText();
+            return text;
+        } catch (e: any) {
+            throw new Error(i18n.global.t('common.pasteFailed'));
+        }
+    }
+
+    // 非安全上下文（HTTP 环境），无法读取剪贴板
+    throw new Error(i18n.global.t('common.pasteNotSupported'));
+}
+
+/**
  * 拷贝文本至剪贴板
  * @param txt 需要拷贝到剪贴板的文本
- * @param selector click事件对应的元素selector，默认为 #copyValue
- * @returns
  */
-export async function copyToClipboard(txt: string, selector: string = '#copyValue') {
+export async function copyToClipboard(txt: string) {
     // navigator clipboard 需要https等安全上下文
     if (navigator.clipboard && window.isSecureContext) {
         // navigator clipboard 向剪贴板写文本
         try {
-            // 拷贝单元格数据
             await navigator.clipboard.writeText(txt);
-            ElMessage.success('复制成功');
+            Msg.success('common.copySuccess');
         } catch (e: any) {
-            ElMessage.error('复制失败');
+            Msg.error('common.copyFailed');
         }
         return;
     }
 
-    let clipboard = new Clipboard(selector, {
-        text: function () {
-            return txt;
-        },
-    });
-    clipboard.on('success', () => {
-        ElMessage.success('复制成功');
-        // 释放内存
-        clipboard.destroy();
-    });
-    clipboard.on('error', () => {
-        // 不支持复制
-        ElMessage.error('该浏览器不支持自动复制');
-        // 释放内存
-        clipboard.destroy();
-    });
+    // 非安全上下文（HTTP 环境），无法使用 Clipboard API
+    // 降级方案：创建临时 textarea 并使用 execCommand('copy')
+    try {
+        const textarea = document.createElement('textarea');
+        textarea.value = txt;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+
+        const success = document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        if (success) {
+            Msg.success('common.copySuccess');
+        } else {
+            Msg.error('common.copyFailed');
+        }
+    } catch (e: any) {
+        Msg.error('common.copyNotSupported');
+    }
 }
 
 export function fuzzyMatchField(keyword: string, fields: any[], ...valueExtractFuncs: Function[]) {

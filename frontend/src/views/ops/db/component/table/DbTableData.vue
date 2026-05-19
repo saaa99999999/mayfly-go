@@ -200,19 +200,20 @@
 </template>
 
 <script lang="ts" setup>
-import { onBeforeUnmount, onMounted, reactive, ref, toRefs, watch, Ref, computed } from 'vue';
-import { ElInput, ElMessage } from 'element-plus';
-import { copyToClipboard } from '@/common/utils/string';
-import { DbInst, DbThemeConfig } from '@/views/ops/db/db';
-import { Contextmenu, ContextmenuItem } from '@/components/contextmenu';
-import SvgIcon from '@/components/svgIcon/index.vue';
 import { exportCsv, exportExcel, exportFile } from '@/common/utils/export';
 import { formatDate } from '@/common/utils/format';
+import { copyToClipboard } from '@/common/utils/string';
+import { Contextmenu, ContextmenuItem } from '@/components/contextmenu';
+import SvgIcon from '@/components/svgIcon/index.vue';
+import { DbInst, DbThemeConfig } from '@/views/ops/db/db';
 import { useIntervalFn, useStorage } from '@vueuse/core';
+import { ElInput } from 'element-plus';
+import { Ref, computed, onBeforeUnmount, onMounted, reactive, ref, toRefs, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { Msg } from '../../../../../hooks/useI18n';
 import { ColumnTypeSubscript, DataType, DbDialect, getDbDialect } from '../../dialect/index';
 import ColumnFormItem from './ColumnFormItem.vue';
 import DbTableDataForm from './DbTableDataForm.vue';
-import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
@@ -698,7 +699,7 @@ const onDeleteData = async () => {
 const onEditRowData = () => {
     const selectionDatas = Array.from(selectionRowsMap.value.values());
     if (selectionDatas.length > 1) {
-        ElMessage.warning(t('db.onlySelectOneData'));
+        Msg.warning('db.onlySelectOneData');
         return;
     }
     const data = selectionDatas[0];

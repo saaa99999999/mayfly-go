@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { reactive, toRefs, watch } from 'vue';
-import { ElMessage } from 'element-plus';
+import { Msg } from '@/hooks/useI18n';
 
 const props = defineProps({
     visible: { type: Boolean },
@@ -46,10 +46,10 @@ const onclose = () => {
 const onsubmit = () => {
     state.dialogVisible = false;
     if (state.modelValue) {
-        ElMessage.success('发送剪贴板数据成功');
+        Msg.success('components.terminal-rdp.clipboardSendSuccess');
         emits('submit', state.modelValue);
     } else {
-        ElMessage.warning('请输入需要粘贴的文本');
+        Msg.warning('components.terminal-rdp.clipboardInputRequired');
     }
 };
 

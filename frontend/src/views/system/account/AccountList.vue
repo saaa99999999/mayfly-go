@@ -61,15 +61,15 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, toRefs, reactive, onMounted, Ref, defineAsyncComponent } from 'vue';
-import { AccountStatusEnum } from '../enums';
-import { accountApi } from '../api';
 import { formatDate } from '@/common/utils/format';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
 import { hasPerms } from '@/components/auth/auth';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
-import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle, useI18nOperateSuccessMsg } from '@/hooks/useI18n';
+import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
+import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
+import { accountApi } from '../api';
+import { AccountStatusEnum } from '../enums';
 
 const AccountEdit = defineAsyncComponent(() => import('./AccountEdit.vue'));
 const RoleAllocation = defineAsyncComponent(() => import('./RoleAllocation.vue'));
@@ -158,7 +158,7 @@ const onChangeStatus = async (row: any) => {
         id,
         status,
     });
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
     search();
 };
 
@@ -167,7 +167,7 @@ const onResetOtpSecret = async (row: any) => {
     await accountApi.resetOtpSecret.request({
         id,
     });
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
     row.otpSecret = '-';
 };
 
@@ -200,7 +200,7 @@ const onValChange = () => {
 const onDeleteAccount = async () => {
     await useI18nDeleteConfirm(state.selectionData.map((x: any) => x.username).join('、'));
     await accountApi.del.request({ id: state.selectionData.map((x: any) => x.id).join(',') });
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     search();
 };
 </script>

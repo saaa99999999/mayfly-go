@@ -57,17 +57,17 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, toRefs, reactive, onMounted, Ref } from 'vue';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
-import { hasPerms } from '@/components/auth/auth';
-import { SearchItem } from '@/components/pagetable/SearchForm';
-import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle, useI18nOperateSuccessMsg } from '@/hooks/useI18n';
-import { tmplApi } from '../api';
-import { TmplStatusEnum, TmplTypeEnum, ChannelTypeEnum } from '../enums';
-import TmplEdit from './TmplEdit.vue';
 import EnumValue from '@/common/Enum';
+import { hasPerms } from '@/components/auth/auth';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
+import { SearchItem } from '@/components/pagetable/SearchForm';
+import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
 import AccountSelectFormItem from '@/views/system/account/components/AccountSelectFormItem.vue';
+import { onMounted, reactive, ref, Ref, toRefs } from 'vue';
+import { tmplApi } from '../api';
+import { ChannelTypeEnum, TmplStatusEnum, TmplTypeEnum } from '../enums';
+import TmplEdit from './TmplEdit.vue';
 
 const perms = {
     saveTmpl: 'msg:tmpl:save',
@@ -155,7 +155,7 @@ const editTmpl = (data: any) => {
 const deleteTmpl = async () => {
     await useI18nDeleteConfirm(state.selectionData.map((x: any) => x.code).join('、'));
     await tmplApi.del.request({ id: state.selectionData.map((x: any) => x.id).join(',') });
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     search();
 };
 
@@ -173,7 +173,7 @@ const sendMsg = async () => {
         params: state.sendMsgDialog.params,
         receiverIds: state.sendMsgDialog.receiverIds,
     });
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
     state.sendMsgDialog.visible = false;
 };
 </script>

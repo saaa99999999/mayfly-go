@@ -18,7 +18,7 @@
             }}</span>
             <span class="text-xs text-gray-500 dark:text-gray-400 mr-2">{{ progress.uploadedFiles }}/{{ progress.totalFiles }}</span>
             <!-- 取消按钮 -->
-            <el-button v-if="progress.status === '' || progress.status === 'uploading'" type="danger" size="small" text @click="handleCancel">
+            <el-button v-if="progress.status === '' || progress.status === 'uploading'" type="danger" size="small" text :loading="cancelLoading" @click="handleCancel">
                 {{ $t('common.cancel') }}
             </el-button>
         </div>
@@ -48,7 +48,9 @@
 <script lang="ts" setup>
 import TagCodePath from '@/views/ops/component/TagCodePath.vue';
 import { Loading } from '@element-plus/icons-vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+
+const cancelLoading = ref(false);
 
 const props = defineProps({
     progress: {
@@ -93,6 +95,7 @@ const formatSize = (bytes: number): string => {
 // 处理取消上传
 const handleCancel = () => {
     if (props.onCancel) {
+        cancelLoading.value = true;
         props.onCancel();
     }
 };

@@ -25,10 +25,10 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-import { defineAsyncComponent, ref, watch } from 'vue';
+import { Msg } from '@/hooks/useI18n';
 import { esApi } from '@/views/ops/es/api';
-import { ElMessage } from 'element-plus';
+import { defineAsyncComponent, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const MonacoEditor = defineAsyncComponent(() => import('@/components/monaco/MonacoEditor.vue'));
 
@@ -110,7 +110,7 @@ const onSaveDoc = async () => {
     try {
         data = JSON.parse(doc);
     } catch (error) {
-        ElMessage.error(t('es.docJsonError'));
+        Msg.error('es.docJsonError');
         loading.value = false;
         return;
     }
@@ -125,8 +125,7 @@ const onSaveDoc = async () => {
     }, 2000);
 
     await esApi.proxyReq('post', model.value.instId, `/${model.value.idxName}/_doc/${_id.value}`, data);
-
-    ElMessage.success(t('common.saveSuccess'));
+    Msg.saveSuccess();
 
     setTimeout(() => {
         visible.value = false;

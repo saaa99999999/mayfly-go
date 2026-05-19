@@ -38,18 +38,18 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, toRefs, reactive, onMounted, Ref } from 'vue';
-import { procdefApi, procinstApi } from './api';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
 import { hasPerms } from '@/components/auth/auth';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
-import ProcdefEdit from './ProcdefEdit.vue';
-import { ProcdefStatus } from './enums';
-import TagCodePath from '../ops/component/TagCodePath.vue';
-import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
+import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
+import { onMounted, reactive, ref, Ref, toRefs } from 'vue';
 import { useI18n } from 'vue-i18n';
+import TagCodePath from '../ops/component/TagCodePath.vue';
+import ProcdefEdit from './ProcdefEdit.vue';
+import { procdefApi } from './api';
 import FlowDesignDrawer from './components/flowdesign/FlowDesignDrawer.vue';
+import { ProcdefStatus } from './enums';
 
 const { t } = useI18n();
 
@@ -133,7 +133,7 @@ const onDeleteProcdef = async () => {
     try {
         await useI18nDeleteConfirm(state.selectionData.map((x: any) => x.name).join(', '));
         await procdefApi.del.request({ id: state.selectionData.map((x: any) => x.id).join(',') });
-        useI18nDeleteSuccessMsg();
+        Msg.deleteSuccess();
         search();
     } catch (err) {
         //
@@ -149,7 +149,7 @@ const onShowFlowDesign = async (data: any) => {
 
 const onSaveFlowDesign = async (data: any) => {
     await procdefApi.saveFlowDef.request({ id: state.flowDesignEditor.procdefId, flow: data });
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     state.flowDesignEditor.visible = false;
 };
 </script>

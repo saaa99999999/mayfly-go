@@ -84,19 +84,18 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, reactive, toRefs } from 'vue';
-import { dockerApi, getDockerExecSocketUrl } from '../api';
-import { formatByteSize, formatDate } from '@/common/utils/format';
-import EnumSelect from '@/components/enumselect/EnumSelect.vue';
-import { ImageStateEnum } from '../enums';
-import EnumTag from '@/components/enumtag/EnumTag.vue';
-import { fuzzyMatchField } from '@/common/utils/string';
-import TerminalBody from '@/components/terminal/TerminalBody.vue';
 import config from '@/common/config';
 import { joinClientParams } from '@/common/request';
+import { formatByteSize, formatDate } from '@/common/utils/format';
 import { getToken } from '@/common/utils/storage';
-import { ElMessage } from 'element-plus';
-import { i18n } from '@/i18n';
+import { fuzzyMatchField } from '@/common/utils/string';
+import EnumSelect from '@/components/enumselect/EnumSelect.vue';
+import EnumTag from '@/components/enumtag/EnumTag.vue';
+import TerminalBody from '@/components/terminal/TerminalBody.vue';
+import { Msg } from '@/hooks/useI18n';
+import { computed, onMounted, reactive, toRefs } from 'vue';
+import { dockerApi, getDockerExecSocketUrl } from '../api';
+import { ImageStateEnum } from '../enums';
 
 const props = defineProps({
     id: {
@@ -179,7 +178,7 @@ const uploadImage = (content: any) => {
             timeout: 3 * 60 * 60 * 1000,
         })
         .then(() => {
-            ElMessage.success(i18n.global.t('machine.uploadSuccess'));
+            Msg.success('machine.uploadSuccess');
             setTimeout(() => {
                 getImages();
             }, 3000);
@@ -187,12 +186,12 @@ const uploadImage = (content: any) => {
         .catch(() => {
             // state.uploadProgressShow = false;
         });
-    ElMessage.info(i18n.global.t('docker.imageUploading'));
+    Msg.info('docker.imageUploading');
 };
 
 const uploadSuccess = (res: any) => {
     if (res.code !== 200) {
-        ElMessage.error(res.msg);
+        Msg.error(res.msg);
     }
 };
 

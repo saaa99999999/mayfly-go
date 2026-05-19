@@ -56,7 +56,10 @@ export default {
         copy: 'Copy',
         paste: 'Paste',
         pasteFailed: 'Paste failed',
+        pasteNotSupported: 'Clipboard access is not supported in this environment. Please use Ctrl+V to paste',
         copySuccess: 'Copy Success',
+        copyFailed: 'Copy failed',
+        copyNotSupported: 'This browser does not support auto copy',
         copyCell: 'Copy Cell',
 
         search: 'Search',
@@ -288,6 +291,11 @@ export default {
             uploading: 'Upload progress: {percent}%',
             uploadToPath: 'File will be uploaded to: {path}',
             uploadPathTip: 'Tip: File will be uploaded to home directory (~). To upload to another directory, use cd command first, then use drag-and-drop upload.',
+            
+            // Paste related
+            manualPaste: 'Manual Paste',
+            pasteManualHint: 'Unable to read clipboard content automatically. Please paste your content into the input box below:',
+            pasteHere: 'Paste your content here...',
             
             // Machine file upload progress notification
             machineFileUpload: {

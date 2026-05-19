@@ -267,13 +267,13 @@
     </el-drawer>
 </template>
 <script setup lang="ts">
-import { useI18nFormValidate, useI18nOperateSuccessMsg } from '@/hooks/useI18n';
-import { computed, reactive, toRefs, useTemplateRef, watch } from 'vue';
-import { dockerApi } from '../api';
-import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
 import { Rules } from '@/common/rule';
 import { formatByteSize } from '@/common/utils/format';
 import { deepClone } from '@/common/utils/object';
+import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
+import { computed, reactive, toRefs, useTemplateRef, watch } from 'vue';
+import { dockerApi } from '../api';
 
 const rules = {
     name: [Rules.requiredInput('common.name')],
@@ -420,7 +420,7 @@ const btnOk = async () => {
         state.submitForm.cmd = cmds;
     }
     await createExec();
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
     emit('success', submitForm);
     cancel();
 };

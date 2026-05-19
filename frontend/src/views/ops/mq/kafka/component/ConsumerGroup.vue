@@ -36,11 +36,10 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, toRefs, computed } from 'vue';
-import { mqApi } from '../../api';
-import { ElMessage } from 'element-plus';
+import { Msg, useI18nDeleteConfirm } from '@/hooks/useI18n';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useI18nDeleteConfirm, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
+import { mqApi } from '../../api';
 
 export interface ConsumerGroup {
     Coordinator: number;
@@ -88,10 +87,10 @@ const handleDeleteGroup = async (group: ConsumerGroup) => {
             id: props.kafkaId,
             group: group.Group,
         });
-        useI18nSaveSuccessMsg();
+        Msg.saveSuccess();
         emits('refresh');
     } catch (error: any) {
-        ElMessage.error(error.message || t('common.requestFail'));
+        Msg.error(error.message || 'common.requestFail');
     }
 };
 const handleGetGroupMembers = async (group: ConsumerGroup) => {
@@ -102,7 +101,7 @@ const handleGetGroupMembers = async (group: ConsumerGroup) => {
         });
         console.log(res);
     } catch (error: any) {
-        ElMessage.error(error.message || t('common.requestFail'));
+        Msg.error(error.message || 'common.requestFail');
     }
 };
 

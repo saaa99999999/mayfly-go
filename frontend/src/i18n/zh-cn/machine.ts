@@ -158,4 +158,11 @@ export default {
             files: '{count} 个文件',
         },
     },
+    // 远程桌面相关
+    'terminal-rdp': {
+        sendCombinationKeySuccess: '发送组合键成功',
+        clipboardSendSuccess: '发送剪贴板数据成功',
+        clipboardInputRequired: '请输入需要粘贴的文本',
+        httpsRequiredForClipboard: '只有 HTTPS 才可以访问剪贴板',
+    },
 };

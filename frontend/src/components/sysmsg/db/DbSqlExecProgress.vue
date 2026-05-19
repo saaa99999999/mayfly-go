@@ -9,7 +9,7 @@
                 {{ progress.title }}
             </span>
             <!-- 取消按钮 -->
-            <el-button v-if="!progress.terminated && progress.status !== 'cancelled'" type="danger" size="small" text @click="handleCancel">
+            <el-button v-if="!progress.terminated && progress.status !== 'cancelled'" type="danger" size="small" text :loading="cancelLoading" @click="handleCancel">
                 <SvgIcon name="Close" :size="14" />
                 {{ $t('common.cancel') }}
             </el-button>
@@ -23,9 +23,11 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { onMounted, onUnmounted, reactive } from 'vue';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { formatTime } from 'element-plus/es/components/countdown/src/utils';
 import TagCodePath from '@/views/ops/component/TagCodePath.vue';
+
+const cancelLoading = ref(false);
 
 interface Progress {
     dbCode: string;
@@ -77,6 +79,7 @@ onUnmounted(async () => {
 // 处理取消执行
 const handleCancel = () => {
     if (props.onCancel) {
+        cancelLoading.value = true;
         props.onCancel();
     }
 };

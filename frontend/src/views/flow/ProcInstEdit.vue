@@ -43,20 +43,17 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, reactive, defineAsyncComponent, shallowReactive, useTemplateRef, watch, onMounted } from 'vue';
-import { procdefApi, procinstApi } from './api';
-import { ElMessage } from 'element-plus';
-import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
-import { FlowBizType } from './enums';
-import EnumSelect from '@/components/enumselect/EnumSelect.vue';
-import RedisRunCmdFlowBizForm from './flowbiz/redis/RedisRunCmdFlowBizForm.vue';
-import { useI18n } from 'vue-i18n';
 import { Rules } from '@/common/rule';
+import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
+import EnumSelect from '@/components/enumselect/EnumSelect.vue';
+import { Msg } from '@/hooks/useI18n';
+import { defineAsyncComponent, reactive, shallowReactive, toRefs, useTemplateRef, watch } from 'vue';
+import { procdefApi, procinstApi } from './api';
 import FlowDesign from './components/flowdesign/FlowDesign.vue';
+import { FlowBizType } from './enums';
+import RedisRunCmdFlowBizForm from './flowbiz/redis/RedisRunCmdFlowBizForm.vue';
 
 const DbSqlExecFlowBizForm = defineAsyncComponent(() => import('./flowbiz/dbms/DbSqlExecFlowBizForm.vue'));
-
-const { t } = useI18n();
 
 const props = defineProps({
     title: {
@@ -135,12 +132,12 @@ const btnOk = async () => {
         await formRef.value.validate();
         await bizFormRef.value.validateBizForm();
     } catch (e: any) {
-        ElMessage.error(t('flow.procinstFormError'));
+        Msg.error('flow.procinstFormError');
         return false;
     }
 
     await procinstStart();
-    ElMessage.success(t('flow.procinstStartSuccess'));
+    Msg.success('flow.procinstStartSuccess');
     emit('val-change', modelValue.value);
     //重置表单域
     cancel();

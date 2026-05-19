@@ -97,15 +97,15 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, toRefs, reactive, onMounted, nextTick } from 'vue';
-import TagTreeCheck from '../../component/TagTreeCheck.vue';
 import { TagResourceTypeEnum } from '@/common/commonEnum';
-import { cmdConfApi } from '../api';
-import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
-import TagCodePath from '../../component/TagCodePath.vue';
-import { useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
 import { Rules } from '@/common/rule';
 import { deepClone } from '@/common/utils/object';
+import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
+import { Msg, useI18nDeleteConfirm, useI18nFormValidate } from '@/hooks/useI18n';
+import { nextTick, onMounted, reactive, ref, toRefs } from 'vue';
+import TagCodePath from '../../component/TagCodePath.vue';
+import TagTreeCheck from '../../component/TagTreeCheck.vue';
+import { cmdConfApi } from '../api';
 
 const rules = {
     tags: [Rules.requiredInput('machine.relateMachine')],
@@ -177,7 +177,7 @@ const onOpenFormDialog = (data: any) => {
 const onDeleteCmdConf = async (data: any) => {
     await useI18nDeleteConfirm(data.name);
     await cmdConfApi.delete.request({ id: data.id });
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     getCmdConfs();
 };
 
@@ -195,7 +195,7 @@ const onSubmitForm = async () => {
         await useI18nFormValidate(formRef);
         state.submiting = true;
         await cmdConfApi.save.request(state.form);
-        useI18nSaveSuccessMsg();
+        Msg.saveSuccess();
 
         onCancelEdit();
         getCmdConfs();

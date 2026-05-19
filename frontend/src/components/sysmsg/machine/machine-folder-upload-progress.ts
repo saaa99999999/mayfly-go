@@ -70,7 +70,6 @@ export async function registerFolderUploadProgressHandler() {
         if (content.status === 'uploading') {
             createOrUpdateNotification(uploadId, 'machineFolderUpload', content, MachineFolderUploadProgress, props, {
                 title: message.title || 'machine.folderUpload',
-                onCancel: props.onCancel,
             });
         }
 

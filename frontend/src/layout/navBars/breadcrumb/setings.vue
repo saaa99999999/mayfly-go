@@ -416,15 +416,13 @@
 </template>
 
 <script lang="ts" setup name="layoutBreadcrumbSeting">
-import { nextTick, onMounted, ref, watch } from 'vue';
-import { ElMessage } from 'element-plus';
-import ClipboardJS from 'clipboard';
-import { storeToRefs } from 'pinia';
-import { useThemeConfig } from '@/store/themeConfig';
+import { getLocal, setLocal } from '@/common/utils/storage';
 import { getLightColor } from '@/common/utils/theme';
-import { setLocal, getLocal } from '@/common/utils/storage';
+import { useThemeConfig } from '@/store/themeConfig';
+import { storeToRefs } from 'pinia';
+import { nextTick, onMounted, ref, watch } from 'vue';
 
-import themes from '@/components/terminal/themes';
+import themes from '@/components/terminal/themes.js';
 import { useWindowSize } from '@vueuse/core';
 
 const copyConfigBtnRef = ref();
@@ -624,24 +622,9 @@ const setLocalThemeConfigStyle = () => {
     setLocal('themeConfigStyle', document.documentElement.style.cssText);
 };
 // 一键复制配置
-const onCopyConfigClick = (target: any) => {
-    if (!target) {
-        return;
-    }
+const onCopyConfigClick = () => {
     let copyThemeConfig = getLocal('themeConfig');
     copyThemeConfig.isDrawer = false;
-    const clipboard = new ClipboardJS(target, {
-        text: () => JSON.stringify(copyThemeConfig),
-    });
-    clipboard.on('success', () => {
-        themeConfig.value.isDrawer = false;
-        ElMessage.success('复制成功');
-        clipboard.destroy();
-    });
-    clipboard.on('error', () => {
-        ElMessage.error('复制失败');
-        clipboard.destroy();
-    });
 };
 
 const checkClientWidth = () => {

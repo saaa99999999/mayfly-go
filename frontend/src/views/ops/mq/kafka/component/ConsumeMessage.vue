@@ -132,6 +132,7 @@ import SvgIcon from '@/components/svgIcon/index.vue';
 import MonacoEditorBox from '@/components/monaco/MonacoEditorBox';
 import { ConsumerGroup } from '@/views/ops/mq/kafka/component/ConsumerGroup.vue';
 import { randomUuid } from '@/common/utils/string';
+import { Msg } from '@/hooks/useI18n';
 
 const { t } = useI18n();
 
@@ -223,7 +224,7 @@ const consumeMessage = async () => {
             displayValue: typeof msg.value === 'object' ? JSON.stringify(msg.value, null, 2) : String(msg.value),
         }));
     } catch (error: any) {
-        ElMessage.error(error.message || t('common.requestFail'));
+        Msg.error(error.message || 'common.requestFail');
     } finally {
         consuming.value = false;
     }

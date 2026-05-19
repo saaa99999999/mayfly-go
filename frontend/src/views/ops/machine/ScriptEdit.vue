@@ -64,16 +64,16 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, toRefs, reactive, watch } from 'vue';
-import { machineApi } from './api';
-import { ScriptResultEnum } from './enums';
-import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
-import { DynamicFormEdit } from '@/components/dynamic-form';
-import SvgIcon from '@/components/svgIcon/index.vue';
-import EnumSelect from '@/components/enumselect/EnumSelect.vue';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
 import { Rules } from '@/common/rule';
 import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
+import { DynamicFormEdit } from '@/components/dynamic-form';
+import EnumSelect from '@/components/enumselect/EnumSelect.vue';
+import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
+import SvgIcon from '@/components/svgIcon/index.vue';
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
+import { reactive, ref, toRefs, watch } from 'vue';
+import { machineApi } from './api';
+import { ScriptResultEnum } from './enums';
 
 const props = defineProps({
     data: {
@@ -147,7 +147,7 @@ const onConfirm = async () => {
         state.form.params = JSON.stringify(state.params);
     }
     machineApi.saveScript.request(state.form).then(() => {
-        useI18nSaveSuccessMsg();
+        Msg.saveSuccess();
         emit('submitSuccess');
         onCancel();
     });

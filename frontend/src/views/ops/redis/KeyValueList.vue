@@ -48,11 +48,10 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { ref, reactive, toRefs, onMounted } from 'vue';
-import { ElMessage } from 'element-plus';
+import { Msg } from '@/hooks/useI18n';
+import { onMounted, reactive, ref, toRefs } from 'vue';
 import FormatViewer from './FormatViewer.vue';
 import { RedisInst } from './redis';
-import { useI18nDeleteSuccessMsg, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
 
 const props = defineProps({
     redis: {
@@ -134,7 +133,7 @@ const confirmEditData = async () => {
             await props.redis.runCmd(['LSET', state.key, index, member]);
         }
 
-        useI18nSaveSuccessMsg();
+        Msg.saveSuccess();
         initData();
     } finally {
         state.editDialog.visible = false;
@@ -144,7 +143,7 @@ const confirmEditData = async () => {
 const lrem = async (row: any, index: any) => {
     // LREM key count element
     await props.redis.runCmd(['LREM', state.key, 1, row.value]);
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     state.values.splice(index, 1);
     state.total--;
 };

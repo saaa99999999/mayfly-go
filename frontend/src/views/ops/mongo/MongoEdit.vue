@@ -42,16 +42,12 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, reactive, watchEffect, useTemplateRef } from 'vue';
-import { mongoApi } from './api';
-import { ElMessage } from 'element-plus';
-import TagTreeSelect from '../component/TagTreeSelect.vue';
-import SshTunnelSelect from '../component/SshTunnelSelect.vue';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
-import { useI18n } from 'vue-i18n';
 import { Rules } from '@/common/rule';
-
-const { t } = useI18n();
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
+import { reactive, toRefs, useTemplateRef, watchEffect } from 'vue';
+import SshTunnelSelect from '../component/SshTunnelSelect.vue';
+import TagTreeSelect from '../component/TagTreeSelect.vue';
+import { mongoApi } from './api';
 
 const props = defineProps({
     mongo: {
@@ -116,13 +112,13 @@ const getReqForm = () => {
 const onTestConn = async () => {
     await useI18nFormValidate(mongoFormRef);
     await testConnExec(getReqForm());
-    ElMessage.success(t('ac.connSuccess'));
+    Msg.success('ac.connSuccess');
 };
 
 const onConfirm = async () => {
     await useI18nFormValidate(mongoFormRef);
     await saveMongoExec(getReqForm());
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     emit('val-change', state.form);
     onCancel();
 };

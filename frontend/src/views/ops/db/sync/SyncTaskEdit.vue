@@ -210,22 +210,21 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, reactive, ref, toRefs, watch } from 'vue';
-import { ElMessage } from 'element-plus';
-import DbSelectTree from '@/views/ops/db/component/DbSelectTree.vue';
-import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
-import { DbInst, registerDbCompletionItemProvider } from '@/views/ops/db/db';
-import { compatibleDuplicateStrategy, DbType, getDbDialect } from '@/views/ops/db/dialect';
+import { Rules } from '@/common/rule';
 import CrontabInput from '@/components/crontab/CrontabInput.vue';
 import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
 import EnumSelect from '@/components/enumselect/EnumSelect.vue';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
-import { useI18n } from 'vue-i18n';
 import FormItemTooltip from '@/components/form/FormItemTooltip.vue';
-import { Rules } from '@/common/rule';
-import { DbDataSyncDuplicateStrategyEnum } from '@/views/ops/db/sync/enums';
-import { dbSyncApi } from '@/views/ops/db/sync/api';
+import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
 import { dbApi } from '@/views/ops/db/api';
+import DbSelectTree from '@/views/ops/db/component/DbSelectTree.vue';
+import { DbInst, registerDbCompletionItemProvider } from '@/views/ops/db/db';
+import { compatibleDuplicateStrategy, DbType, getDbDialect } from '@/views/ops/db/dialect';
+import { dbSyncApi } from '@/views/ops/db/sync/api';
+import { DbDataSyncDuplicateStrategyEnum } from '@/views/ops/db/sync/enums';
+import { computed, reactive, ref, toRefs, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
@@ -396,7 +395,7 @@ watch(tabActiveName, async (newValue: string) => {
                 }
             });
             if (fields.size < (state.form.fieldMap?.length || 0)) {
-                ElMessage.warning(t('db.fieldMapError'));
+                Msg.warning('db.fieldMapError');
                 state.previewInsertSql = '';
                 return;
             }
@@ -443,19 +442,19 @@ const loadDbTables = async (dbId: number, db: string) => {
 const handleGetSrcFields = async () => {
     // 执行sql，获取字段信息
     if (!state.form.dataSql || !state.form.dataSql.trim()) {
-        ElMessage.warning(t('db.noDataSqlMsg'));
+        Msg.warning('db.noDataSqlMsg');
         return;
     }
 
     // 判断sql是否是查询语句
     if (!/^select/i.test(state.form.dataSql.trim()!)) {
-        ElMessage.warning(t('db.notSelectSql'));
+        Msg.warning('db.notSelectSql');
         return;
     }
 
     // 判断是否有多条sql
     if (/;/i.test(state.form.dataSql!)) {
-        ElMessage.warning(t('db.notOneSql'));
+        Msg.warning('db.notOneSql');
         return;
     }
 
@@ -481,7 +480,7 @@ const handleGetSrcFields = async () => {
     });
 
     if (res.length && !res[0].columns) {
-        ElMessage.warning(t('db.notColumnSql'));
+        Msg.warning('db.notColumnSql');
         return;
     }
 
@@ -532,7 +531,7 @@ const btnOk = async () => {
     const reqForm: any = { ...state.form };
     reqForm.fieldMap = JSON.stringify(state.form.fieldMap);
     await saveExec(reqForm);
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     emit('val-change', state.form);
     cancel();
 };

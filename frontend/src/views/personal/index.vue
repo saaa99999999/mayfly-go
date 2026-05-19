@@ -51,18 +51,15 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, reactive, onMounted } from 'vue';
-import { ElMessage } from 'element-plus';
-import { personApi } from './api';
 import config from '@/common/config';
 import { joinClientParams } from '@/common/request';
-import { useI18n } from 'vue-i18n';
+import { Msg } from '@/hooks/useI18n';
+import { onMounted, reactive, toRefs } from 'vue';
+import { personApi } from './api';
 
 defineOptions({
     name: 'Personal',
 });
-
-const { t } = useI18n();
 
 const state = reactive({
     accountInfo: {
@@ -91,7 +88,7 @@ const getAccountInfo = async () => {
 
 const updateAccount = async () => {
     await personApi.updateAccount.request(state.accountForm);
-    ElMessage.success(t('personal.updateSuccess'));
+    Msg.success('personal.updateSuccess');
 };
 
 const bindOAuth2 = () => {
@@ -110,7 +107,7 @@ const bindOAuth2 = () => {
             if (e.data.action === 'oauthBind') {
                 window.removeEventListener('message', handler);
                 // 处理登录token
-                ElMessage.success(t('personal.bindingSuccess'));
+                Msg.success('personal.bindingSuccess');
                 setTimeout(() => {
                     location.reload();
                 }, 1000);
@@ -127,7 +124,7 @@ const bindOAuth2 = () => {
 
 const unbindOAuth2 = async () => {
     await personApi.unbindOauth2.request();
-    ElMessage.success(t('personal.unbundleSuccess'));
+    Msg.success('personal.unbundleSuccess');
     state.authStatus = await personApi.authStatus.request();
 };
 </script>

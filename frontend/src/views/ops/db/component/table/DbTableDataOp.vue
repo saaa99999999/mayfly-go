@@ -247,16 +247,16 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, reactive, Ref, ref, toRefs, watch } from 'vue';
-import { ElMessage } from 'element-plus';
 
-import { DbInst } from '@/views/ops/db/db';
-import DbTableData from './DbTableData.vue';
-import { DbDialect } from '@/views/ops/db/dialect';
-import SvgIcon from '@/components/svgIcon/index.vue';
-import { useEventListener } from '@vueuse/core';
 import { copyToClipboard, fuzzyMatchField } from '@/common/utils/string';
-import DbTableDataForm from './DbTableDataForm.vue';
+import SvgIcon from '@/components/svgIcon/index.vue';
+import { Msg } from '@/hooks/useI18n';
+import { DbInst } from '@/views/ops/db/db';
+import { DbDialect } from '@/views/ops/db/dialect';
+import { useEventListener } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
+import DbTableData from './DbTableData.vue';
+import DbTableDataForm from './DbTableDataForm.vue';
 
 const { t } = useI18n();
 
@@ -580,7 +580,7 @@ const onCancelCondition = () => {
  */
 const onCommit = () => {
     getNowDbInst().runSql(props.dbName, 'COMMIT;');
-    ElMessage.success('COMMIT success');
+    Msg.success('COMMIT success');
 };
 
 const onSelectByCondition = async () => {

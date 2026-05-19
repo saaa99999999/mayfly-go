@@ -145,7 +145,7 @@ import { formatDate } from '@/common/utils/format';
 import { TableColumn } from '@/components/pagetable';
 import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
-import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle } from '@/hooks/useI18n';
+import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
 import { onMounted, reactive, ref, Ref, toRefs } from 'vue';
 import { useRoute } from 'vue-router';
 import TagCodePath from '../component/TagCodePath.vue';
@@ -237,7 +237,7 @@ const deleteRedis = async () => {
     try {
         await useI18nDeleteConfirm(state.selectionData.map((x: any) => x.name).join('、'));
         await redisApi.delRedis.request({ id: state.selectionData.map((x: any) => x.id).join(',') });
-        useI18nDeleteSuccessMsg();
+        Msg.deleteSuccess();
         search();
     } catch (err) {
         //

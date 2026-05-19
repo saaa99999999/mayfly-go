@@ -63,7 +63,7 @@
 <script setup lang="ts" name="AiAssistant">
 import { notBlankI18n } from '@/common/assert';
 import { formatDate } from '@/common/utils/format';
-import { useI18nOperateSuccessMsg } from '@/hooks/useI18n';
+import { Msg } from '@/hooks/useI18n';
 import { useThemeConfig } from '@/store/themeConfig';
 import { ElMessageBox } from 'element-plus';
 import { computed, defineAsyncComponent, onMounted, ref } from 'vue';
@@ -147,7 +147,7 @@ const onMenuCommand = async (command: ConversationMenuCommand, item: Conversatio
         }).then(async ({ value }) => {
             notBlankI18n(value, 'common.name');
             await aiApi.renameSession.request({ sessionKey: item.key, title: value });
-            useI18nOperateSuccessMsg();
+            Msg.operateSuccess();
             loadSessions();
         });
     }

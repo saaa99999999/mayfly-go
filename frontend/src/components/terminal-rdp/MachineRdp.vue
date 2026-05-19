@@ -75,7 +75,7 @@ import MachineFile from '@/views/ops/machine/file/MachineFile.vue';
 import { exitFullscreen, launchIntoFullscreen, unWatchFullscreenChange, watchFullscreenChange } from '@/components/terminal-rdp/guac/screen';
 import { useDebounceFn, useEventListener } from '@vueuse/core';
 import { ClientState, TunnelState } from '@/components/terminal-rdp/guac/states';
-import { ElMessage } from 'element-plus';
+import { Msg } from '@/hooks/useI18n';
 import { joinClientParams } from '@/common/request';
 import { MachineProtocolEnum } from '@/views/ops/machine/enums';
 
@@ -470,7 +470,7 @@ const openSendKeyboard = (keys: string[]) => {
     for (let j = 0; j < keys.length; j++) {
         state.client.sendKeyEvent(0, keys[j]);
     }
-    ElMessage.success('发送组合键成功');
+    Msg.success('components.terminal-rdp.sendCombinationKeySuccess');
 };
 
 const exposes = {

@@ -28,25 +28,20 @@
     </el-dialog>
 
     <!-- 授权弹窗 -->
-    <RolesGrantPrivilege
-        ref="grantPrivilegeRef"
-        :milvus-id="milvusId"
-        @privilege-saved="loadList"
-    />
+    <RolesGrantPrivilege ref="grantPrivilegeRef" :milvus-id="milvusId" @privilege-saved="loadList" />
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import { ElMessage, ElMessageBox, FormInstance } from 'element-plus';
-import { milvusApi } from '../api';
 import { Rules } from '@/common/rule';
-import { useI18n } from 'vue-i18n';
-import { useI18nConfirm } from '@/hooks/useI18n';
+import { Msg, useI18nConfirm } from '@/hooks/useI18n';
 import { useMilvusStore } from '@/views/ops/milvus/resource/store';
+import { FormInstance } from 'element-plus';
+import { onMounted, ref, watch } from 'vue';
+import { milvusApi } from '../api';
 import RolesGrantPrivilege from './RolesGrantPrivilege.vue';
 
 const milvusStore = useMilvusStore();
-const { t } = useI18n();
+
 const props = defineProps<{
     milvusId: number;
 }>();
@@ -92,7 +87,7 @@ const submitCreate = async () => {
         createLoading.value = true;
         try {
             await milvusApi.createRole(props.milvusId, createForm.value);
-            ElMessage.success(t('milvus.createdSuccess'));
+            Msg.success('milvus.createdSuccess');
             createDialog.value.visible = false;
             loadList();
         } finally {
@@ -108,7 +103,7 @@ const handleGrantPrivilege = async (row: any) => {
 const handleDrop = async (row: any) => {
     await useI18nConfirm('milvus.confirmDeleteRole', { name: row.roleName });
     await milvusApi.dropRole(props.milvusId, row.roleName);
-    ElMessage.success(t('milvus.deletedSuccess'));
+    Msg.success('milvus.deletedSuccess');
     await loadList();
 };
 

@@ -153,11 +153,11 @@
 </template>
 
 <script lang="ts" setup>
-import { mongoApi } from './api';
-import { watch, toRefs, reactive } from 'vue';
 import { formatByteSize } from '@/common/utils/format';
+import { Msg } from '@/hooks/useI18n';
+import { reactive, toRefs, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useI18nDeleteSuccessMsg, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
+import { mongoApi } from './api';
 
 const { t } = useI18n();
 
@@ -291,7 +291,7 @@ const onDeleteCollection = async (collection: string) => {
             },
         ],
     });
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     setCollections(state.collectionsDialog.database);
 };
 
@@ -310,7 +310,7 @@ const onCreateCollection = async () => {
             },
         ],
     });
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     state.createCollectionDialog.visible = false;
     state.createCollectionDialog.form = {} as any;
     setCollections(state.collectionsDialog.database);
@@ -331,7 +331,7 @@ const onCreateDb = async () => {
             },
         ],
     });
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     state.createDbDialog.visible = false;
     state.createDbDialog.form = {} as any;
     showDatabases();
@@ -347,7 +347,7 @@ const onDeleteDb = async (db: string) => {
             },
         ],
     });
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     showDatabases();
 };
 </script>

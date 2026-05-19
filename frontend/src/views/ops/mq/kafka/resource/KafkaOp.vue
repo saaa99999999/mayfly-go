@@ -30,19 +30,16 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, defineAsyncComponent, onMounted, getCurrentInstance, computed } from 'vue';
+import { Msg } from '@/hooks/useI18n';
 import { KafkaOpComp } from '@/views/ops/mq/kafka/resource';
+import { computed, defineAsyncComponent, getCurrentInstance, onMounted, ref } from 'vue';
 import { mqApi } from '../../api';
-import { ElMessage } from 'element-plus';
-import { useI18n } from 'vue-i18n';
 
 const NodeManage = defineAsyncComponent(() => import('../component/NodeManage.vue'));
 const TopicManage = defineAsyncComponent(() => import('../component/TopicManage.vue'));
 const ProduceMessage = defineAsyncComponent(() => import('../component/ProduceMessage.vue'));
 const ConsumeMessage = defineAsyncComponent(() => import('../component/ConsumeMessage.vue'));
 const ConsumerGroup = defineAsyncComponent(() => import('../component/ConsumerGroup.vue'));
-
-const { t } = useI18n();
 
 interface Topic {
     name: string;
@@ -94,7 +91,7 @@ const loadData = async () => {
         );
         groups.value = groupsRes || [];
     } catch (error: any) {
-        ElMessage.error(error.message || t('common.requestFail'));
+        Msg.error(error.message || 'common.requestFail');
     } finally {
         loading.value = false;
     }

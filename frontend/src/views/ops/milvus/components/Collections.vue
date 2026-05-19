@@ -18,26 +18,13 @@
         <el-table-column prop="created_time" :label="$t('common.createTime')" sortable width="160" />
         <el-table-column :label="$t('milvus.loadStatus')" width="100">
             <template #default="{ row }">
-                <el-tag
-                    v-if="row.Loaded"
-                    type="success"
-                    @click="handleReleaseClick(row)"
-                    style="cursor: pointer"
-                >
+                <el-tag v-if="row.Loaded" type="success" @click="handleReleaseClick(row)" style="cursor: pointer">
                     {{ $t('milvus.loaded') }}
                 </el-tag>
-                <el-tag
-                    v-else-if="row.LoadedPercentage > 0 && row.LoadedPercentage < 100"
-                    type="warning"
-                >
+                <el-tag v-else-if="row.LoadedPercentage > 0 && row.LoadedPercentage < 100" type="warning">
                     {{ $t('milvus.loading') }} {{ row.LoadedPercentage }}%
                 </el-tag>
-                <el-tag
-                    v-else
-                    type="info"
-                    @click="handleLoadClick(row)"
-                    style="cursor: pointer"
-                >
+                <el-tag v-else type="info" @click="handleLoadClick(row)" style="cursor: pointer">
                     {{ $t('milvus.unloaded') }}
                 </el-tag>
             </template>
@@ -45,14 +32,7 @@
         <el-table-column :label="$t('milvus.aliases')" min-width="200">
             <template #default="{ row }">
                 <div class="alias-container">
-                    <el-tag
-                        v-for="alias in (row.aliases || [])"
-                        :key="alias"
-                        size="small"
-                        closable
-                        @close="handleDeleteAlias(row, alias)"
-                        class="alias-tag"
-                    >
+                    <el-tag v-for="alias in row.aliases || []" :key="alias" size="small" closable @close="handleDeleteAlias(row, alias)" class="alias-tag">
                         {{ alias }}
                     </el-tag>
                     <el-button size="small" text @click="handleAddAlias(row)" icon="plus" class="add-alias-btn">
@@ -89,15 +69,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, onBeforeUnmount } from 'vue';
-import { ElMessage, ElSpace } from 'element-plus';
-import { milvusApi } from '../api';
-import { useI18nConfirm } from '@/hooks/useI18n';
-import { useI18n } from 'vue-i18n';
-import { useMilvusStore } from '@/views/ops/milvus/resource/store';
-import { storeToRefs } from 'pinia';
-import CollectionsCreate from './CollectionsCreate.vue';
 import MonacoEditorBox from '@/components/monaco/MonacoEditorBox';
+import { Msg, useI18nConfirm } from '@/hooks/useI18n';
+import { useMilvusStore } from '@/views/ops/milvus/resource/store';
+import { ElSpace } from 'element-plus';
+import { storeToRefs } from 'pinia';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { milvusApi } from '../api';
+import CollectionsCreate from './CollectionsCreate.vue';
 
 const milvusStore = useMilvusStore();
 const { dbs, selectedDb } = storeToRefs(milvusStore);
@@ -244,11 +224,11 @@ const handleLoad = (row: any) => {
     milvusApi
         .loadCollection(props.milvusId, row.name, { async: true })
         .then(() => {
-            ElMessage.success(t('milvus.loadedSuccess'));
+            Msg.success('milvus.loadedSuccess');
             loadList();
         })
         .catch((error: any) => {
-            ElMessage.error(error.message);
+            Msg.error(error.message);
         });
 };
 
@@ -256,11 +236,11 @@ const handleRelease = (row: any) => {
     milvusApi
         .releaseCollection(props.milvusId, row.name)
         .then(() => {
-            ElMessage.success(t('milvus.releasedSuccess'));
+            Msg.success('milvus.releasedSuccess');
             loadList();
         })
         .catch((error: any) => {
-            ElMessage.error(error.message);
+            Msg.error(error.message);
         });
 };
 
@@ -268,7 +248,7 @@ const handleDrop = async (row: any) => {
     await useI18nConfirm('milvus.confirmDeleteCollection', { name: row.name });
 
     await milvusApi.dropCollection(props.milvusId, row.name);
-    ElMessage.success(t('milvus.deletedSuccess'));
+    Msg.success('milvus.deletedSuccess');
     await loadList();
 };
 
@@ -284,16 +264,12 @@ const submitAddAlias = async () => {
 
     aliasLoading.value = true;
     try {
-        await milvusApi.createAlias(
-            props.milvusId,
-            currentCollectionForAlias.value.name,
-            newAlias.value
-        );
-        ElMessage.success(t('milvus.addedAliasSuccess'));
+        await milvusApi.createAlias(props.milvusId, currentCollectionForAlias.value.name, newAlias.value);
+        Msg.success('milvus.addedAliasSuccess');
         aliasDialogVisible.value = false;
         await loadList();
     } catch (error: any) {
-        ElMessage.error(error.message);
+        Msg.error(error.message);
     } finally {
         aliasLoading.value = false;
     }
@@ -304,10 +280,10 @@ const handleDeleteAlias = async (row: any, alias: string) => {
 
     try {
         await milvusApi.dropAlias(props.milvusId, alias);
-        ElMessage.success(t('milvus.deletedAliasSuccess'));
+        Msg.success('milvus.deletedAliasSuccess');
         await loadList();
     } catch (error: any) {
-        ElMessage.error(error.message);
+        Msg.error(error.message);
     }
 };
 

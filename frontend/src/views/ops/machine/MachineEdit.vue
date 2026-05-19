@@ -69,18 +69,17 @@
 </template>
 
 <script lang="ts" setup>
+import { TagResourceTypeEnum } from '@/common/commonEnum';
+import { Rules } from '@/common/rule';
+import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
 import { reactive, toRefs, useTemplateRef, watchEffect } from 'vue';
-import { machineApi } from './api';
-import { ElMessage } from 'element-plus';
-import TagTreeSelect from '../component/TagTreeSelect.vue';
+import { useI18n } from 'vue-i18n';
 import ResourceAuthCertTableEdit from '../component/ResourceAuthCertTableEdit.vue';
 import SshTunnelSelect from '../component/SshTunnelSelect.vue';
+import TagTreeSelect from '../component/TagTreeSelect.vue';
+import { machineApi } from './api';
 import { MachineProtocolEnum } from './enums';
-import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
-import { TagResourceTypeEnum } from '@/common/commonEnum';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
-import { useI18n } from 'vue-i18n';
-import { Rules } from '@/common/rule';
 
 const { t } = useI18n();
 
@@ -159,20 +158,20 @@ const onTestConn = async (authCert: any) => {
     const submitForm = getReqForm();
     submitForm.authCerts = [authCert];
     await testConnExec(submitForm);
-    ElMessage.success(t('machine.connSuccess'));
+    Msg.success('machine.connSuccess');
 };
 
 const onConfirm = async () => {
     await useI18nFormValidate(machineFormRef);
 
     if (state.form.authCerts.length == 0) {
-        ElMessage.error(t('machine.noAcErrMsg'));
+        Msg.error('machine.noAcErrMsg');
         return false;
     }
 
     const submitForm = getReqForm();
     await saveMachineExec(submitForm);
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     emit('val-change', submitForm);
     onCancel();
 };

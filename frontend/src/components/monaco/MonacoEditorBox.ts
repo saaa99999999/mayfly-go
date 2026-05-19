@@ -1,7 +1,7 @@
+import { Msg } from '@/hooks/useI18n';
+import * as monaco from 'monaco-editor';
 import { VNode, h, render } from 'vue';
 import MonacoEditorDialog from './MonacoEditorDialog.vue';
-import * as monaco from 'monaco-editor';
-import { ElMessage } from 'element-plus';
 
 export type MonacoEditorDialogProps = {
     content: string;
@@ -68,11 +68,11 @@ const MonacoEditorBox = (props: MonacoEditorDialogProps): void => {
                     try {
                         val = JSON.parse(value);
                         if (typeof val !== 'object') {
-                            ElMessage.error('Invalid json');
+                            Msg.error('Invalid json');
                             return;
                         }
                     } catch (e) {
-                        ElMessage.error('Invalid json');
+                        Msg.error('Invalid json');
                         return;
                     }
                     // 压缩json字符串

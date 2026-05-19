@@ -3,15 +3,12 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, toRaw, unref } from 'vue';
-import { useRoute } from 'vue-router';
-import { ElMessage } from 'element-plus';
 import openApi from '@/common/openApi';
-import { useI18n } from 'vue-i18n';
+import { Msg } from '@/hooks/useI18n';
+import { onMounted, toRaw } from 'vue';
+import { useRoute } from 'vue-router';
 
 const route = useRoute();
-
-const { t } = useI18n();
 
 onMounted(async () => {
     try {
@@ -29,7 +26,7 @@ onMounted(async () => {
         }
 
         const res: any = await openApi.oauth2Callback(queryParam);
-        ElMessage.success(t('system.oauth.authSuccess'));
+        Msg.success('system.oauth.authSuccess');
         top?.opener.postMessage(toRaw(res), '*');
         window.close();
     } catch (e: any) {

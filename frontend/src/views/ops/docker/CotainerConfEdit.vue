@@ -30,16 +30,12 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, reactive, watch, useTemplateRef } from 'vue';
-import { dockerApi } from './api';
-import { ElMessage } from 'element-plus';
-import TagTreeSelect from '../component/TagTreeSelect.vue';
-import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
-import { useI18n } from 'vue-i18n';
 import { Rules } from '@/common/rule';
-
-const { t } = useI18n();
+import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
+import { reactive, toRefs, useTemplateRef, watch } from 'vue';
+import TagTreeSelect from '../component/TagTreeSelect.vue';
+import { dockerApi } from './api';
 
 const props = defineProps({
     container: {
@@ -95,13 +91,13 @@ watch(dialogVisible, () => {
 const onTestConn = async () => {
     await useI18nFormValidate(formRef);
     // await testConnExec();
-    ElMessage.success(t('ac.connSuccess'));
+    Msg.success('ac.connSuccess');
 };
 
 const onConfirm = async () => {
     await useI18nFormValidate(formRef);
     await saveConfExec();
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     emit('val-change', state.form);
     onCancel();
 };

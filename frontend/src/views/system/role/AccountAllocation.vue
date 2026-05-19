@@ -41,15 +41,15 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, toRefs, reactive, onMounted, Ref } from 'vue';
-import { AccountStatusEnum } from '../enums';
-import { accountApi, roleApi } from '../api';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
 import { hasPerms } from '@/components/auth/auth';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
+import { Msg } from '@/hooks/useI18n';
+import { onMounted, reactive, ref, Ref, toRefs } from 'vue';
 import AccountSelectFormItem from '../account/components/AccountSelectFormItem.vue';
-import { useI18nOperateSuccessMsg } from '@/hooks/useI18n';
+import { accountApi, roleApi } from '../api';
+import { AccountStatusEnum } from '../enums';
 
 const props = defineProps({
     role: Object,
@@ -113,7 +113,7 @@ const onRelateAccount = async (relateType: number, accountId: number) => {
         roleId: props.role?.id,
         relateType,
     });
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
     // 如果是新增账号，则关闭新增账号弹窗
     if (relateType == 1) {
         onCancelAddAccount();

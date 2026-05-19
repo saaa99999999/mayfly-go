@@ -72,23 +72,23 @@
 </template>
 
 <script setup lang="ts" name="layoutBreadcrumbUser">
-import { ref, computed, reactive, onMounted, watch, useTemplateRef, defineAsyncComponent } from 'vue';
-import { useRouter } from 'vue-router';
-import { ElMessageBox, ElMessage } from 'element-plus';
-import screenfull from 'screenfull';
-import { resetRoute } from '@/router/index';
-import { storeToRefs } from 'pinia';
-import { useUserInfo } from '@/store/userInfo';
-import { useThemeConfig } from '@/store/themeConfig';
-import { clearSession } from '@/common/utils/storage';
-import UserNews from '@/layout/navBars/breadcrumb/userNews.vue';
-import SearchMenu from '@/layout/navBars/breadcrumb/search.vue';
-import openApi from '@/common/openApi';
-import { getThemeConfig } from '@/common/utils/storage';
-import { useDark, usePreferredDark } from '@vueuse/core';
-import { useI18n } from 'vue-i18n';
 import { I18nEnum } from '@/common/commonEnum';
 import EnumValue from '@/common/Enum';
+import openApi from '@/common/openApi';
+import { clearSession, getThemeConfig } from '@/common/utils/storage';
+import { Msg } from '@/hooks/useI18n';
+import SearchMenu from '@/layout/navBars/breadcrumb/search.vue';
+import UserNews from '@/layout/navBars/breadcrumb/userNews.vue';
+import { resetRoute } from '@/router/index';
+import { useThemeConfig } from '@/store/themeConfig';
+import { useUserInfo } from '@/store/userInfo';
+import { useDark, usePreferredDark } from '@vueuse/core';
+import { ElMessageBox } from 'element-plus';
+import { storeToRefs } from 'pinia';
+import screenfull from 'screenfull';
+import { computed, onMounted, reactive, ref, useTemplateRef, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 
 // const AiChatDialog = defineAsyncComponent(() => import('@/views/ai/AiChatDialog.vue'));
 
@@ -135,7 +135,7 @@ const onShowMsgs = () => {
 // 全屏点击时
 const onScreenfullClick = () => {
     if (!screenfull.isEnabled) {
-        ElMessage.warning('暂不不支持全屏');
+        Msg.warning('暂不不支持全屏');
         return false;
     }
     screenfull.toggle();
@@ -177,7 +177,7 @@ const onHandleCommandClick = (path: string) => {
                 resetRoute(); // 删除/重置路由
                 router.push('/login');
                 setTimeout(() => {
-                    ElMessage.success(t('layout.user.logoutSuccess'));
+                    Msg.success('layout.user.logoutSuccess');
                 }, 300);
             })
             .catch(() => {});

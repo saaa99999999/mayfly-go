@@ -62,7 +62,6 @@ export async function registerMachineFileUploadProgress() {
         // 创建或更新上传通知
         createOrUpdateNotification(uploadId, 'machineFileUpload', content, MachineFileUploadProgress, props, {
             title: message.title || 'machine.fileUpload',
-            onCancel: props.onCancel,
         });
 
         // 如果有待注册的 abort 方法，现在注册

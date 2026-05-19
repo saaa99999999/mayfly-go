@@ -2,7 +2,7 @@ import router from '../router';
 import config from './config';
 import { getClientId, getToken } from './utils/storage';
 import { templateResolve } from './utils/string';
-import { ElMessage } from 'element-plus';
+import { Msg } from '@/hooks/useI18n';
 import axios from 'axios';
 import JSONBig from 'json-bigint';
 import { useApiFetch } from '../hooks/useRequest';
@@ -56,7 +56,7 @@ export const baseUrl: string = config.baseApiUrl;
  */
 function notifyErrorMsg(msg: string) {
     // 危险通知
-    ElMessage.error(msg);
+    Msg.error(msg);
 }
 
 // create an axios instance

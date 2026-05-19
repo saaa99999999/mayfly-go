@@ -72,11 +72,11 @@
 </template>
 
 <script lang="ts" setup>
+import EnumSelect from '@/components/enumselect/EnumSelect.vue';
+import { Msg, useI18nDeleteConfirm } from '@/hooks/useI18n';
 import { defineAsyncComponent, reactive, toRefs, watch } from 'vue';
 import { machineApi } from '../api';
 import { FileTypeEnum } from '../enums';
-import EnumSelect from '@/components/enumselect/EnumSelect.vue';
-import { useI18nDeleteConfirm, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
 
 const MachineFile = defineAsyncComponent(() => import('./MachineFile.vue'));
 const MachineFileContent = defineAsyncComponent(() => import('./MachineFileContent.vue'));
@@ -160,7 +160,7 @@ const add = () => {
 const addFiles = async (row: any) => {
     row.machineId = props.machineId;
     await addFile.request(row);
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     getFiles();
 };
 

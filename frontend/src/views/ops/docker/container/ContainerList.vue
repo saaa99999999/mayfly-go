@@ -166,17 +166,17 @@
 </template>
 
 <script lang="ts" setup>
+import EnumValue from '@/common/Enum';
+import { formatByteSize, formatDate } from '@/common/utils/format';
+import { fuzzyMatchField } from '@/common/utils/string';
+import EnumSelect from '@/components/enumselect/EnumSelect.vue';
+import SvgIcon from '@/components/svgIcon/index.vue';
+import TerminalBody from '@/components/terminal/TerminalBody.vue';
+import { useDataState } from '@/hooks/useDataState';
+import { Msg, useI18nConfirm } from '@/hooks/useI18n';
 import { computed, defineAsyncComponent, onMounted, reactive, toRefs, watch } from 'vue';
 import { dockerApi, getDockerExecSocketUrl } from '../api';
-import { formatByteSize, formatDate } from '@/common/utils/format';
-import EnumSelect from '@/components/enumselect/EnumSelect.vue';
 import { ContainerStateEnum } from '../enums';
-import { fuzzyMatchField } from '@/common/utils/string';
-import TerminalBody from '@/components/terminal/TerminalBody.vue';
-import { useI18nConfirm, useI18nDeleteSuccessMsg, useI18nOperateSuccessMsg } from '@/hooks/useI18n';
-import SvgIcon from '@/components/svgIcon/index.vue';
-import { useDataState } from '@/hooks/useDataState';
-import EnumValue from '@/common/Enum';
 
 const ContainerLog = defineAsyncComponent(() => import('./ContainerLog.vue'));
 const ContainerCreate = defineAsyncComponent(() => import('./ContainerCreate.vue'));
@@ -293,21 +293,21 @@ const setContainersStats = () => {
 
 const containerRestart = async (param: any) => {
     await dockerApi.containerRestart.request({ id: props.id, containerId: param.containerId });
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
     getContainers();
 };
 
 const containerStop = async (param: any) => {
     await useI18nConfirm('docker.stopContainerConfirm', { name: param.name });
     await dockerApi.containerStop.request({ id: props.id, containerId: param.containerId });
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
     getContainers();
 };
 
 const containerRemove = async (param: any) => {
     await useI18nConfirm('docker.removeContainerConfirm', { name: param.name });
     await dockerApi.containerRemove.request({ id: props.id, containerId: param.containerId });
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     getContainers();
 };
 

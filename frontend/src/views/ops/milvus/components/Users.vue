@@ -65,16 +65,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import { ElMessage, ElMessageBox, FormInstance } from 'element-plus';
-import { milvusApi } from '../api';
 import { Rules } from '@/common/rule';
-import { useI18n } from 'vue-i18n';
-import { useI18nConfirm } from '@/hooks/useI18n';
+import { Msg, useI18nConfirm } from '@/hooks/useI18n';
 import { useMilvusStore } from '@/views/ops/milvus/resource/store';
+import { FormInstance } from 'element-plus';
+import { onMounted, ref, watch } from 'vue';
+import { milvusApi } from '../api';
 
 const milvusStore = useMilvusStore();
-const { t } = useI18n();
+
 const props = defineProps<{
     milvusId: number;
 }>();
@@ -151,7 +150,7 @@ const submitCreate = async () => {
         createLoading.value = true;
         try {
             await milvusApi.createUser(props.milvusId, createForm.value);
-            ElMessage.success(t('milvus.createdSuccess'));
+            Msg.success('milvus.createdSuccess');
             createDialog.value.visible = false;
             await loadList();
         } finally {
@@ -175,7 +174,7 @@ const submitPassword = async () => {
         passwordLoading.value = true;
         try {
             await milvusApi.updatePassword(props.milvusId, passwordDialog.value.currentUser, passwordForm.value);
-            ElMessage.success(t('milvus.savedSuccess'));
+            Msg.success('milvus.savedSuccess');
             passwordDialog.value.visible = false;
         } catch (error: any) {
             passwordLoading.value = false;
@@ -186,7 +185,7 @@ const submitPassword = async () => {
 const handleDelete = async (row: any) => {
     await useI18nConfirm('milvus.confirmDeleteUser', { name: row.name });
     await milvusApi.deleteUser(props.milvusId, row.name);
-    ElMessage.success(t('milvus.deletedSuccess'));
+    Msg.success('milvus.deletedSuccess');
     await loadList();
 };
 
@@ -218,7 +217,7 @@ const submitRoles = async () => {
             await milvusApi.revokeRole(props.milvusId, currentUser, role);
         }
 
-        ElMessage.success(t('milvus.savedSuccess'));
+        Msg.success('milvus.savedSuccess');
         roleDialog.value.visible = false;
         await loadList();
     } finally {

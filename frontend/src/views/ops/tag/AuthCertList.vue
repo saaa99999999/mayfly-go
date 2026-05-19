@@ -40,16 +40,16 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, reactive, onMounted, ref, Ref } from 'vue';
-import { resourceAuthCertApi } from './api';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
-import { SearchItem } from '@/components/pagetable/SearchForm';
-import { AuthCertCiphertextTypeEnum, AuthCertTypeEnum } from './enums';
 import { ResourceTypeEnum, TagResourceTypeEnum } from '@/common/commonEnum';
-import ResourceAuthCertEdit from '../component/ResourceAuthCertEdit.vue';
 import EnumValue from '@/common/Enum';
-import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
+import { SearchItem } from '@/components/pagetable/SearchForm';
+import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
+import { onMounted, reactive, ref, Ref, toRefs } from 'vue';
+import ResourceAuthCertEdit from '../component/ResourceAuthCertEdit.vue';
+import { resourceAuthCertApi } from './api';
+import { AuthCertCiphertextTypeEnum, AuthCertTypeEnum } from './enums';
 
 const pageTableRef: Ref<any> = ref(null);
 const state = reactive({
@@ -129,7 +129,7 @@ const onEdit = (data: any) => {
 
 const onConfirmSave = async (authCert: any) => {
     await resourceAuthCertApi.save.request(authCert);
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     state.editor.visible = false;
     search();
 };
@@ -138,7 +138,7 @@ const onDeleteAc = async (data: any) => {
     try {
         await useI18nDeleteConfirm(data.name);
         await resourceAuthCertApi.delete.request({ id: data.id });
-        useI18nDeleteSuccessMsg();
+        Msg.deleteSuccess();
         search();
     } catch (err) {
         //

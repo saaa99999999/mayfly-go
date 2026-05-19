@@ -36,19 +36,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import { ElMessage, FormInstance } from 'element-plus';
-import { milvusApi } from '../api';
 import { Rules } from '@/common/rule';
-import { useI18n } from 'vue-i18n';
-import { useI18nConfirm } from '@/hooks/useI18n';
+import { Msg, useI18nConfirm } from '@/hooks/useI18n';
 import { useMilvusStore } from '@/views/ops/milvus/resource/store';
+import { FormInstance } from 'element-plus';
 import { storeToRefs } from 'pinia';
+import { onMounted, ref, watch } from 'vue';
+import { milvusApi } from '../api';
 
 const milvusStore = useMilvusStore();
 const { collections, selectedCollection } = storeToRefs(milvusStore);
 
-const { t } = useI18n();
 const props = defineProps<{
     milvusId: number;
 }>();
@@ -93,7 +91,7 @@ const submitCreate = async () => {
         createLoading.value = true;
         try {
             await milvusApi.createPartition(props.milvusId, milvusStore.selectedCollection, createForm.value);
-            ElMessage.success(t('milvus.createdSuccess'));
+            Msg.success('milvus.createdSuccess');
             createDialog.value.visible = false;
             await loadList();
         } finally {
@@ -105,13 +103,13 @@ const submitCreate = async () => {
 const handleDrop = async (row: any) => {
     await useI18nConfirm('milvus.confirmDeletePartition', { name: row.name });
     await milvusApi.dropPartition(props.milvusId, milvusStore.selectedCollection, row.name);
-    ElMessage.success(t('milvus.deletedSuccess'));
+    Msg.success('milvus.deletedSuccess');
     await loadList();
 };
 
 const handleRelease = async (row: any) => {
     await milvusApi.releasePartition(props.milvusId, milvusStore.selectedCollection, row.name);
-    ElMessage.success(t('milvus.releasedSuccess'));
+    Msg.success('milvus.releasedSuccess');
 };
 
 onMounted(() => {

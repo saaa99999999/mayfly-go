@@ -36,14 +36,11 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, reactive, ref, watch } from 'vue';
+import { Msg } from '@/hooks/useI18n';
 import type { PropType } from 'vue';
-import { ElMessage } from 'element-plus';
-import { useI18n } from 'vue-i18n';
+import { computed, reactive, ref, watch } from 'vue';
 import { milvusApi } from '../api';
 import type { IPrivilegeGroup } from '../types';
-
-const { t } = useI18n();
 
 const props = defineProps({
     visible: { type: Boolean, default: false },
@@ -169,7 +166,7 @@ const handlePrivilegeChange = (group: PrivilegeGroupItem) => {
 
 const handleSave = async () => {
     if (!form.groupName) {
-        ElMessage.warning(t('milvus.privilegeGroupName'));
+        Msg.warning('milvus.privilegeGroupName');
         return;
     }
     saving.value = true;
@@ -178,7 +175,7 @@ const handleSave = async () => {
             groupName: form.groupName,
             privileges: form.privileges,
         });
-        ElMessage.success(t('milvus.privilegeGroupSaveSuccess'));
+        Msg.success('milvus.privilegeGroupSaveSuccess');
         emit('saved');
         dialogVisible.value = false;
     } finally {

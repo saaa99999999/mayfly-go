@@ -56,7 +56,10 @@ export default {
         copy: '复制',
         paste: '粘贴',
         pasteFailed: '粘贴失败',
+        pasteNotSupported: '当前环境不支持读取剪贴板，请使用 Ctrl+V 粘贴',
         copySuccess: '复制成功',
+        copyFailed: '复制失败',
+        copyNotSupported: '该浏览器不支持自动复制',
         copyCell: '复制单元格',
         search: '搜索',
         pleaseInput: '请输入{label}',
@@ -297,6 +300,11 @@ export default {
             uploading: '上传进度: {percent}%',
             uploadToPath: '文件将上传到路径: {path}',
             uploadPathTip: '提示: 文件将上传到用户家目录(~)。如需上传到其他目录，请先在终端中执行 cd 命令切换到目标目录，然后使用拖拽上传功能。',
+            
+            // 粘贴相关
+            manualPaste: '手动粘贴',
+            pasteManualHint: '当前环境无法自动读取剪贴板内容，请手动粘贴内容到下方输入框：',
+            pasteHere: '请在此处粘贴内容...',
             
             // 机器文件上传进度通知
             machineFileUpload: {

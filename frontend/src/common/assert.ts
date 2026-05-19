@@ -1,12 +1,12 @@
 import { i18n } from '@/i18n';
-import { ElMessage } from 'element-plus';
+import { Msg } from '@/hooks/useI18n';
 
 /**
  * 不符合业务断言错误
  */
 class AssertError extends Error {
     constructor(message: string) {
-        ElMessage.error(message);
+        Msg.error(message);
         super(message);
         // 错误类名
         this.name = 'AssertError';

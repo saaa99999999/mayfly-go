@@ -53,15 +53,15 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, toRefs, reactive, onMounted, Ref, defineAsyncComponent } from 'vue';
-import { configApi } from '../api';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
 import { hasPerms } from '@/components/auth/auth';
 import { DynamicForm } from '@/components/dynamic-form';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
+import { Msg } from '@/hooks/useI18n';
+import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useI18nSaveSuccessMsg } from '@/hooks/useI18n';
+import { configApi } from '../api';
 
 const ConfigEdit = defineAsyncComponent(() => import('./ConfigEdit.vue'));
 
@@ -185,7 +185,7 @@ const setConfig = async () => {
         name: state.paramsDialog.config.name,
         value: paramsValue,
     });
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     onCloseSetConfigDialog();
     search();
 };
@@ -200,7 +200,7 @@ const hasParam = (paramKey: string, paramItems: any) => {
 };
 
 const onConfigEditChange = () => {
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     search();
 };
 

@@ -239,21 +239,21 @@
 </template>
 
 <script lang="tsx" setup>
-import { defineAsyncComponent, inject, reactive, ref, toRefs, getCurrentInstance, onMounted } from 'vue';
+import { defineAsyncComponent, getCurrentInstance, inject, onMounted, reactive, ref, toRefs } from 'vue';
 
-import { ContextmenuItem } from '@/components/contextmenu';
-import { useI18n } from 'vue-i18n';
-import SvgIcon from '@/components/svgIcon/index.vue';
-import { copyToClipboard } from '@/common/utils/string';
-import { ElCheckbox, ElMessage } from 'element-plus';
-import { useI18nConfirm, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nOperateSuccessMsg } from '@/hooks/useI18n';
-import { useIntervalFn } from '@vueuse/core';
 import Api from '@/common/Api';
-import { esApi } from '@/views/ops/es/api';
-import { ResourceOpCtx, TagTreeNode } from '@/views/ops/component/tag';
 import { formatDocSize } from '@/common/utils/format';
-import { ResourceOpCtxKey } from '@/views/ops/resource/resource';
+import { copyToClipboard } from '@/common/utils/string';
+import { ContextmenuItem } from '@/components/contextmenu';
+import SvgIcon from '@/components/svgIcon/index.vue';
+import { Msg, useI18nConfirm, useI18nDeleteConfirm } from '@/hooks/useI18n';
+import { ResourceOpCtx, TagTreeNode } from '@/views/ops/component/tag';
+import { esApi } from '@/views/ops/es/api';
 import { EsOpComp } from '@/views/ops/es/resource';
+import { ResourceOpCtxKey } from '@/views/ops/resource/resource';
+import { useIntervalFn } from '@vueuse/core';
+import { ElCheckbox } from 'element-plus';
+import { useI18n } from 'vue-i18n';
 
 const EsAddIndex = defineAsyncComponent(() => import('../component/EsAddIndex.vue'));
 const EsDashboard = defineAsyncComponent(() => import('../component/EsDashboard.vue'));
@@ -381,16 +381,16 @@ const onIdxCopyName = async (data: any) => {
 };
 const onRefreshIdx = async (data: any) => {
     await esApi.proxyReq('post', data.params.instId, `/${data.params.idxName}/_refresh`);
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
 };
 const onClearIdxCache = async (data: any) => {
     await useI18nConfirm('es.clearCacheConfirm', { name: data.params.idxName });
     await esApi.proxyReq('post', data.params.instId, `/${data.params.idxName}/_cache/clear`);
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
 };
 const onFlushIdx = async (data: any) => {
     await esApi.proxyReq('post', data.params.instId, `/${data.params.idxName}/_flush`);
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
 };
 const onIdxReindex = async (data: any) => {
     await onReindex(data.params.instId, data.params.idxName);
@@ -399,18 +399,18 @@ const onIdxClose = async (data: any) => {
     await useI18nConfirm('es.closeIndexConfirm', { name: data.params.idxName });
     await esApi.proxyReq('post', data.params.instId, `/${data.params.idxName}/_close`);
     data.params.idx.status = 'close';
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
 };
 const onIdxOpen = async (data: any) => {
     await useI18nConfirm('es.openIndexConfirm', { name: data.params.idxName });
     await esApi.proxyReq('post', data.params.instId, `/${data.params.idxName}/_open`);
     data.params.idx.status = 'open';
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
 };
 const onIdxDelete = async (data: any) => {
     await useI18nDeleteConfirm(data.params.idxName);
     await esApi.proxyReq('delete', data.params.instId, data.params.idxName);
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     await onRefreshIndices(data.params.instId, data.params.parentKey);
 };
 const onIdxBaseSearch = async (data: any) => {
@@ -719,7 +719,7 @@ const onEditDoc = async (src: any) => {
 
 const onEditSelectDoc = async (dt: any) => {
     if (dt.selectKeys.length > 1 || dt.selectKeys.length == 0) {
-        ElMessage.warning(t('common.pleaseSelectOne'));
+        Msg.warning('common.pleaseSelectOne');
         return;
     }
     await onEditDoc(dt.selectKeys[0].src);
@@ -748,7 +748,7 @@ const doDeleteDoc = async (ids: any[]) => {
     await esApi.proxyReq('post', dataTab.instId, `/${dataTab.idxName}/_delete_by_query`, {
         query: { terms: { _id: ids } },
     });
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     await refreshIndex(); // 删除后刷新索引
     setTimeout(async () => {
         await fetchIndexData(); // 删除后刷新数据

@@ -8,8 +8,8 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { defineAsyncComponent, watch, ref, shallowReactive, reactive, computed, onMounted } from 'vue';
-import { ElMessage } from 'element-plus';
+import { Msg } from '@/hooks/useI18n';
+import { computed, defineAsyncComponent, onMounted, reactive, ref, shallowReactive, watch } from 'vue';
 import KeyHeader from './KeyHeader.vue';
 import { RedisInst } from './redis';
 
@@ -56,7 +56,7 @@ const componentMap: any = {
 const componentName = computed(() => {
     const component = componentMap[props.keyInfo?.type];
     if (!component) {
-        ElMessage.error('暂不支持该类型');
+        Msg.error('暂不支持该类型');
         return '';
     }
     return component;

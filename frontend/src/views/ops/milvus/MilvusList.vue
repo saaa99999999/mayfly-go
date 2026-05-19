@@ -36,13 +36,12 @@ import { TagResourceTypePath } from '@/common/commonEnum';
 import { TableColumn } from '@/components/pagetable';
 import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
-import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle } from '@/hooks/useI18n';
+import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
 import { getTagPathSearchItem } from '@/views/ops/component/tag';
-import { ElMessage } from 'element-plus';
 import { defineAsyncComponent, ref, Ref } from 'vue';
+import TagCodePath from '../component/TagCodePath.vue';
 import { milvusApi, perms } from './api';
 import type { IMilvus } from './types';
-import TagCodePath from '../component/TagCodePath.vue';
 
 const MilvusEdit = defineAsyncComponent(() => import('./MilvusEdit.vue'));
 
@@ -85,14 +84,14 @@ const editMilvus = (data?: IMilvus) => {
 const deleteMilvus = async () => {
     const records = selectionData.value || [];
     if (records.length === 0) {
-        ElMessage.warning('请选择要删除的数据');
+        Msg.warning('请选择要删除的数据');
         return;
     }
     const ids = records.map((r: any) => r.id).join(',');
 
     await useI18nDeleteConfirm('Milvus: ' + ids);
     milvusApi.delete.request(ids).then(() => {
-        useI18nDeleteSuccessMsg();
+        Msg.deleteSuccess();
         search();
     });
 };

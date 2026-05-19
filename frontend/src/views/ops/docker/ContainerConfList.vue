@@ -63,7 +63,7 @@ import { formatDate } from '@/common/utils/format';
 import { TableColumn } from '@/components/pagetable';
 import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
-import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle } from '@/hooks/useI18n';
+import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
 import TagCodePath from '@/views/ops/component/TagCodePath.vue';
 import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
 import { useRoute } from 'vue-router';
@@ -137,7 +137,7 @@ const deleteConf = async () => {
     try {
         await useI18nDeleteConfirm(state.selectionData.map((x: any) => x.name).join('、'));
         await dockerApi.delConf.request({ id: state.selectionData.map((x: any) => x.id).join(',') });
-        useI18nDeleteSuccessMsg();
+        Msg.deleteSuccess();
         search();
     } catch (err) {
         //

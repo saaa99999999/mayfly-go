@@ -49,14 +49,14 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
 import { hasPerms } from '@/components/auth/auth';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
-import { useI18nConfirm, useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle, useI18nOperateSuccessMsg } from '@/hooks/useI18n';
+import { Msg, useI18nConfirm, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
 import { dbSyncApi } from '@/views/ops/db/sync/api';
 import { DbDataSyncRecentStateEnum, DbDataSyncRunningStateEnum } from '@/views/ops/db/sync/enums';
+import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
 
 const DataSyncTaskEdit = defineAsyncComponent(() => import('./SyncTaskEdit.vue'));
 const DataSyncTaskLog = defineAsyncComponent(() => import('./SyncTaskLog.vue'));
@@ -144,14 +144,14 @@ const edit = async (data: any) => {
 const run = async (id: any) => {
     await useI18nConfirm('db.runConfirm');
     await dbSyncApi.runDatasyncTask.request({ taskId: id });
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
     setTimeout(search, 1000);
 };
 
 const stop = async (id: any) => {
     await useI18nConfirm('db.stopConfirm');
     await dbSyncApi.stopDatasyncTask.request({ taskId: id });
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
     search();
 };
 
@@ -164,7 +164,7 @@ const log = async (data: any) => {
 const updStatus = async (id: any, status: 1 | -1) => {
     try {
         await dbSyncApi.updateDatasyncTaskStatus.request({ taskId: id, status });
-        useI18nOperateSuccessMsg();
+        Msg.operateSuccess();
         search();
     } catch (err) {
         //
@@ -175,7 +175,7 @@ const del = async () => {
     try {
         await useI18nDeleteConfirm(state.selectionData.map((x: any) => x.taskName).join('、'));
         await dbSyncApi.deleteDatasyncTask.request({ taskId: state.selectionData.map((x: any) => x.id).join(',') });
-        useI18nDeleteSuccessMsg();
+        Msg.deleteSuccess();
         search();
     } catch (err) {
         //

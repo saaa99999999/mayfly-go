@@ -132,25 +132,21 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onMounted, ref, toRefs, reactive } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
-import { initRouter } from '@/router/index';
-import { getRefreshToken, saveRefreshToken, saveToken, saveUser } from '@/common/utils/storage';
-import openApi from '@/common/openApi';
 import { RsaEncrypt } from '@/common/crypto';
-import { getAccountLoginSecurity, getLdapEnabled } from '@/common/sysconfig';
-import { letterAvatar } from '@/common/utils/string';
-import { useUserInfo } from '@/store/userInfo';
-import QrcodeVue from 'qrcode.vue';
-import { personApi } from '@/views/personal/api';
-import { getToken } from '@/common/utils/storage';
-import { useThemeConfig } from '@/store/themeConfig';
+import openApi from '@/common/openApi';
 import { getFileUrl } from '@/common/request';
-import { useI18n } from 'vue-i18n';
 import { Rules } from '@/common/rule';
-
-const { t } = useI18n();
+import { getAccountLoginSecurity, getLdapEnabled } from '@/common/sysconfig';
+import { getRefreshToken, getToken, saveRefreshToken, saveToken, saveUser } from '@/common/utils/storage';
+import { letterAvatar } from '@/common/utils/string';
+import { Msg } from '@/hooks/useI18n';
+import { initRouter } from '@/router/index';
+import { useThemeConfig } from '@/store/themeConfig';
+import { useUserInfo } from '@/store/userInfo';
+import { personApi } from '@/views/personal/api';
+import QrcodeVue from 'qrcode.vue';
+import { nextTick, onMounted, reactive, ref, toRefs } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 const rules = {
     username: [Rules.requiredInput('common.username')],
@@ -409,7 +405,7 @@ const toIndex = async () => {
     setTimeout(async () => {
         // 关闭 loading
         state.loading.signIn = true;
-        ElMessage.success(t('login.loginSuccessTip'));
+        Msg.success('login.loginSuccessTip');
         // 水印设置用户信息
         storesThemeConfig.setWatermarkUser();
     }, 300);
@@ -429,7 +425,7 @@ const changePwd = async () => {
         changePwdReq.oldPassword = await RsaEncrypt(form.oldPassword);
         changePwdReq.newPassword = await RsaEncrypt(form.newPassword);
         await openApi.changePwd(changePwdReq);
-        ElMessage.success(t('login.passwordChangeSuccessTip'));
+        Msg.success('login.passwordChangeSuccessTip');
         state.loginForm.password = state.changePwdDialog.form.newPassword;
         state.changePwdDialog.visible = false;
         getCaptcha();

@@ -1,15 +1,15 @@
 /* eslint-disable no-unused-vars */
-import { dbApi } from './api';
 import { getTextWidth } from '@/common/utils/string';
-import SqlExecBox from './component/sqleditor/SqlExecBox';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { editor, languages, Position } from 'monaco-editor';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import { dbApi } from './api';
+import SqlExecBox from './component/sqleditor/SqlExecBox';
 
 import { registerCompletionItemProvider } from '@/components/monaco/completionItemProvider';
-import { DbDialect, EditorCompletionItem, getDbDialect } from './dialect';
+import { Msg } from '@/hooks/useI18n';
 import { type RemovableRef, useLocalStorage } from '@vueuse/core';
+import { DbDialect, EditorCompletionItem, getDbDialect } from './dialect';
 import { DbGetDbNamesMode } from './enums';
-import { ElMessage } from 'element-plus';
 
 const hintsStorage: RemovableRef<Map<string, any>> = useLocalStorage('db-table-hints', new Map());
 const tableStorage: RemovableRef<Map<string, any>> = useLocalStorage('db-tables', new Map());
@@ -232,7 +232,7 @@ export class DbInst {
         });
         for (let re of res) {
             if (re.errorMsg) {
-                ElMessage.error(`${re.sql} -> 执行失败: ${re.errorMsg}`);
+                Msg.error(`${re.sql} -> 执行失败: ${re.errorMsg}`);
             }
         }
         return res;

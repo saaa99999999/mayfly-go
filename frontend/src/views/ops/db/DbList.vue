@@ -158,7 +158,7 @@ import { hasPerms } from '@/components/auth/auth';
 import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
 import { TableColumn } from '@/components/pagetable';
 import PageTable from '@/components/pagetable/PageTable.vue';
-import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
+import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
 import { computed, defineAsyncComponent, reactive, ref, Ref, toRefs } from 'vue';
 import { useI18n } from 'vue-i18n';
 import TagCodePath from '../component/TagCodePath.vue';
@@ -305,7 +305,7 @@ const editDb = (data: any) => {
 const confirmEditDb = async (db: any) => {
     db.instanceId = props.instance?.id;
     await dbApi.saveDb.request(db);
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     search();
     cancelEditDb();
 };
@@ -321,7 +321,7 @@ const deleteDb = async () => {
         for (let db of state.selectionData) {
             await dbApi.deleteDb.request({ id: db.id });
         }
-        useI18nDeleteSuccessMsg();
+        Msg.deleteSuccess();
     } catch (err) {
         //
     } finally {

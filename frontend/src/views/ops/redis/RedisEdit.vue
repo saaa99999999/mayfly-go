@@ -56,17 +56,13 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, reactive, watch, useTemplateRef } from 'vue';
-import { redisApi } from './api';
-import { ElMessage } from 'element-plus';
-import TagTreeSelect from '../component/TagTreeSelect.vue';
-import SshTunnelSelect from '../component/SshTunnelSelect.vue';
-import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
-import { useI18n } from 'vue-i18n';
 import { Rules } from '@/common/rule';
-
-const { t } = useI18n();
+import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
+import { reactive, toRefs, useTemplateRef, watch } from 'vue';
+import SshTunnelSelect from '../component/SshTunnelSelect.vue';
+import TagTreeSelect from '../component/TagTreeSelect.vue';
+import { redisApi } from './api';
 
 const props = defineProps({
     redis: {
@@ -144,7 +140,7 @@ const changeDb = () => {
 const getReqForm = () => {
     const reqForm = { ...state.form };
     if (reqForm.mode == 'sentinel' && reqForm.host.split('=').length != 2) {
-        ElMessage.error(t('redis.sentinelHostErr'));
+        Msg.error('redis.sentinelHostErr');
         return;
     }
     if (!state.form.sshTunnelMachineId || state.form.sshTunnelMachineId <= 0) {
@@ -156,13 +152,13 @@ const getReqForm = () => {
 const onTestConn = async () => {
     await useI18nFormValidate(redisFormRef);
     await testConnExec(getReqForm());
-    ElMessage.success(t('ac.connSuccess'));
+    Msg.success('ac.connSuccess');
 };
 
 const onConfirm = async () => {
     await useI18nFormValidate(redisFormRef);
     await saveRedisExec(getReqForm());
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     emit('val-change', state.form);
     onCancel();
 };

@@ -9,12 +9,12 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { ref, watch, reactive, toRefs, onMounted } from 'vue';
 import { notEmptyI18n } from '@/common/assert';
+import { Msg } from '@/hooks/useI18n';
+import { onMounted, reactive, ref, toRefs, watch } from 'vue';
+import { redisApi } from './api';
 import FormatViewer from './FormatViewer.vue';
 import { RedisInst } from './redis';
-import { useI18nSaveSuccessMsg } from '@/hooks/useI18n';
-import { redisApi } from './api';
 
 const props = defineProps({
     redis: {
@@ -82,7 +82,7 @@ const saveValue = async () => {
     }
 
     await props.redis.runCmd(['SET', state.key, state.string.value, ...tArr]);
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
 };
 
 defineExpose({ initData });

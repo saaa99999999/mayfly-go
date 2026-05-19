@@ -51,9 +51,8 @@
 
 <script lang="ts" setup>
 import { Rules } from '@/common/rule';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
 import { mqApi } from '@/views/ops/mq/api';
-import { ElMessage } from 'element-plus';
 import { reactive, toRefs, useTemplateRef, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import SshTunnelSelect from '../../component/SshTunnelSelect.vue';
@@ -140,13 +139,13 @@ const getReqForm = () => {
 const onTestConn = async () => {
     await useI18nFormValidate(kafkaFormRef);
     await testConnExec(getReqForm());
-    ElMessage.success(t('ac.connSuccess'));
+    Msg.success('ac.connSuccess');
 };
 
 const onConfirm = async () => {
     await useI18nFormValidate(kafkaFormRef);
     await saveKafkaExec(getReqForm());
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     emit('val-change', state.form);
     onCancel();
 };

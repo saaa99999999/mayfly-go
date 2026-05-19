@@ -1,5 +1,6 @@
 import Guacamole from './guacamole-common';
 import { ElMessage } from 'element-plus';
+import { i18n } from '@/i18n';
 
 const clipboard = {};
 
@@ -77,7 +78,7 @@ clipboard.getLocalClipboard = async () => {
             data: text,
         };
     } else {
-        ElMessage.warning('只有https才可以访问剪贴板');
+        Msg.warning('components.terminal-rdp.httpsRequiredForClipboard');
     }
 };
 

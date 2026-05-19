@@ -120,27 +120,20 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, ref, watch, reactive, onMounted, computed, nextTick, useTemplateRef } from 'vue';
-import { tagApi } from './api';
-import { formatDate } from '@/common/utils/format';
-import { Contextmenu, ContextmenuItem } from '@/components/contextmenu/index';
 import { TagResourceTypeEnum } from '@/common/commonEnum';
-import EnumTag from '@/components/enumtag/EnumTag.vue';
 import EnumValue from '@/common/Enum';
-import TagCodePath from '../component/TagCodePath.vue';
-import { isPrefixSubsequence } from '@/common/utils/string';
-import { useI18n } from 'vue-i18n';
-import {
-    useI18nCreateTitle,
-    useI18nDeleteConfirm,
-    useI18nDeleteSuccessMsg,
-    useI18nEditTitle,
-    useI18nFormValidate,
-    useI18nSaveSuccessMsg,
-} from '@/hooks/useI18n';
 import { Rules } from '@/common/rule';
-import { getResourceConfigs } from '@/views/ops/resource/resource';
+import { formatDate } from '@/common/utils/format';
+import { isPrefixSubsequence } from '@/common/utils/string';
 import { hasPerm } from '@/components/auth/auth';
+import { Contextmenu, ContextmenuItem } from '@/components/contextmenu/index';
+import EnumTag from '@/components/enumtag/EnumTag.vue';
+import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle, useI18nFormValidate } from '@/hooks/useI18n';
+import { getResourceConfigs } from '@/views/ops/resource/resource';
+import { computed, nextTick, onMounted, reactive, ref, toRefs, useTemplateRef, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import TagCodePath from '../component/TagCodePath.vue';
+import { tagApi } from './api';
 
 const compRefs = ref<Array<any>>([]);
 const setComponentRef = (el: any, index: number) => {
@@ -359,7 +352,7 @@ const onSaveTag = async () => {
     await useI18nFormValidate(tagForm);
     const form = state.saveTabDialog.form;
     await tagApi.saveTagTree.request(form);
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     search();
     onCancelSaveTag();
     state.currentTag = null;
@@ -374,7 +367,7 @@ const onCancelSaveTag = () => {
 const onDeleteTag = async (data: any) => {
     await useI18nDeleteConfirm(data.codePath);
     await tagApi.delTagTree.request({ id: data.id });
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     search();
 };
 

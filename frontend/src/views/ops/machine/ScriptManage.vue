@@ -72,9 +72,9 @@
             draggable
             append-to-body
         >
-            <TerminalBody 
-                ref="terminal" 
-                :cmd="terminalDialog.cmd" 
+            <TerminalBody
+                ref="terminal"
+                :cmd="terminalDialog.cmd"
                 :socket-url="getMachineTerminalSocketUrl(props.authCertName)"
                 :machine-id="props.machineId"
                 :auth-cert-name="props.authCertName"
@@ -95,22 +95,18 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, toRefs, reactive, Ref, defineAsyncComponent } from 'vue';
-import { ElMessage } from 'element-plus';
+import { DynamicFormDialog } from '@/components/dynamic-form';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
+import { SearchItem } from '@/components/pagetable/SearchForm';
+import { OptionsApi } from '@/components/pagetable/SearchForm/index';
+import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
+import { defineAsyncComponent, reactive, ref, Ref, toRefs } from 'vue';
 import { getMachineTerminalSocketUrl, machineApi } from './api';
 import { ScriptResultEnum, ScriptTypeEnum } from './enums';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
-import { DynamicFormDialog } from '@/components/dynamic-form';
-import { SearchItem } from '@/components/pagetable/SearchForm';
-import { useI18n } from 'vue-i18n';
-import { useI18nCreateTitle, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nEditTitle } from '@/hooks/useI18n';
-import { OptionsApi } from '@/components/pagetable/SearchForm/index';
 
 const ScriptEdit = defineAsyncComponent(() => import('./ScriptEdit.vue'));
 const TerminalBody = defineAsyncComponent(() => import('@/components/terminal/TerminalBody.vue'));
-
-const { t } = useI18n();
 
 const props = defineProps({
     machineId: { type: Number },
@@ -225,7 +221,7 @@ const run = async (script: any) => {
         });
 
         if (noResult) {
-            ElMessage.success(t('machine.execCompleted'));
+            Msg.success('machine.execCompleted');
             return;
         }
         state.resultDialog.result = res;
@@ -283,7 +279,7 @@ const deleteRow = async (rows: any) => {
         machineId: props.machineId,
         scriptId: rows.map((x: any) => x.id).join(','),
     });
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     getScripts();
 };
 

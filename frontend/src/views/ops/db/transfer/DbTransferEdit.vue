@@ -154,18 +154,17 @@
 <script lang="ts" setup>
 import { nextTick, reactive, ref, toRefs, watch } from 'vue';
 
-import { ElMessage } from 'element-plus';
-import DbSelectTree from '@/views/ops/db/component/DbSelectTree.vue';
-import CrontabInput from '@/components/crontab/CrontabInput.vue';
-import { getDbDialect, getDbDialectMap } from '@/views/ops/db/dialect';
-import SvgIcon from '@/components/svgIcon/index.vue';
-import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
-import { useI18n } from 'vue-i18n';
 import { Rules } from '@/common/rule';
 import { deepClone } from '@/common/utils/object';
+import CrontabInput from '@/components/crontab/CrontabInput.vue';
+import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
+import SvgIcon from '@/components/svgIcon/index.vue';
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
 import { dbApi } from '@/views/ops/db/api';
+import DbSelectTree from '@/views/ops/db/component/DbSelectTree.vue';
+import { getDbDialect, getDbDialectMap } from '@/views/ops/db/dialect';
 import { dbTransferApi } from '@/views/ops/db/transfer/api';
+import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
@@ -394,12 +393,12 @@ const btnOk = async () => {
     }
 
     if (!reqForm.checkedKeys) {
-        ElMessage.error(t('db.noTransferTableMsg'));
+        Msg.error('db.noTransferTableMsg');
         return false;
     }
 
     await saveExec(reqForm);
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     emit('val-change', state.form);
     cancel();
 };

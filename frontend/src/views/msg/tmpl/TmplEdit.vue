@@ -57,16 +57,16 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, watchEffect, useTemplateRef, toRefs } from 'vue';
-import { channelApi, tmplApi } from '../api';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
+import EnumValue from '@/common/Enum';
 import { Rules } from '@/common/rule';
 import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
 import EnumSelect from '@/components/enumselect/EnumSelect.vue';
-import { ChannelStatusEnum, TmplStatusEnum, TmplTypeEnum, ChannelTypeEnum } from '../enums';
-import EnumValue from '@/common/Enum';
-import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
 import FormItemTooltip from '@/components/form/FormItemTooltip.vue';
+import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
+import { reactive, toRefs, useTemplateRef, watchEffect } from 'vue';
+import { channelApi, tmplApi } from '../api';
+import { ChannelStatusEnum, ChannelTypeEnum, TmplStatusEnum, TmplTypeEnum } from '../enums';
 
 const props = defineProps({
     form: {
@@ -137,7 +137,7 @@ watchEffect(() => {
 const btnOk = async () => {
     await useI18nFormValidate(formRef);
     await saveFormExec();
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     emit('success', state.form);
     //重置表单域
     formRef.value.resetFields();

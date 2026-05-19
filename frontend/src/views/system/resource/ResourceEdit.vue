@@ -85,18 +85,17 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, reactive, useTemplateRef, watch } from 'vue';
-import { ElMessage } from 'element-plus';
-import { resourceApi } from '../api';
-import { ResourceTypeEnum } from '../enums';
 import { notEmpty } from '@/common/assert';
-import iconSelector from '@/components/iconSelector/index.vue';
-import { useI18n } from 'vue-i18n';
+import { LinkTypeEnum } from '@/common/commonEnum';
+import { Rules } from '@/common/rule';
 import EnumSelect from '@/components/enumselect/EnumSelect.vue';
 import FormItemTooltip from '@/components/form/FormItemTooltip.vue';
-import { Rules } from '@/common/rule';
-import { useI18nFormValidate } from '@/hooks/useI18n';
-import { LinkTypeEnum } from '@/common/commonEnum';
+import iconSelector from '@/components/iconSelector/index.vue';
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
+import { reactive, toRefs, useTemplateRef, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { resourceApi } from '../api';
+import { ResourceTypeEnum } from '../enums';
 
 const { t } = useI18n();
 
@@ -212,7 +211,7 @@ const onConfirm = async () => {
     await saveResouceExec(submitForm);
 
     emit('val-change', submitForm);
-    ElMessage.success(t('common.saveSuccess'));
+    Msg.saveSuccess();
     onCancel();
 };
 

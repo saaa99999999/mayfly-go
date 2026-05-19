@@ -35,15 +35,12 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, reactive, watch, ref } from 'vue';
-import { ElMessage } from 'element-plus';
+import SvgIcon from '@/components/svgIcon/index.vue';
+import { Msg } from '@/hooks/useI18n';
+import { reactive, ref, toRefs, watch } from 'vue';
 import { roleApi } from '../api';
 import { ResourceTypeEnum } from '../enums';
-import { useI18n } from 'vue-i18n';
-import SvgIcon from '@/components/svgIcon/index.vue';
 import { getMenuIcon } from '../resource';
-
-const { t } = useI18n();
 
 const props = defineProps({
     title: {
@@ -98,7 +95,7 @@ const onConfirm = async () => {
             id: props.role!.id,
             resourceIds: resources,
         });
-        ElMessage.success(t('common.saveSuccess'));
+        Msg.saveSuccess();
         emit('cancel');
     } finally {
         state.submiting = false;

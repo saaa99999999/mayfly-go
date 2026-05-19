@@ -79,12 +79,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, toRefs, onMounted, defineAsyncComponent, watch } from 'vue';
+import { Msg } from '@/hooks/useI18n';
+import { defineAsyncComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
 import { mqApi } from '../../api';
-import { ElMessage } from 'element-plus';
-import { useI18n } from 'vue-i18n';
-import { Rules } from '@/common/rule';
-import { useI18nOperateSuccessMsg, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
 
 const MonacoEditor = defineAsyncComponent(() => import('@/components/monaco/MonacoEditor.vue'));
 
@@ -92,8 +89,6 @@ interface Header {
     key: string;
     value: string;
 }
-
-const { t } = useI18n();
 
 const props = defineProps({
     kafkaId: {
@@ -181,9 +176,9 @@ const sendMessage = async () => {
         };
 
         await mqApi.kafkaTopicProduce.request(param);
-        useI18nOperateSuccessMsg();
+        Msg.operateSuccess();
     } catch (error: any) {
-        ElMessage.error(error.message || t('common.requestFail'));
+        Msg.error(error.message || 'common.requestFail');
     } finally {
         sending.value = false;
     }

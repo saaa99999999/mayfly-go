@@ -85,12 +85,13 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, nextTick, ref, Ref } from 'vue';
-import { ElInput, ElMessage } from 'element-plus';
-import { DataType } from '../../dialect/index';
-import SvgIcon from '@/components/svgIcon/index.vue';
 import MonacoEditorBox from '@/components/monaco/MonacoEditorBox';
+import SvgIcon from '@/components/svgIcon/index.vue';
+import { Msg } from '@/hooks/useI18n';
+import { ElInput } from 'element-plus';
+import { computed, nextTick, ref, Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { DataType } from '../../dialect/index';
 
 const { t } = useI18n();
 
@@ -146,7 +147,7 @@ const handleBlur = () => {
         return;
     }
     if (props.dataType == DataType.Number && itemValue.value && !/^-?\d*\.?\d+$/.test(itemValue.value)) {
-        ElMessage.error(t('db.valueTypeNoMatch'));
+        Msg.error('db.valueTypeNoMatch');
         return;
     }
     emit('update:modelValue', itemValue.value);

@@ -129,7 +129,6 @@
             v-model:visible="dialogForm.visible"
             v-model:data="dialogForm.data"
             :typeDisabled="dialogForm.typeDisabled"
-            :departTree="data"
             :type="dialogForm.type"
             @val-change="onValChange"
         />
@@ -139,16 +138,15 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, toRefs, reactive, onMounted, watch, defineAsyncComponent } from 'vue';
-import { ElMessage } from 'element-plus';
-import { ResourceTypeEnum, RoleStatusEnum } from '../enums';
-import { resourceApi } from '../api';
 import { formatDate } from '@/common/utils/format';
-import EnumTag from '@/components/enumtag/EnumTag.vue';
-import { Contextmenu, ContextmenuItem } from '@/components/contextmenu';
 import { isPrefixSubsequence } from '@/common/utils/string';
+import { Contextmenu, ContextmenuItem } from '@/components/contextmenu';
+import EnumTag from '@/components/enumtag/EnumTag.vue';
+import { Msg, useI18nDeleteConfirm } from '@/hooks/useI18n';
+import { defineAsyncComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useI18nDeleteConfirm, useI18nDeleteSuccessMsg } from '@/hooks/useI18n';
+import { resourceApi } from '../api';
+import { ResourceTypeEnum, RoleStatusEnum } from '../enums';
 import { getMenuIcon } from './index';
 
 const ResourceEdit = defineAsyncComponent(() => import('./ResourceEdit.vue'));
@@ -286,7 +284,7 @@ const onDeleteMenu = async (data: any) => {
         id: data.id,
     });
 
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     search();
 };
 
@@ -294,6 +292,7 @@ const onAddResource = (data: any) => {
     let dialog = state.dialogForm;
     dialog.data = { pid: 0, type: 1 };
     dialog.typeDisabled = false;
+
     // 添加顶级菜单情况
     if (!data) {
         dialog.data.type = menuTypeValue;
@@ -339,7 +338,7 @@ const onChangeStatus = async (data: any, status: any) => {
         status: status,
     });
     search();
-    ElMessage.success((status === 1 ? t('system.menu.enable') : t('system.menu.disable')) + ' ' + t('system.menu.success'));
+    Msg.success((status === 1 ? t('system.menu.enable') : t('system.menu.disable')) + ' ' + t('system.menu.success'));
 };
 
 // 节点被展开时触发的事件

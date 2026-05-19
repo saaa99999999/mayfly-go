@@ -51,18 +51,18 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, reactive, watch, ref } from 'vue';
-import { procdefApi } from './api';
-import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
-import { ProcdefStatus } from './enums';
-import TagTreeCheck from '../ops/component/TagTreeCheck.vue';
 import { TagResourceTypeEnum, TagResourceTypePath } from '@/common/commonEnum';
-import EnumSelect from '@/components/enumselect/EnumSelect.vue';
-import { useI18nFormValidate, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
-import { useI18n } from 'vue-i18n';
-import FormItemTooltip from '@/components/form/FormItemTooltip.vue';
 import { Rules } from '@/common/rule';
+import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
+import EnumSelect from '@/components/enumselect/EnumSelect.vue';
+import FormItemTooltip from '@/components/form/FormItemTooltip.vue';
+import { Msg, useI18nFormValidate } from '@/hooks/useI18n';
+import { reactive, ref, toRefs, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import MsgTmplSelect from '../msg/components/MsgTmplSelect.vue';
+import TagTreeCheck from '../ops/component/TagTreeCheck.vue';
+import { procdefApi } from './api';
+import { ProcdefStatus } from './enums';
 
 const { t } = useI18n();
 
@@ -119,7 +119,7 @@ watch(props, async (newValue: any) => {
 const onSave = async () => {
     await useI18nFormValidate(formRef);
     await saveFlowDefExec();
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     emit('val-change', state.form);
     //重置表单域
     formRef.value.resetFields();

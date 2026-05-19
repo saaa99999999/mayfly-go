@@ -265,8 +265,8 @@
                                             v-model="selectedField.isPrimaryKey"
                                             :disabled="
                                                 (isEditMode && selectedField.readonly) ||
-                                                    !canBePrimaryKey(selectedField.dataType) ||
-                                                    (!!getPrimaryKeyField() && getPrimaryKeyField() !== selectedField)
+                                                !canBePrimaryKey(selectedField.dataType) ||
+                                                (!!getPrimaryKeyField() && getPrimaryKeyField() !== selectedField)
                                             "
                                         />
                                         <el-tooltip
@@ -353,7 +353,10 @@
                                                         @click="dynamicField.selectedIdx = idxIdx"
                                                     >
                                                         <span>{{ idx.indexName || `${$t('common.index')} ${Number(idxIdx) + 1}` }}</span>
-                                                        <el-popconfirm :title="$t('milvus.confirmDeleteIndex')" @confirm="handleDeleteDynamicIndex(Number(idxIdx))">
+                                                        <el-popconfirm
+                                                            :title="$t('milvus.confirmDeleteIndex')"
+                                                            @confirm="handleDeleteDynamicIndex(Number(idxIdx))"
+                                                        >
                                                             <template #reference>
                                                                 <el-icon class="delete-icon"><close /></el-icon>
                                                             </template>
@@ -597,7 +600,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { ElMessage, FormInstance } from 'element-plus';
+import { FormInstance } from 'element-plus';
 import {
     ArrowDown,
     Key,
@@ -620,6 +623,7 @@ import { milvusApi } from '../api';
 import { Rules } from '@/common/rule';
 import { useI18n } from 'vue-i18n';
 import MonacoEditorBox from '@/components/monaco/MonacoEditorBox';
+import { Msg } from '@/hooks/useI18n';
 
 const { t } = useI18n();
 
@@ -1069,7 +1073,7 @@ const handleAddField = (dataType: number, name?: string) => {
 const handleDeleteField = (index: number) => {
     const field = form.value.fields[index];
     if (field.isPrimaryKey && field.autoID) {
-        ElMessage.warning(t('milvus.cannotDeletePrimaryKey'));
+        Msg.warning('milvus.cannotDeletePrimaryKey');
         return;
     }
     form.value.fields.splice(index, 1);
@@ -1121,13 +1125,13 @@ const handleClose = () => {
 const getFormData = async () => {
     await formRef.value?.validate();
     if (form.value.fields.length === 0) {
-        ElMessage.warning(t('milvus.addFieldRequired'));
+        Msg.warning('milvus.addFieldRequired');
         return '';
     }
 
     // 检查是否有主键
     if (!getPrimaryKeyField()) {
-        ElMessage.warning(t('milvus.primaryKeyRequired'));
+        Msg.warning('milvus.primaryKeyRequired');
         return '';
     }
 
@@ -1135,7 +1139,7 @@ const getFormData = async () => {
     const vectorFieldsWithoutIndex = form.value.fields.filter((field) => isVectorType(field.dataType) && !field.indexType);
     if (vectorFieldsWithoutIndex.length > 0) {
         const fieldNames = vectorFieldsWithoutIndex.map((f) => f.name).join('、');
-        ElMessage.warning(t('milvus.vectorFieldIndexRequired', { fields: fieldNames }));
+        Msg.warning('milvus.vectorFieldIndexRequired', { fields: fieldNames });
         return '';
     }
 
@@ -1263,10 +1267,10 @@ const handleSubmit = async () => {
             if (submitData.consistency_level !== undefined) {
                 // 将字符串一致性级别转换为数字
                 const consistencyMap: Record<string, number> = {
-                    'Strong': 0,
-                    'Bounded': 1,
-                    'Session': 2,
-                    'Eventually': 3,
+                    Strong: 0,
+                    Bounded: 1,
+                    Session: 2,
+                    Eventually: 3,
                 };
                 alterData.consistency_level = consistencyMap[submitData.consistency_level] ?? 1;
             }
@@ -1294,11 +1298,11 @@ const handleSubmit = async () => {
             }
 
             await milvusApi.alterCollection(props.milvusId, originalName.value, alterData);
-            ElMessage.success(t('milvus.updatedSuccess'));
+            Msg.success('milvus.updatedSuccess');
         } else {
             // 创建/复制模式：调用创建接口
             await milvusApi.createCollection(props.milvusId, submitData);
-            ElMessage.success(t('milvus.createdSuccess'));
+            Msg.success('milvus.createdSuccess');
         }
         visible.value = false;
         emits('success');

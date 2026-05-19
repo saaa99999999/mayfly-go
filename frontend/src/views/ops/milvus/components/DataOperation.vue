@@ -1,7 +1,6 @@
 <template>
     <!-- 顶部查询工具栏 -->
     <el-space>
-
         <el-button size="small" type="primary" @click="() => handleQuery()" :loading="queryLoading" icon="search">
             {{ $t('milvus.query') }}
         </el-button>
@@ -78,7 +77,6 @@
                 </el-dropdown-menu>
             </template>
         </el-dropdown>
-
     </el-space>
 
     <!-- 操作工具栏 -->
@@ -211,11 +209,7 @@
             <!-- 样本数据大小 -->
             <div class="import-field">
                 <label class="field-label">{{ $t('milvus.sampleSizeLabel') }}</label>
-                <el-input-number
-                    v-model="sampleSize"
-                    :min="1" :max="10000"
-                    :placeholder="$t('milvus.sampleSizePlaceholder')"
-                />
+                <el-input-number v-model="sampleSize" :min="1" :max="10000" :placeholder="$t('milvus.sampleSizePlaceholder')" />
             </div>
 
             <!-- 下载选项 -->
@@ -248,11 +242,7 @@
         <template #footer>
             <div class="dialog-footer">
                 <el-button @click="handleCloseImportDialog">{{ $t('common.cancel') }}</el-button>
-                <el-button
-                    type="success"
-                    @click="executeImport"
-                    :loading="loading"
-                >
+                <el-button type="success" @click="executeImport" :loading="loading">
                     {{ $t('milvus.import') }}
                 </el-button>
             </div>
@@ -262,15 +252,16 @@
 
 <script setup lang="ts">
 /* eslint-disable no-undef */
-import { ref, computed, watch, onMounted } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { milvusApi } from '../api';
-import { useI18n } from 'vue-i18n';
-import { useMilvusStore } from '@/views/ops/milvus/resource/store';
-import { storeToRefs } from 'pinia';
-import { Loading, DocumentCopy, DataAnalysis, Key, InfoFilled, Grid } from '@element-plus/icons-vue';
-import { useClipboard } from '@vueuse/core';
 import MonacoEditorBox from '@/components/monaco/MonacoEditorBox';
+import { Msg } from '@/hooks/useI18n';
+import { useMilvusStore } from '@/views/ops/milvus/resource/store';
+import { DataAnalysis, DocumentCopy, Grid, InfoFilled, Key } from '@element-plus/icons-vue';
+import { useClipboard } from '@vueuse/core';
+import { ElMessageBox } from 'element-plus';
+import { storeToRefs } from 'pinia';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { milvusApi } from '../api';
 
 const { t } = useI18n();
 const { copy } = useClipboard();
@@ -373,7 +364,7 @@ const handleSelectAll = (val: boolean | string | number) => {
 // 查询数据
 const handleQuery = async (page?: number) => {
     if (!selectedCollection.value) {
-        ElMessage.warning(t('milvus.selectCollectionHint'));
+        Msg.warning('milvus.selectCollectionHint');
         return;
     }
 
@@ -408,12 +399,12 @@ const handleQuery = async (page?: number) => {
             // 使用后端返回的真实 total
             totalRecords.value = res.total || 0;
             if (res.count === 0) {
-                ElMessage.info(t('milvus.noData'));
+                Msg.info('milvus.noData');
             }
         } else {
             queryResults.value = [];
             totalRecords.value = 0;
-            ElMessage.info(t('milvus.noData'));
+            Msg.info('milvus.noData');
         }
     } catch (error: any) {
         queryResults.value = [];
@@ -481,13 +472,13 @@ const handleSelectionChange = (selection: any[]) => {
 // 复制单个数据
 const copyToClipboard = async (value: any, field: string) => {
     await copy(JSON.stringify(value));
-    ElMessage.success(t('common.copySuccess'));
+    Msg.success('common.copySuccess');
 };
 
 // 复制选中行
 const handleCopySelected = async () => {
     await copy(JSON.stringify(selectedRows.value, null, 2));
-    ElMessage.success(t('common.copySuccess'));
+    Msg.success('common.copySuccess');
 };
 
 // 删除选中行
@@ -500,14 +491,14 @@ const handleDeleteSelected = async () => {
 
     const ids = selectedRows.value.map((row) => row[primaryKey.value]).filter(Boolean);
     if (ids.length === 0) {
-        ElMessage.warning(t('milvus.noPrimaryKey'));
+        Msg.warning('milvus.noPrimaryKey');
         return;
     }
 
     const expr = `${primaryKey.value} in [${ids.join(',')}]`;
     await milvusApi.deleteData(props.milvusId, selectedCollection.value, { expr });
 
-    ElMessage.success(t('common.deleteSuccess'));
+    Msg.success('common.deleteSuccess');
     selectedRows.value = [];
     setTimeout(handleQuery, 500);
 };
@@ -601,7 +592,7 @@ const downloadingJSON = ref(false);
 // 插入样本数据 - 打开配置对话框
 const handleInsertSample = async () => {
     if (!selectedCollection.value) {
-        ElMessage.warning(t('milvus.selectCollectionHint'));
+        Msg.warning('milvus.selectCollectionHint');
         return;
     }
 
@@ -616,7 +607,7 @@ const handleInsertSample = async () => {
 // 生成样本数据（调用后端 Mock API）
 const generateSampleData = async () => {
     if (sampleSize.value < 1 || sampleSize.value > 10000) {
-        ElMessage.error('样本数据大小必须在 1-10000 之间');
+        Msg.error('样本数据大小必须在 1-10000 之间');
         return;
     }
 
@@ -626,13 +617,13 @@ const generateSampleData = async () => {
         // 调用后端 Mock API 生成样本数据
         const response = await milvusApi.generateMockData(props.milvusId, selectedCollection.value, {
             count: sampleSize.value,
-            partitionName: selectedPartitionForImport.value
+            partitionName: selectedPartitionForImport.value,
         });
         generatedSampleData.value = response.data;
 
-        ElMessage.success(`已生成 ${sampleSize.value} 条样本数据`);
+        Msg.success(`已生成 ${sampleSize.value} 条样本数据`);
     } catch (error: any) {
-        ElMessage.error(error.message || '生成样本数据失败');
+        Msg.error(error.message || '生成样本数据失败');
     } finally {
         loading.value = false;
     }
@@ -641,7 +632,7 @@ const generateSampleData = async () => {
 // 处理 CSV 下载（预加载：调用接口生成数据并直接下载）
 const handleDownloadCSV = async () => {
     if (sampleSize.value < 1 || sampleSize.value > 10000) {
-        ElMessage.error('样本数据大小必须在 1-10000 之间');
+        Msg.error('样本数据大小必须在 1-10000 之间');
         return;
     }
 
@@ -651,7 +642,7 @@ const handleDownloadCSV = async () => {
         // 调用后端 Mock API 生成样本数据
         const response = await milvusApi.generateMockData(props.milvusId, selectedCollection.value, {
             count: sampleSize.value,
-            partitionName: selectedPartitionForImport.value
+            partitionName: selectedPartitionForImport.value,
         });
         const data = response.data;
 
@@ -660,15 +651,15 @@ const handleDownloadCSV = async () => {
         const csvRows = [
             headers.join(','),
             ...data.map((row: any) =>
-                headers.map(header => {
-                    const value = row[header];
-                    const stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
-                    // 如果包含逗号或引号，需要用引号包裹
-                    return stringValue.includes(',') || stringValue.includes('"')
-                        ? `"${stringValue.replace(/"/g, '""')}"`
-                        : stringValue;
-                }).join(',')
-            )
+                headers
+                    .map((header) => {
+                        const value = row[header];
+                        const stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
+                        // 如果包含逗号或引号，需要用引号包裹
+                        return stringValue.includes(',') || stringValue.includes('"') ? `"${stringValue.replace(/"/g, '""')}"` : stringValue;
+                    })
+                    .join(',')
+            ),
         ];
 
         const csvContent = csvRows.join('\n');
@@ -679,9 +670,9 @@ const handleDownloadCSV = async () => {
         link.click();
         URL.revokeObjectURL(link.href);
 
-        ElMessage.success(`CSV 文件下载成功`);
+        Msg.success(`CSV 文件下载成功`);
     } catch (error: any) {
-        ElMessage.error(error.message || '下载 CSV 失败');
+        Msg.error(error.message || '下载 CSV 失败');
     } finally {
         downloadingCSV.value = false;
     }
@@ -690,7 +681,7 @@ const handleDownloadCSV = async () => {
 // 处理 JSON 下载（预加载：调用接口生成数据并直接下载）
 const handleDownloadJSON = async () => {
     if (sampleSize.value < 1 || sampleSize.value > 10000) {
-        ElMessage.error('样本数据大小必须在 1-10000 之间');
+        Msg.error('样本数据大小必须在 1-10000 之间');
         return;
     }
 
@@ -700,7 +691,7 @@ const handleDownloadJSON = async () => {
         // 调用后端 Mock API 生成样本数据
         const response = await milvusApi.generateMockData(props.milvusId, selectedCollection.value, {
             count: sampleSize.value,
-            partitionName: selectedPartitionForImport.value
+            partitionName: selectedPartitionForImport.value,
         });
         const data = response.data;
 
@@ -713,9 +704,9 @@ const handleDownloadJSON = async () => {
         link.click();
         URL.revokeObjectURL(link.href);
 
-        ElMessage.success(`JSON 文件下载成功`);
+        Msg.success(`JSON 文件下载成功`);
     } catch (error: any) {
-        ElMessage.error(error.message || '下载 JSON 失败');
+        Msg.error(error.message || '下载 JSON 失败');
     } finally {
         downloadingJSON.value = false;
     }
@@ -724,23 +715,23 @@ const handleDownloadJSON = async () => {
 // 下载 CSV 文件（已生成数据时使用）
 const downloadCSV = () => {
     if (generatedSampleData.value.length === 0) {
-        ElMessage.warning('请先生成样本数据');
+        Msg.warning('请先生成样本数据');
         return;
     }
 
     const headers = Object.keys(generatedSampleData.value[0]);
     const csvRows = [
         headers.join(','),
-        ...generatedSampleData.value.map(row =>
-            headers.map(header => {
-                const value = row[header];
-                const stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
-                // 如果包含逗号或引号，需要用引号包裹
-                return stringValue.includes(',') || stringValue.includes('"')
-                    ? `"${stringValue.replace(/"/g, '""')}"`
-                    : stringValue;
-            }).join(',')
-        )
+        ...generatedSampleData.value.map((row) =>
+            headers
+                .map((header) => {
+                    const value = row[header];
+                    const stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
+                    // 如果包含逗号或引号，需要用引号包裹
+                    return stringValue.includes(',') || stringValue.includes('"') ? `"${stringValue.replace(/"/g, '""')}"` : stringValue;
+                })
+                .join(',')
+        ),
     ];
 
     const csvContent = csvRows.join('\n');
@@ -755,7 +746,7 @@ const downloadCSV = () => {
 // 下载 JSON 文件（已生成数据时使用）
 const downloadJSON = () => {
     if (generatedSampleData.value.length === 0) {
-        ElMessage.warning('请先生成样本数据');
+        Msg.warning('请先生成样本数据');
         return;
     }
 
@@ -771,7 +762,7 @@ const downloadJSON = () => {
 // 执行导入（后端直接 mock 数据并入库）
 const executeImport = async () => {
     if (sampleSize.value < 1 || sampleSize.value > 10000) {
-        ElMessage.error('样本数据大小必须在 1-10000 之间');
+        Msg.error('样本数据大小必须在 1-10000 之间');
         return;
     }
 
@@ -780,16 +771,16 @@ const executeImport = async () => {
 
         const response = await milvusApi.insertSampleData(props.milvusId, selectedCollection.value, {
             count: sampleSize.value,
-            partitionName: selectedPartitionForImport.value
-        })
+            partitionName: selectedPartitionForImport.value,
+        });
 
-        ElMessage.success(`成功导入 ${response.insertCount} 条数据`);
+        Msg.success(`成功导入 ${response.insertCount} 条数据`);
         importDialogVisible.value = false;
 
         // 刷新数据
         await handleQuery();
     } catch (error: any) {
-        ElMessage.error(error.message || '导入失败');
+        Msg.error(error.message || '导入失败');
     } finally {
         loading.value = false;
     }
@@ -813,7 +804,7 @@ const handleImportFile = () => {
 
         // 检查文件类型
         if (!file.name.endsWith('.json') && !file.name.endsWith('.csv')) {
-            ElMessage.error('仅支持 CSV 和 JSON 格式的文件');
+            Msg.error('仅支持 CSV 和 JSON 格式的文件');
             return;
         }
 
@@ -828,7 +819,7 @@ const handleImportFile = () => {
             // 调用后端接口导入文件
             const response = await milvusApi.importFile(props.milvusId, selectedCollection.value, formData);
 
-            ElMessage.success(`成功导入 ${response.insertCount} 条数据`);
+            Msg.success(`成功导入 ${response.insertCount} 条数据`);
             setTimeout(handleQuery, 500);
         } finally {
             loading.value = false;
@@ -847,7 +838,7 @@ const handleClearData = async () => {
     });
 
     if (!primaryKey.value) {
-        ElMessage.warning(t('milvus.noPrimaryKey'));
+        Msg.warning('milvus.noPrimaryKey');
         return;
     }
 
@@ -855,7 +846,7 @@ const handleClearData = async () => {
     const expr = `${primaryKey.value} > 0 || ${primaryKey.value} < 0`;
     await milvusApi.deleteData(props.milvusId, selectedCollection.value, { expr });
 
-    ElMessage.success(t('common.deleteSuccess'));
+    Msg.success('common.deleteSuccess');
     await handleQuery();
 };
 
@@ -869,7 +860,7 @@ const handleEditData = () => {
         useDrawer: true,
         confirmFn: async (value: any[]) => {
             console.log(value);
-            ElMessage.info(t('common.developing'));
+            Msg.info('common.developing');
         },
     });
 };

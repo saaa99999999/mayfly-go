@@ -211,14 +211,13 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, toRefs, computed, nextTick } from 'vue';
-import { mqApi } from '../../api';
-import { ElMessage } from 'element-plus';
-import { useI18n } from 'vue-i18n';
-import { Contextmenu, ContextmenuItem } from '@/components/contextmenu';
 import { Rules } from '@/common/rule';
-import { useI18nDeleteConfirm, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
+import { Contextmenu, ContextmenuItem } from '@/components/contextmenu';
+import { Msg, useI18nDeleteConfirm } from '@/hooks/useI18n';
 import { ConsumerGroup } from '@/views/ops/mq/kafka/component/ConsumerGroup.vue';
+import { computed, nextTick, reactive, ref, toRefs } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { mqApi } from '../../api';
 
 interface Partitions {
     LeaderEpoch: number;
@@ -394,7 +393,7 @@ const showCreateTopicDialog = () => {
 };
 const showCreatePartitionsDialog = () => {
     if (!state.topicPartitionsDialog.topic) {
-        ElMessage.warning(t('mq.kafka.selectTopicWarning'));
+        Msg.warning('mq.kafka.selectTopicWarning');
         return;
     }
 
@@ -414,11 +413,11 @@ const confirmCreateTopic = async () => {
             id: props.kafkaId,
             ...state.createTopicDialog.form,
         });
-        useI18nSaveSuccessMsg();
+        Msg.saveSuccess();
         state.createTopicDialog.visible = false;
         emits('refresh');
     } catch (error: any) {
-        ElMessage.error(error.message || t('common.requestFail'));
+        Msg.error(error.message || 'common.requestFail');
     } finally {
         state.createTopicDialog.loading = false;
     }
@@ -432,7 +431,7 @@ const confirmCreatePartitions = async () => {
             id: props.kafkaId,
             ...state.createPartitionsDialog.form,
         });
-        useI18nSaveSuccessMsg();
+        Msg.saveSuccess();
         state.createPartitionsDialog.visible = false;
         emits('refresh');
         await nextTick(() => {
@@ -441,7 +440,7 @@ const confirmCreatePartitions = async () => {
             }, 200);
         });
     } catch (error: any) {
-        ElMessage.error(error.message || t('common.requestFail'));
+        Msg.error(error.message || 'common.requestFail');
     } finally {
         state.createPartitionsDialog.loading = false;
     }
@@ -464,7 +463,7 @@ const viewTopicConfig = async (topic: Topic) => {
 
         state.topicConfigDialog.visible = true;
     } catch (error: any) {
-        ElMessage.error(error.message || t('common.requestFail'));
+        Msg.error(error.message || 'common.requestFail');
     } finally {
     }
 };
@@ -488,10 +487,10 @@ const handleDeleteTopic = async (topic: Topic) => {
             id: props.kafkaId,
             topic: topic.name,
         });
-        useI18nSaveSuccessMsg();
+        Msg.saveSuccess();
         emits('refresh');
     } catch (error: any) {
-        ElMessage.error(error.message || t('common.requestFail'));
+        Msg.error(error.message || 'common.requestFail');
     }
 };
 

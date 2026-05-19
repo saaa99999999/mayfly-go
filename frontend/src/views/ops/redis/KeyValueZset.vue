@@ -62,11 +62,10 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { ref, reactive, toRefs, onMounted } from 'vue';
-import { ElMessage } from 'element-plus';
+import { Msg } from '@/hooks/useI18n';
+import { onMounted, reactive, ref, toRefs } from 'vue';
 import FormatViewer from './FormatViewer.vue';
 import { RedisInst } from './redis';
-import { useI18nDeleteSuccessMsg, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
 
 const props = defineProps({
     redis: {
@@ -199,7 +198,7 @@ const confirmEditData = async () => {
     // ZADD key [NX | XX] [GT | LT] [CH] [INCR] score member [score member...]
     await props.redis.runCmd(['ZADD', state.key, score, member]);
 
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     if (dataRow) {
         state.editDialog.dataRow.value = member;
         state.editDialog.dataRow.score = score;
@@ -213,7 +212,7 @@ const confirmEditData = async () => {
 
 const zrem = async (row: any, index: any) => {
     await props.redis.runCmd(['ZREM', state.key, row.value]);
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     state.values.splice(index, 1);
     state.total--;
 };

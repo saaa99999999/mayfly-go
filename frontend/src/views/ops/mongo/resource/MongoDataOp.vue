@@ -117,15 +117,14 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, defineAsyncComponent, getCurrentInstance, inject, onMounted, reactive, ref, toRefs, watch } from 'vue';
-import { ElMessage } from 'element-plus';
 import { isTrue, notBlank } from '@/common/assert';
 import { formatByteSize } from '@/common/utils/format';
-import { useI18n } from 'vue-i18n';
-import { useI18nDeleteSuccessMsg, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
+import { Msg } from '@/hooks/useI18n';
 import { mongoApi } from '@/views/ops/mongo/api';
-import { ResourceOpCtxKey } from '@/views/ops/resource/resource';
 import { MongoOpComp } from '@/views/ops/mongo/resource';
+import { ResourceOpCtxKey } from '@/views/ops/resource/resource';
+import { computed, defineAsyncComponent, getCurrentInstance, inject, onMounted, reactive, ref, toRefs } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ResourceOpCtx } from '../../component/tag';
 
 const MonacoEditor = defineAsyncComponent(() => import('@/components/monaco/MonacoEditor.vue'));
@@ -239,7 +238,7 @@ const findCommand = async (key: string) => {
         filter = findParma.filter ? JSON.parse(findParma.filter) : {};
         sort = findParma.sort ? JSON.parse(findParma.sort) : {};
     } catch (e) {
-        ElMessage.error(t('mongo.findParamErrMsg'));
+        Msg.error('mongo.findParamErrMsg');
         return;
     }
 
@@ -314,7 +313,7 @@ const onSaveDoc = async () => {
         try {
             docObj = JSON.parse(state.docEditDialog.doc);
         } catch (e) {
-            ElMessage.error(t('mongo.docErrMsg'));
+            Msg.error('mongo.docErrMsg');
         }
         const dataTab = getNowDataTab();
         const res = await mongoApi.insertCommand.request({
@@ -324,7 +323,7 @@ const onSaveDoc = async () => {
             doc: docObj,
         });
         isTrue(res.InsertedID, 'mongo.insertFail');
-        ElMessage.success(t('mongo.insertSuccess'));
+        Msg.success('mongo.insertSuccess');
     } else {
         const docObj = parseDocJsonString(state.docEditDialog.doc);
         const id = docObj._id;
@@ -339,7 +338,7 @@ const onSaveDoc = async () => {
             update: { $set: docObj },
         });
         isTrue(res.ModifiedCount == 1, 'common.modifyFail');
-        useI18nSaveSuccessMsg();
+        Msg.saveSuccess();
     }
     findCommand(state.activeName);
     state.docEditDialog.visible = false;
@@ -357,7 +356,7 @@ const onDeleteDoc = async (doc: string) => {
         docId: id,
     });
     isTrue(res.DeletedCount == 1, 'common.deleteFail');
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     findCommand(state.activeName);
 };
 
@@ -368,7 +367,7 @@ const parseDocJsonString = (doc: string) => {
     try {
         return JSON.parse(doc);
     } catch (e) {
-        ElMessage.error(t('mongo.docParse2jsonFail'));
+        Msg.error('mongo.docParse2jsonFail');
         throw e;
     }
 };

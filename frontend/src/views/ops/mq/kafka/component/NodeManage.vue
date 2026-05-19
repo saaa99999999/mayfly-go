@@ -46,10 +46,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, toRefs, computed, onMounted } from 'vue';
+import { Msg } from '@/hooks/useI18n';
+import { computed, onMounted, reactive, ref, toRefs } from 'vue';
 import { mqApi } from '../../api';
-import { ElMessage } from 'element-plus';
-import { useI18n } from 'vue-i18n';
 
 interface Broker {
     id: number;
@@ -63,8 +62,6 @@ interface BrokerConfig {
     Source: number;
     Sensitive: boolean;
 }
-
-const { t } = useI18n();
 
 const props = defineProps({
     kafkaId: {
@@ -108,7 +105,7 @@ const refreshBrokers = async () => {
         const res = await mqApi.kafkaTopicBrokers.request({ id: props.kafkaId });
         state.brokers = res || [];
     } catch (error: any) {
-        ElMessage.error(error.message || t('common.requestFail'));
+        Msg.error(error.message || 'common.requestFail');
     } finally {
         loading.value = false;
     }
@@ -131,7 +128,7 @@ const viewBrokerConfig = async (broker: Broker) => {
             state.brokerConfigs = [];
         }
     } catch (error: any) {
-        ElMessage.error(error.message || t('common.requestFail'));
+        Msg.error(error.message || 'common.requestFail');
     } finally {
         loading.value = false;
     }

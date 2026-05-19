@@ -95,12 +95,12 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-import { esApi } from '@/views/ops/es/api';
-import { nextTick, reactive, ref, unref, watch } from 'vue';
-import { useI18nConfirm, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nOperateSuccessMsg } from '@/hooks/useI18n';
 import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
 import SvgIcon from '@/components/svgIcon/index.vue';
+import { Msg, useI18nConfirm, useI18nDeleteConfirm } from '@/hooks/useI18n';
+import { esApi } from '@/views/ops/es/api';
+import { nextTick, reactive, ref, unref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
@@ -261,7 +261,7 @@ const doAddTemplate = async () => {
         },
     };
     await esApi.proxyReq('put', props.instId, `/${state.v.api}/${state.form.name}`, data);
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
 
     setTimeout(async () => {
         state.addVisible = false;
@@ -273,7 +273,7 @@ const onDelTemplate = async (name: any) => {
     await useI18nDeleteConfirm(name);
     await useI18nConfirm('es.deleteTemplateConfirm', { name: name });
     await esApi.proxyReq('delete', props.instId, `/${state.v.api}/${name}`);
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
 
     setTimeout(async () => {
         await fetchTemplates();

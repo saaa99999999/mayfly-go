@@ -26,14 +26,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import { ElMessage, ElMessageBox, FormInstance } from 'element-plus';
-import { milvusApi } from '../api';
 import { Rules } from '@/common/rule';
-import { useI18n } from 'vue-i18n';
-import { useI18nConfirm } from '@/hooks/useI18n';
-import { useMilvusStore } from '@/views/ops/milvus/resource/store';
 import MonacoEditorBox from '@/components/monaco/MonacoEditorBox';
+import { Msg, useI18nConfirm } from '@/hooks/useI18n';
+import { useMilvusStore } from '@/views/ops/milvus/resource/store';
+import { FormInstance } from 'element-plus';
+import { onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { milvusApi } from '../api';
 
 const milvusStore = useMilvusStore();
 const { t } = useI18n();
@@ -81,7 +81,7 @@ const submitCreate = async () => {
         createLoading.value = true;
         try {
             await milvusApi.createResourceGroup(props.milvusId, createForm.value);
-            ElMessage.success(t('milvus.createdSuccess'));
+            Msg.success('milvus.createdSuccess');
             createDialog.value.visible = false;
             loadList();
         } finally {
@@ -110,7 +110,7 @@ const handleDescribe = async (row: any) => {
 const handleDrop = async (row: any) => {
     await useI18nConfirm('milvus.confirmDeleteResourceGroup', { name: row.name });
     await milvusApi.dropResourceGroup(props.milvusId, row.name);
-    ElMessage.success(t('milvus.deletedSuccess'));
+    Msg.success('milvus.deletedSuccess');
     await loadList();
 };
 

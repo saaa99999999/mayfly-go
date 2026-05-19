@@ -50,13 +50,14 @@
 </template>
 
 <script lang="ts" setup>
+import { ElButton, ElDialog, ElDrawer } from 'element-plus';
 import { ref, watch } from 'vue';
-import { ElDialog, ElDrawer, ElButton, ElMessage } from 'element-plus';
 // import base style
 import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
-import { MonacoEditorDialogProps } from './MonacoEditorBox';
+import { Msg } from '@/hooks/useI18n';
 import { i18n } from '@/i18n';
 import { registerCompletionItemProvider } from './completionItemProvider';
+import { MonacoEditorDialogProps } from './MonacoEditorBox';
 
 const editorRef: any = ref(null);
 
@@ -117,11 +118,11 @@ const confirm = async () => {
         try {
             val = JSON.parse(value);
             if (typeof val !== 'object') {
-                ElMessage.error('Invalid json');
+                Msg.error('Invalid json');
                 return;
             }
         } catch (e) {
-            ElMessage.error('Invalid json');
+            Msg.error('Invalid json');
             return;
         }
 

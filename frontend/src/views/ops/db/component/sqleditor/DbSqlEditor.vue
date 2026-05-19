@@ -130,26 +130,26 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onMounted, reactive, ref, toRefs, unref } from 'vue';
-import { getToken } from '@/common/utils/storage';
 import { notBlank } from '@/common/assert';
-import { format as sqlFormatter } from 'sql-formatter';
 import config from '@/common/config';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { getToken } from '@/common/utils/storage';
+import { ElMessageBox } from 'element-plus';
+import { format as sqlFormatter } from 'sql-formatter';
+import { nextTick, onMounted, reactive, ref, toRefs, unref } from 'vue';
 
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { editor } from 'monaco-editor';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 import DbTableData from '@/views/ops/db/component/table/DbTableData.vue';
-import { DbInst } from '../../db';
 import { dbApi, uploadSqlFile } from '../../api';
+import { DbInst } from '../../db';
 
-import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
 import { joinClientParams } from '@/common/request';
+import MonacoEditor from '@/components/monaco/MonacoEditor.vue';
 import SvgIcon from '@/components/svgIcon/index.vue';
-import { useI18n } from 'vue-i18n';
-import { useI18nSaveSuccessMsg } from '@/hooks/useI18n';
+import { Msg } from '@/hooks/useI18n';
 import { useDebounceFn, useEventListener } from '@vueuse/core';
+import { useI18n } from 'vue-i18n';
 
 const emits = defineEmits(['saveSqlSuccess']);
 
@@ -379,7 +379,7 @@ const runNonQuerySqls = async (sqls: string[], newTab: boolean) => {
         i = state.execResTabs.findIndex((x) => x.id == state.activeTab);
         execRes = state.execResTabs[i];
         if (unref(execRes.loading)) {
-            ElMessage.error(t('db.currentSqlTabIsRunning'));
+            Msg.error('db.currentSqlTabIsRunning');
             return;
         }
         id = execRes.id;
@@ -456,7 +456,7 @@ const runSql = async (sql: string, remark = '', newTab = false) => {
         i = state.execResTabs.findIndex((x) => x.id == state.activeTab);
         execRes = state.execResTabs[i];
         if (unref(execRes.loading)) {
-            ElMessage.error(t('db.currentSqlTabIsRunning'));
+            Msg.error('db.currentSqlTabIsRunning');
             return;
         }
         id = execRes.id;
@@ -699,7 +699,7 @@ const saveSql = async () => {
     }
 
     await dbApi.saveSql.request({ id: props.dbId, db: props.dbName, sql: sql, type: 1, name: sqlName });
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     // 保存sql脚本成功事件
     emits('saveSqlSuccess', props.dbId, props.dbName);
 };
@@ -729,7 +729,7 @@ const onFormatSql = () => {
  */
 const onCommit = () => {
     getNowDbInst().runSql(props.dbName, 'COMMIT;');
-    ElMessage.success('COMMIT success');
+    Msg.success('COMMIT success');
 };
 
 /**
@@ -769,7 +769,7 @@ const replaceSelection = (str: string, selection: any) => {
 };
 
 const beforeUpload = (file: File) => {
-    ElMessage.success(t('db.scriptFileUploadRunning', { filename: file.name }));
+    Msg.success('db.scriptFileUploadRunning', { filename: file.name });
 };
 
 // 自定义SQL文件上传处理
@@ -784,10 +784,10 @@ const handleSqlFileUpload = (options: any) => {
         },
         {
             onSuccess: () => {
-                ElMessage.success(t('db.scriptFileUploadSuccess', { filename: file.name }));
+                Msg.success('db.scriptFileUploadSuccess', { filename: file.name });
             },
             onError: (error) => {
-                ElMessage.error(t('db.scriptFileUploadFailed', { filename: file.name, error: error.message }));
+                Msg.error('db.scriptFileUploadFailed', { filename: file.name, error: error.message });
             },
         }
     );
@@ -798,7 +798,7 @@ const handleSqlFileUpload = (options: any) => {
 // 执行sql成功
 const execSqlFileSuccess = (res: any) => {
     if (res.code !== 200) {
-        ElMessage.error(res.msg);
+        Msg.error(res.msg);
     }
 };
 
@@ -857,7 +857,7 @@ const initMonacoEditor = () => {
             try {
                 await onRunSql();
             } catch (e: any) {
-                e.message && ElMessage.error(e.message);
+                e.message && Msg.error(e.message);
             }
         },
     });
@@ -885,7 +885,7 @@ const initMonacoEditor = () => {
             try {
                 await onRunSql(true);
             } catch (e: any) {
-                e.message && ElMessage.error(e.message);
+                e.message && Msg.error(e.message);
             }
         },
     });
@@ -912,7 +912,7 @@ const initMonacoEditor = () => {
             try {
                 await onFormatSql();
             } catch (e: any) {
-                e.message && ElMessage.error(e.message);
+                e.message && Msg.error(e.message);
             }
         },
     });

@@ -22,7 +22,7 @@
     <img src="https://img.shields.io/docker/pulls/mayflygo/mayfly-go.svg?label=docker%20pulls&color=fac858" alt="docker pulls"/>
   </a>
   <a href="https://github.com/golang/go" target="_blank">
-    <img src="https://img.shields.io/badge/Golang-1.24%2B-yellow.svg" alt="golang"/>
+    <img src="https://img.shields.io/badge/Golang-1.26%2B-yellow.svg" alt="golang"/>
   </a>
   <a href="https://cn.vuejs.org" target="_blank">
     <img src="https://img.shields.io/badge/Vue-3.x-green.svg" alt="vue">
@@ -31,7 +31,24 @@
 
 ## 前言
 
-Web 版 **统一管理操作平台**，集成了对 Linux 系统的全面操作支持（包括终端管理[终端回放、命令过滤]、文件管理、脚本执行、进程监控及计划任务设置），同时提供了多种数据库（如 MySQL、PostgreSQL、Oracle、SQL Server、达梦、高斯、SQLite、ClickHouse 等）的数据操作、数据同步与数据迁移功能。此外，还支持 Redis（单机、哨兵、集群模式）、MongoDB、Elasticsearch、Kafka、Milvus 的操作管理，并结合工单流程审批功能，为企业提供一站式的运维与管理解决方案。
+Web 版 **统一资源管理操作平台**，集成了对 Linux 系统的全面操作支持（包括终端管理[终端回放、命令过滤]、文件管理、脚本执行、进程监控及计划任务设置），同时提供了丰富的数据库、缓存、搜索引擎及向量数据库的操作、数据同步与数据迁移功能。结合工单流程审批功能，为企业提供一站式的运维与管理解决方案。
+
+### 🗄️ 数据库支持
+
+#### 关系型数据库
+
+| 数据库类型 | 支持状态 | 数据库类型 | 支持状态 | 数据库类型 | 支持状态 |
+| :--------: | :------: | :--------: | :------: | :--------: | :------: |
+|   MySQL    |    ✅    | PostgreSQL |    ✅    |   Oracle   |    ✅    |
+| SQL Server |    ✅    |    达梦    |    ✅    |    高斯    |    ✅    |
+|   SQLite   |    ✅    | ClickHouse |    ✅    |            |          |
+
+#### 非关系型数据库
+
+| 数据库类型    | 支持状态 | 数据库类型 | 支持状态 |
+| :-----------: | :------: | :--------: | :------: |
+|    MongoDB    |    ✅    |   Redis    |    ✅    |
+| Elasticsearch |    ✅    |   Milvus   |    ✅    |
 
 ## 开发语言与主要框架
 

@@ -128,13 +128,13 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, reactive, ref, toRefs, watch, useTemplateRef, nextTick, Ref } from 'vue';
-import { ElMessage } from 'element-plus';
-import SqlExecBox from '../sqleditor/SqlExecBox';
-import { DbDialect, DbType, getDbDialect, IndexDefinition, RowDefinition } from '../../dialect/index';
-import { DbInst } from '../../db';
 import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
+import { Msg } from '@/hooks/useI18n';
+import { computed, nextTick, reactive, ref, Ref, toRefs, useTemplateRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { DbInst } from '../../db';
+import { DbDialect, DbType, getDbDialect, IndexDefinition, RowDefinition } from '../../dialect/index';
+import SqlExecBox from '../sqleditor/SqlExecBox';
 
 const { t } = useI18n();
 
@@ -345,7 +345,7 @@ const deleteIndex = (index: any) => {
 const submit = async () => {
     let sql = genSql();
     if (!sql) {
-        ElMessage.warning(t('db.noChange'));
+        Msg.warning('db.noChange');
         return;
     }
     SqlExecBox({

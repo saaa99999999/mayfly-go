@@ -136,18 +136,18 @@
 </template>
 
 <script lang="ts" setup>
-import { redisApi } from '../api';
-import { ref, defineAsyncComponent, toRefs, reactive, onMounted, nextTick, Ref, watch, useTemplateRef, getCurrentInstance } from 'vue';
-import { ElMessageBox } from 'element-plus';
 import { isTrue, notNull } from '@/common/assert';
-import { copyToClipboard } from '@/common/utils/string';
-import { keysToTree, sortByTreeNodes, keysToList } from '../utils';
-import { Contextmenu, ContextmenuItem } from '@/components/contextmenu';
-import { RedisInst } from '../redis';
-import { useI18n } from 'vue-i18n';
-import { useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nFormValidate, useI18nOperateSuccessMsg } from '@/hooks/useI18n';
 import { Rules } from '@/common/rule';
+import { copyToClipboard } from '@/common/utils/string';
+import { Contextmenu, ContextmenuItem } from '@/components/contextmenu';
+import { Msg, useI18nDeleteConfirm, useI18nFormValidate } from '@/hooks/useI18n';
 import { RedisOpComp } from '@/views/ops/redis/resource';
+import { ElMessageBox } from 'element-plus';
+import { defineAsyncComponent, getCurrentInstance, nextTick, onMounted, reactive, ref, Ref, toRefs, useTemplateRef } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { redisApi } from '../api';
+import { RedisInst } from '../redis';
+import { keysToList, keysToTree, sortByTreeNodes } from '../utils';
 
 const KeyDetail = defineAsyncComponent(() => import('../KeyDetail.vue'));
 
@@ -416,7 +416,7 @@ const flushDb = () => {
         .then(() => {
             // FLUSHDB [ASYNC | SYNC]
             redisInst.value.runCmd(['FLUSHDB']).then(() => {
-                useI18nOperateSuccessMsg();
+                Msg.operateSuccess();
                 searchKey();
             });
         })
@@ -456,7 +456,7 @@ const delKey = async (key: string) => {
     await useI18nDeleteConfirm(key);
     // DEL key [key ...]
     await redisInst.value.runCmd(['DEL', key]);
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     searchKey();
 
     removeDataTab(key);

@@ -80,14 +80,14 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, reactive, ref } from 'vue';
-import { roleApi, accountApi } from '../api';
-import { ElMessage } from 'element-plus';
-import PageTable from '@/components/pagetable/PageTable.vue';
 import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
-import { ResourceTypeEnum, RoleStatusEnum } from '../enums';
+import { Msg } from '@/hooks/useI18n';
+import { reactive, ref, toRefs } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { accountApi, roleApi } from '../api';
+import { ResourceTypeEnum, RoleStatusEnum } from '../enums';
 import { getMenuIcon } from '../resource/index';
 
 const { t } = useI18n();
@@ -182,7 +182,7 @@ const onRelateRole = async (relateType: number, roleId: number) => {
         roleId,
         relateType,
     });
-    ElMessage.success(t('common.operateSuccess'));
+    Msg.operateSuccess();
     if (state.tabName == relatedTabName) {
         searchAccountRoles();
     } else {

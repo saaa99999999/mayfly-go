@@ -98,8 +98,8 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, reactive, watch } from 'vue';
-import { ElMessage } from 'element-plus';
+import { Msg } from '@/hooks/useI18n';
+import { reactive, toRefs, watch } from 'vue';
 import { machineApi } from './api';
 
 const props = defineProps({
@@ -178,7 +178,7 @@ const confirmKillProcess = async (pid: any) => {
         pid,
         id: state.params.id,
     });
-    ElMessage.success('kill success');
+    Msg.success('kill success');
     state.params.name = '';
     getProcess();
 };

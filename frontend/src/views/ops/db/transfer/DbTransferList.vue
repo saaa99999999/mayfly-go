@@ -83,17 +83,17 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
-import PageTable from '@/components/pagetable/PageTable.vue';
-import { TableColumn } from '@/components/pagetable';
 import { hasPerms } from '@/components/auth/auth';
+import { TableColumn } from '@/components/pagetable';
+import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
-import { getDbDialect } from '@/views/ops/db/dialect';
 import TerminalLog from '@/components/terminal/TerminalLog.vue';
-import { useI18nConfirm, useI18nDeleteConfirm, useI18nDeleteSuccessMsg, useI18nOperateSuccessMsg } from '@/hooks/useI18n';
-import { useI18n } from 'vue-i18n';
+import { Msg, useI18nConfirm, useI18nDeleteConfirm } from '@/hooks/useI18n';
+import { getDbDialect } from '@/views/ops/db/dialect';
 import { dbTransferApi } from '@/views/ops/db/transfer/api';
 import { DbTransferRunningStateEnum } from '@/views/ops/db/transfer/enums';
+import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const DbTransferEdit = defineAsyncComponent(() => import('./DbTransferEdit.vue'));
 const DbTransferFile = defineAsyncComponent(() => import('./DbTransferFile.vue'));
@@ -190,7 +190,7 @@ const edit = async (data: any) => {
 const stop = async (id: any) => {
     await useI18nConfirm('db.stopConfirm');
     await dbTransferApi.stopDbTransferTask.request({ taskId: id });
-    useI18nOperateSuccessMsg();
+    Msg.operateSuccess();
     search();
 };
 
@@ -205,7 +205,7 @@ const onReRun = async (data: any) => {
     await useI18nConfirm('db.runConfirm');
     try {
         let res = await dbTransferApi.runDbTransferTask.request({ taskId: data.id });
-        useI18nOperateSuccessMsg();
+        Msg.operateSuccess();
         // 拿到日志id之后，弹出日志弹窗
         onOpenLog({ logId: res, state: DbTransferRunningStateEnum.Running.value });
     } catch (e) {
@@ -226,7 +226,7 @@ const openFiles = async (data: any) => {
 const updStatus = async (id: any, status: 1 | -1) => {
     try {
         await dbTransferApi.updateDbTransferTaskStatus.request({ taskId: id, status });
-        useI18nOperateSuccessMsg();
+        Msg.operateSuccess();
         search();
     } catch (err) {
         //
@@ -237,7 +237,7 @@ const del = async () => {
     try {
         await useI18nDeleteConfirm(state.selectionData.map((x: any) => x.taskName).join('、'));
         await dbTransferApi.deleteDbTransferTask.request({ taskId: state.selectionData.map((x: any) => x.id).join(',') });
-        useI18nDeleteSuccessMsg();
+        Msg.deleteSuccess();
         search();
     } catch (err) {
         //

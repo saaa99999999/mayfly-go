@@ -111,16 +111,15 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, reactive, watch, defineAsyncComponent, shallowReactive } from 'vue';
-import { procinstApi, procinstTaskApi } from './api';
-import { ElMessage } from 'element-plus';
+import { formatDate, formatTime } from '@/common/utils/format';
 import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
-import { FlowBizType, ProcinstBizStatus, ProcinstTaskStatus, ProcinstStatus } from './enums';
-import { formatTime } from '@/common/utils/format';
 import EnumTag from '@/components/enumtag/EnumTag.vue';
+import { Msg } from '@/hooks/useI18n';
 import AccountInfo from '@/views/system/account/components/AccountInfo.vue';
-import { formatDate } from '@/common/utils/format';
+import { defineAsyncComponent, reactive, shallowReactive, toRefs, watch } from 'vue';
+import { procinstApi, procinstTaskApi } from './api';
 import FlowDesign from './components/flowdesign/FlowDesign.vue';
+import { FlowBizType, ProcinstBizStatus, ProcinstStatus, ProcinstTaskStatus } from './enums';
 
 const DbSqlExecBiz = defineAsyncComponent(() => import('./flowbiz/dbms/DbSqlExecBiz.vue'));
 const RedisRunCmdBiz = defineAsyncComponent(() => import('./flowbiz/redis/RedisRunCmdBiz.vue'));
@@ -230,7 +229,7 @@ const btnOk = async () => {
     try {
         state.saveBtnLoading = true;
         await api.request({ id: props.instTaskId, remark: state.form.remark });
-        ElMessage.success('操作成功');
+        Msg.operateSuccess();
         cancel();
         emit('val-change');
     } finally {

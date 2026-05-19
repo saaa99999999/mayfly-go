@@ -57,10 +57,10 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { ref, reactive, toRefs, onMounted } from 'vue';
+import { Msg } from '@/hooks/useI18n';
+import { onMounted, reactive, ref, toRefs } from 'vue';
 import FormatViewer from './FormatViewer.vue';
 import { RedisInst } from './redis';
-import { useI18nDeleteSuccessMsg, useI18nSaveSuccessMsg } from '@/hooks/useI18n';
 
 const props = defineProps({
     redis: {
@@ -154,7 +154,7 @@ const confirmEditData = async () => {
     // SADD key member [member ...]
     await props.redis.runCmd(['SADD', state.key, member]);
 
-    useI18nSaveSuccessMsg();
+    Msg.saveSuccess();
     if (dataRow) {
         state.editDialog.dataRow.value = member;
     } else {
@@ -168,7 +168,7 @@ const confirmEditData = async () => {
 const srem = async (row: any, index: any) => {
     // SREM key member [member ...]
     await props.redis.runCmd(['SREM', state.key, row.value]);
-    useI18nDeleteSuccessMsg();
+    Msg.deleteSuccess();
     state.setDatas.splice(index, 1);
     state.total--;
 };

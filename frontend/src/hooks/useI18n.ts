@@ -78,30 +78,64 @@ export function useI18nDetailTitle(i18nKey: string) {
     return t('common.detailTitle', { name: t(i18nKey) });
 }
 
-export function useI18nOperateSuccessMsg() {
-    MsgSuccess('common.operateSuccess');
-}
-
-export function useI18nSaveSuccessMsg() {
-    MsgSuccess('common.saveSuccess');
-}
-
-export function useI18nDeleteSuccessMsg() {
-    MsgSuccess('common.deleteSuccess');
-}
-
 /**
- * error msg
- * @param msg msg(支持i8n msgkey)
+ * 国际化消息提示（基于 ElMessage）
  */
-export function MsgError(msg: string) {
-    ElMessage.error(i18n.global.t(msg));
-}
+export const Msg = {
+    /**
+     * 成功消息
+     * @param msg 消息内容（支持 i18n key）
+     * @param params 国际化参数
+     */
+    success(msg: string, params?: any) {
+        ElMessage.success(i18n.global.t(msg, params));
+    },
 
-/**
- * success msg
- * @param msg msg(支持i8n msgkey)
- */
-export function MsgSuccess(msg: string) {
-    ElMessage.success(i18n.global.t(msg));
-}
+    /**
+     * 错误消息
+     * @param msg 消息内容（支持 i18n key）
+     * @param params 国际化参数
+     */
+    error(msg: string, params?: any) {
+        ElMessage.error(i18n.global.t(msg, params));
+    },
+
+    /**
+     * 警告消息
+     * @param msg 消息内容（支持 i18n key）
+     * @param params 国际化参数
+     */
+    warning(msg: string, params?: any) {
+        ElMessage.warning(i18n.global.t(msg, params));
+    },
+
+    /**
+     * 信息消息
+     * @param msg 消息内容（支持 i18n key）
+     * @param params 国际化参数
+     */
+    info(msg: string, params?: any) {
+        ElMessage.info(i18n.global.t(msg, params));
+    },
+
+    /**
+     * 保存成功消息
+     */
+    saveSuccess() {
+        Msg.success('common.saveSuccess');
+    },
+
+    /**
+     * 删除成功消息
+     */
+    deleteSuccess() {
+        Msg.success('common.deleteSuccess');
+    },
+
+    /**
+     * 操作成功消息
+     */
+    operateSuccess() {
+        Msg.success('common.operateSuccess');
+    },
+};

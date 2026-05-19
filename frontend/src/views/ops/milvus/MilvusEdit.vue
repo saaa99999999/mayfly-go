@@ -41,16 +41,14 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, reactive, watch, useTemplateRef } from 'vue';
-import { milvusApi } from './api';
-import { ElMessage } from 'element-plus';
-import SshTunnelSelect from '../component/SshTunnelSelect.vue';
-import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
 import { Rules } from '@/common/rule';
+import DrawerHeader from '@/components/drawer-header/DrawerHeader.vue';
+import { Msg } from '@/hooks/useI18n';
 import TagTreeSelect from '@/views/ops/component/TagTreeSelect.vue';
-import { useI18n } from 'vue-i18n';
+import { reactive, toRefs, useTemplateRef, watch } from 'vue';
+import SshTunnelSelect from '../component/SshTunnelSelect.vue';
+import { milvusApi } from './api';
 
-const { t } = useI18n();
 const props = defineProps({
     milvus: {
         type: [Boolean, Object],
@@ -117,14 +115,14 @@ const onTestConn = async () => {
     await milvusFormRef.value?.validate();
     state.submitForm = await getReqForm();
     await testConnExec();
-    ElMessage.success(t('milvus.connSuccess'));
+    Msg.success('milvus.connSuccess');
 };
 
 const onConfirm = async () => {
     await milvusFormRef.value?.validate();
     state.submitForm = await getReqForm();
     await saveMilvusExec();
-    ElMessage.success(t('milvus.savedSuccess'));
+    Msg.success('milvus.savedSuccess');
     emit('val-change', state.form);
     onCancel();
 };
