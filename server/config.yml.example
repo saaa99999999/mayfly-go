@@ -13,7 +13,8 @@ server:
     cert-file: ./default.pem
 jwt:
   # jwt key，不设置默认使用随机字符串
-  key: 333333000000
+  # key: 生产环境请务必修改为强随机密钥: openssl rand -base64 32
+  key:
   # accessToken过期时间单位分钟
   expire-time: 720
   # refreshToken过期时间单位分钟
@@ -24,7 +25,7 @@ db:
   address: mysql:3306
   name: mayfly-go
   username: root
-  password: 111049
+  password:
   config: charset=utf8&loc=Local&parseTime=true
   max-idle-conns: 5
 # db:
@@ -35,7 +36,7 @@ db:
 # redis:
 #   host: localhost
 #   port: 6379
-#   password: 111049
+#   password:
 #   db: 0
 log:
   # 日志等级, debug, info, warn, error
@@ -56,4 +57,4 @@ log:
   #   compress: true
 # 资源密码aes加密key
 aes:
-  key: 1111111111111111
+  key:    # 需设置16/24/32位AES密钥
