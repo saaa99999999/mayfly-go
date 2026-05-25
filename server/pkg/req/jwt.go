@@ -2,6 +2,7 @@ package req
 
 import (
 	"errors"
+	"fmt"
 	"mayfly-go/pkg/utils/stringx"
 	"time"
 
@@ -64,6 +65,9 @@ func ParseToken(tokenStr string) (uint64, string, error) {
 
 	// Parse token
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
 		return []byte(jwtConf.Key), nil
 	})
 	if err != nil || token == nil {
