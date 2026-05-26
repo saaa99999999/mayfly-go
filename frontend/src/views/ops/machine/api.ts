@@ -117,8 +117,8 @@ export function uploadFile(file: File, params: UploadParams, options: UploadOpti
     // 业务层生成 uploadId
     const uploadId = params.uploadId || `upload_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
-    // 构建查询参数
-    const queryParams = new URLSearchParams({
+    // 构建查询参数对象
+    const queryParams: Record<string, string> = {
         machineId: String(params.machineId),
         authCertName: params.authCertName,
         protocol: String(params.protocol),
@@ -126,15 +126,15 @@ export function uploadFile(file: File, params: UploadParams, options: UploadOpti
         path: params.path,
         uploadId: uploadId,
         filename: file.name,
-    });
+    };
 
     // 如果是文件夹上传，添加标识参数
     if (params.isFolderUpload) {
-        queryParams.set('isFolderUpload', 'true');
+        queryParams['isFolderUpload'] = 'true';
     }
 
     // 直接使用文件流作为 body，不包装为 FormData
-    const { abort } = machineApi.uploadFile.uploadRaw(file, queryParams.toString(), {
+    const { abort } = machineApi.uploadFile.uploadRaw(file, queryParams, {
         ...options,
     });
 

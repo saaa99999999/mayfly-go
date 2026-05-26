@@ -66,17 +66,14 @@ func (d *Image) ImageRemove(rc *req.Ctx) {
 }
 
 func (d *Image) ImageLoad(rc *req.Ctx) {
-	fileheader, err := rc.FormFile("file")
-	biz.ErrIsNilAppendErr(err, "read form file error: %s")
-
-	file, err := fileheader.Open()
-	biz.ErrIsNil(err)
-	defer file.Close()
+	// 从 body 直接读取文件流
+	body := rc.GetRequest().Body
+	defer body.Close()
 
 	cli := GetCli(rc)
 	rc.ReqParam = cli.Server
 
-	resp, err := cli.DockerClient.ImageLoad(rc.MetaCtx, file)
+	resp, err := cli.DockerClient.ImageLoad(rc.MetaCtx, body)
 	biz.ErrIsNil(err)
 	defer resp.Body.Close()
 

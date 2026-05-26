@@ -58,7 +58,6 @@
 </template>
 
 <script lang="ts" setup>
-import { TagResourceTypeEnum } from '@/common/commonEnum';
 import { formatDate } from '@/common/utils/format';
 import { TableColumn } from '@/components/pagetable';
 import PageTable from '@/components/pagetable/PageTable.vue';
@@ -67,7 +66,6 @@ import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from 
 import TagCodePath from '@/views/ops/component/TagCodePath.vue';
 import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
 import { useRoute } from 'vue-router';
-import { getTagPathSearchItem } from '../component/tag';
 import { dockerApi } from './api';
 
 const ContainerConfEdit = defineAsyncComponent(() => import('./CotainerConfEdit.vue'));
@@ -82,10 +80,7 @@ const props = defineProps({
 const route = useRoute();
 const pageTableRef: Ref<any> = ref(null);
 
-const searchItems = [
-    SearchItem.input('keyword', 'common.keyword').withPlaceholder('redis.keywordPlaceholder'),
-    getTagPathSearchItem(TagResourceTypeEnum.Container.value),
-];
+const searchItems = [SearchItem.input('keyword', 'common.keyword').withPlaceholder('redis.keywordPlaceholder')];
 
 const columns = ref([
     TableColumn.new('name', 'common.name').isSlot('name').setAddWidth(15),

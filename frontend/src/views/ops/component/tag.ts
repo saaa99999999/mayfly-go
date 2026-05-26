@@ -1,7 +1,4 @@
-import { OptionsApi, SearchItem } from '@/components/pagetable/SearchForm';
 import { ContextmenuItem } from '@/components/contextmenu';
-import { TagResourceTypeEnum } from '@/common/commonEnum';
-import { tagApi } from '../tag/api';
 import { markRaw } from 'vue';
 
 // 资源配置
@@ -221,24 +218,6 @@ export class NodeType {
         this.contextMenuItems = contextMenuItems;
         return this;
     }
-}
-
-/**
- * 获取标签搜索项配置
- * @param resourceType 资源类型
- * @returns
- */
-export function getTagPathSearchItem(resourceType: any) {
-    return SearchItem.select('tagPath', 'common.tag').withOptionsApi(
-        OptionsApi.new(tagApi.getResourceTagPaths, { resourceType }).withConvertFn((res: any) => {
-            return res.map((x: any) => {
-                return {
-                    label: x,
-                    value: x,
-                };
-            });
-        })
-    );
 }
 
 export function expandCodePath(codePath: string) {

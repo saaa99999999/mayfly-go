@@ -17,6 +17,7 @@
                             <img :src="userInfo.photo" class="w-full h-full rounded transition-transform duration-300 hover:scale-110" />
                         </el-upload>
                     </div>
+
                     <div class="flex-1 px-3.75">
                         <div class="mb-4 text-lg truncate">{{ $t('home.welcomeMsg', { name: userInfo.name }) }}</div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-[13px]">

@@ -38,6 +38,7 @@ export default {
         stopImageConfirm: 'Are you sure to stop image [{name}] ?',
         export: 'Export',
         imageUploading: 'Image uploading, please wait...',
+        uploadSuccess: 'Image uploaded successfully',
         imageTips: 'Support manual input and select',
         forcePull: 'Force Pull Image',
         hostPortPlaceholder: '80',

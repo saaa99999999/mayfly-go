@@ -23,7 +23,7 @@
     <el-table :data="filterTableDatas" v-loading="state.loadingImages">
         <el-table-column prop="id" label="ID" :min-width="100" show-overflow-tooltip>
             <template #default="{ row }">
-                <el-link type="primary" :underline="false">
+                <el-link type="primary" underline="never">
                     {{ row.id.split(':')[1].substring(0, 12) }}
                 </el-link>
             </template>
@@ -86,6 +86,7 @@
 <script lang="ts" setup>
 import config from '@/common/config';
 import { joinClientParams } from '@/common/request';
+import { downloadFile } from '@/common/utils/file';
 import { formatByteSize, formatDate } from '@/common/utils/format';
 import { getToken } from '@/common/utils/storage';
 import { fuzzyMatchField } from '@/common/utils/string';
@@ -159,33 +160,28 @@ const getImages = async () => {
 };
 
 const exportImage = async (row: any) => {
-    const a = document.createElement('a');
-    a.setAttribute('href', `${config.baseApiUrl}/docker/${props.id}/images/save?id=${props.id}&tag=${row.tags[0]}&${joinClientParams()}`);
-    a.setAttribute('target', '_blank');
-    a.click();
+    downloadFile(`${config.baseApiUrl}/docker/${props.id}/images/save?id=${props.id}&tag=${row.tags[0]}&${joinClientParams()}`);
 };
 
 const uploadImage = (content: any) => {
-    const params = new FormData();
-    // const path = state.nowPath;
-    params.append('file', content.file);
-    params.append('id', props.id + '');
-    params.append('token', token);
-    dockerApi.imageUpload
-        .xhrReq(params, {
-            headers: { 'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryF1uyUD0tWdqmJqpl' },
-            // onUploadProgress: onUploadProgress,
-            timeout: 3 * 60 * 60 * 1000,
-        })
-        .then(() => {
-            Msg.success('machine.uploadSuccess');
-            setTimeout(() => {
-                getImages();
-            }, 3000);
-        })
-        .catch(() => {
-            // state.uploadProgressShow = false;
-        });
+    const file = content.file;
+    // 直接使用文件流作为 body，不包装为 FormData
+    dockerApi.imageUpload.uploadRaw(
+        file,
+        { id: String(props.id) },
+        {
+            onSuccess: () => {
+                Msg.success('docker.uploadSuccess');
+                setTimeout(() => {
+                    getImages();
+                }, 1000);
+            },
+            onError: (error) => {
+                Msg.error(error.message);
+            },
+        }
+    );
+
     Msg.info('docker.imageUploading');
 };
 

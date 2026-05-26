@@ -1,7 +1,7 @@
+import { templateResolve } from '@/common/utils/string';
 import { RequestOptions, useApiFetch } from '@/hooks/useRequest';
 import config from './config';
 import request, { joinClientParams } from './request';
-import { getToken } from './utils/storage';
 
 /**
  * 文件上传选项
@@ -79,17 +79,6 @@ class Api<T = any, P = any> {
     }
 
     /**
-     * xhr 请求对应的该api
-     * @param {Object} param 请求该api的参数
-     */
-    async xhrReq(param: any = null, options: any = {}): Promise<T> {
-        if (this.beforeHandler) {
-            await this.beforeHandler(param);
-        }
-        return request.xhrReq(this.method, this.url, param, options);
-    }
-
-    /**
      * 文件上传请求
      * @param formData FormData 对象（调用方自行构建，包含文件和其他参数）
      * @param options 上传选项
@@ -137,14 +126,44 @@ class Api<T = any, P = any> {
     /**
      * 原始文件流上传请求（直接使用文件流作为 body，参数通过 URL query 传递）
      * @param file 文件对象
-     * @param queryParams URL 查询参数字符串
+     * @param queryParams URL 查询参数对象（可选）
      * @param options 上传选项（可包含自定义 headers）
      * @returns { abort: () => void } 返回中止方法
      */
-    uploadRaw(file: File, queryParams: string, options: UploadOptions & { headers?: Record<string, string> } = {}): { abort: () => void } {
+    uploadRaw(file: File, queryParams?: Record<string, string>, options: UploadOptions & { headers?: Record<string, string> } = {}): { abort: () => void } {
         const { onSuccess, onError, headers = {} } = options;
 
-        const url = `${config.baseApiUrl}${this.url}?${queryParams}&${joinClientParams()}`;
+        // 构建 URL，兼容没有 queryParams 的情况
+        let url = `${config.baseApiUrl}${this.url}`;
+        // 简单判断该url是否是restful风格
+        if (url.indexOf('{') != -1 && queryParams) {
+            url = templateResolve(url, queryParams);
+        }
+
+        const searchParams = new URLSearchParams();
+
+        // 添加业务参数
+        if (queryParams) {
+            Object.entries(queryParams).forEach(([key, value]) => {
+                searchParams.append(key, value);
+            });
+        }
+
+        // 添加客户端参数
+        const clientParams = joinClientParams();
+        if (clientParams) {
+            // 将 joinClientParams 返回的字符串追加到 searchParams
+            const clientParamsObj = new URLSearchParams(clientParams);
+            clientParamsObj.forEach((value, key) => {
+                searchParams.append(key, value);
+            });
+        }
+
+        // 拼接完整的 query string
+        const queryString = searchParams.toString();
+        if (queryString) {
+            url += `?${queryString}`;
+        }
 
         // 创建 AbortController 用于取消请求
         const abortController = new AbortController();

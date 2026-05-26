@@ -103,12 +103,12 @@ export function uploadSqlFile(
     // 生成 uploadId
     const uploadId = `sql_exec_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
-    // 使用 URLSearchParams 构建查询参数
-    const queryParams = new URLSearchParams({
+    // 构建查询参数对象
+    const queryParams: Record<string, string> = {
         db: params.dbName,
         uploadId: uploadId,
         filename: file.name,
-    }).toString();
+    };
 
     // 创建 Api 实例
     const api = Api.newPost(`/dbs/${params.dbId}/exec-sql-file`);

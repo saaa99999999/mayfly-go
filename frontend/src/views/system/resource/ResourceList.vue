@@ -370,7 +370,7 @@ const allowDrop = (draggingNode: any, dropNode: any, type: any) => {
     // 如果是插入至目标节点
     if (type === 'inner') {
         // 只有目标节点下没有子节点才允许移动
-        if (!dropNode.data.children || dropNode.data.children == 0) {
+        if (!dropNode.data.children || dropNode.data.children?.length == 0) {
             // 只有权限节点可移动至菜单节点下 或者移动菜单
             return (
                 (draggingNode.data.type == permissionTypeValue && dropNode.data.type == menuTypeValue) ||

@@ -5,7 +5,7 @@ go 1.26
 require (
 	gitee.com/chunanyong/dm v1.8.21
 	gitee.com/liuzongyang/libpq v1.10.11
-	github.com/cloudwego/eino v0.8.13
+	github.com/cloudwego/eino v0.9.0
 	github.com/cloudwego/eino-ext/components/model/openai v0.1.13
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/docker/go-connections v0.7.0
@@ -39,7 +39,7 @@ require (
 	github.com/twmb/franz-go v1.20.7
 	github.com/twmb/franz-go/pkg/kadm v1.17.2
 	go.mongodb.org/mongo-driver/v2 v2.5.0 // mongo
-	golang.org/x/crypto v0.51.0
+	golang.org/x/crypto v0.52.0
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sync v0.20.0
 	golang.org/x/text v0.37.0
@@ -212,8 +212,8 @@ require (
 	golang.org/x/arch v0.22.0 // indirect
 	golang.org/x/exp v0.0.0-20251002181428-27f1f14c8bb9 // indirect
 	golang.org/x/image v0.31.0 // indirect
-	golang.org/x/net v0.53.0 // indirect
-	golang.org/x/sys v0.44.0 // indirect
+	golang.org/x/net v0.54.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
 	google.golang.org/genproto v0.0.0-20250505200425-f936aa4a68b2 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260226221140-a57be14db171 // indirect

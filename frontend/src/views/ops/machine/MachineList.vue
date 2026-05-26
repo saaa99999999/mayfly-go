@@ -262,7 +262,6 @@
 </template>
 
 <script lang="ts" setup>
-import { TagResourceTypePath } from '@/common/commonEnum';
 import { formatByteSize, formatDate } from '@/common/utils/format';
 import { hasPerms } from '@/components/auth/auth';
 import { TableColumn } from '@/components/pagetable';
@@ -272,7 +271,6 @@ import { Msg, useI18nDeleteConfirm } from '@/hooks/useI18n';
 import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
-import { getTagPathSearchItem } from '../component/tag';
 import TagCodePath from '../component/TagCodePath.vue';
 import { getMachineTerminalSocketUrl, machineApi } from './api';
 import { MachineProtocolEnum } from './enums';
@@ -310,10 +308,7 @@ const perms = {
     terminal: 'machine:terminal',
 };
 
-const searchItems = [
-    SearchItem.input('keyword', 'common.keyword').withPlaceholder('machine.keywordPlaceholder'),
-    getTagPathSearchItem(TagResourceTypePath.MachineAuthCert),
-];
+const searchItems = [SearchItem.input('keyword', 'common.keyword').withPlaceholder('machine.keywordPlaceholder')];
 
 const columns = [
     TableColumn.new('name', 'common.name').isSlot('name').setAddWidth(15),

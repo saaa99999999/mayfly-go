@@ -37,17 +37,15 @@
 </template>
 
 <script setup lang="ts">
-import { TagResourceTypePath } from '@/common/commonEnum';
 import { TableColumn } from '@/components/pagetable';
 import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
 import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
-import { getTagPathSearchItem } from '@/views/ops/component/tag';
 import { defineAsyncComponent, ref, Ref } from 'vue';
+import ResourceAuthCert from '../component/ResourceAuthCert.vue';
+import TagCodePath from '../component/TagCodePath.vue';
 import { milvusApi, perms } from './api';
 import type { IMilvus } from './types';
-import TagCodePath from '../component/TagCodePath.vue';
-import ResourceAuthCert from '../component/ResourceAuthCert.vue';
 
 const MilvusEdit = defineAsyncComponent(() => import('./MilvusEdit.vue'));
 
@@ -60,7 +58,7 @@ const query = ref({
 
 const selectionData = ref([]);
 
-const searchItems = [SearchItem.input('keyword', 'common.keyword').withPlaceholder('db.keywordPlaceholder'), getTagPathSearchItem(TagResourceTypePath.Db)];
+const searchItems = [SearchItem.input('keyword', 'common.keyword').withPlaceholder('db.keywordPlaceholder')];
 
 const columns = ref([
     TableColumn.new('name', 'common.name').isSlot('name').setAddWidth(15),

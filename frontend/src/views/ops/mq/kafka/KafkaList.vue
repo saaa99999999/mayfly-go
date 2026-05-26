@@ -33,12 +33,10 @@
 </template>
 
 <script lang="ts" setup>
-import { TagResourceTypeEnum } from '@/common/commonEnum';
 import { TableColumn } from '@/components/pagetable';
 import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
 import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
-import { getTagPathSearchItem } from '@/views/ops/component/tag';
 import { mqApi } from '@/views/ops/mq/api';
 import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
 import { useRoute } from 'vue-router';
@@ -56,10 +54,7 @@ const props = defineProps({
 const route = useRoute();
 const pageTableRef: Ref<any> = ref(null);
 
-const searchItems = [
-    SearchItem.input('keyword', 'common.keyword').withPlaceholder('mq.kafka.keywordPlaceholder'),
-    getTagPathSearchItem(TagResourceTypeEnum.MqKafka.value),
-];
+const searchItems = [SearchItem.input('keyword', 'common.keyword').withPlaceholder('mq.kafka.keywordPlaceholder')];
 
 const columns = [
     TableColumn.new('name', 'common.name').isSlot('name').setAddWidth(15),

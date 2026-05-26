@@ -64,7 +64,6 @@
 </template>
 
 <script lang="ts" setup>
-import { TagResourceTypePath } from '@/common/commonEnum';
 import { formatDate } from '@/common/utils/format';
 import { hasPerms } from '@/components/auth/auth';
 import { TableColumn } from '@/components/pagetable';
@@ -73,7 +72,6 @@ import { SearchItem } from '@/components/pagetable/SearchForm';
 import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
 import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
 import ResourceAuthCert from '../component/ResourceAuthCert.vue';
-import { getTagPathSearchItem } from '../component/tag';
 import TagCodePath from '../component/TagCodePath.vue';
 import { esApi } from './api';
 
@@ -91,7 +89,7 @@ const perms = {
     delInstance: 'es:instance:del',
 };
 
-const searchItems = [SearchItem.input('keyword', 'common.keyword').withPlaceholder('es.keywordPlaceholder'), getTagPathSearchItem(TagResourceTypePath.Es)];
+const searchItems = [SearchItem.input('keyword', 'common.keyword').withPlaceholder('es.keywordPlaceholder')];
 
 const columns = ref([
     TableColumn.new('name', 'common.name').isSlot('name').setAddWidth(15),

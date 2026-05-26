@@ -38,6 +38,7 @@ export default {
         stopImageConfirm: '确定删除该镜像？',
         export: '导出',
         imageUploading: '镜像导入中，请稍后...',
+        uploadSuccess: '镜像导入成功',
         imageTips: '支持手动输入并选择',
         forcePull: '强制拉取镜像',
         hostPortPlaceholder: '80',

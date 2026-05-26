@@ -46,14 +46,12 @@
 </template>
 
 <script lang="ts" setup>
-import { TagResourceTypeEnum } from '@/common/commonEnum';
 import { TableColumn } from '@/components/pagetable';
 import PageTable from '@/components/pagetable/PageTable.vue';
 import { SearchItem } from '@/components/pagetable/SearchForm';
 import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from '@/hooks/useI18n';
 import { defineAsyncComponent, onMounted, reactive, ref, Ref, toRefs } from 'vue';
 import { useRoute } from 'vue-router';
-import { getTagPathSearchItem } from '../component/tag';
 import TagCodePath from '../component/TagCodePath.vue';
 import { mongoApi } from './api';
 
@@ -71,10 +69,7 @@ const props = defineProps({
 const route = useRoute();
 const pageTableRef: Ref<any> = ref(null);
 
-const searchItems = [
-    SearchItem.input('keyword', 'common.keyword').withPlaceholder('mongo.keywordPlaceholder'),
-    getTagPathSearchItem(TagResourceTypeEnum.Mongo.value),
-];
+const searchItems = [SearchItem.input('keyword', 'common.keyword').withPlaceholder('mongo.keywordPlaceholder')];
 
 const columns = [
     TableColumn.new('name', 'common.name').isSlot('name').setAddWidth(25),

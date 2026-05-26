@@ -140,7 +140,6 @@
 </template>
 
 <script lang="ts" setup>
-import { TagResourceTypeEnum } from '@/common/commonEnum';
 import { formatDate } from '@/common/utils/format';
 import { TableColumn } from '@/components/pagetable';
 import PageTable from '@/components/pagetable/PageTable.vue';
@@ -149,7 +148,6 @@ import { Msg, useI18nCreateTitle, useI18nDeleteConfirm, useI18nEditTitle } from 
 import { onMounted, reactive, ref, Ref, toRefs } from 'vue';
 import { useRoute } from 'vue-router';
 import TagCodePath from '../component/TagCodePath.vue';
-import { getTagPathSearchItem } from '../component/tag';
 import Info from './Info.vue';
 import RedisEdit from './RedisEdit.vue';
 import { redisApi } from './api';
@@ -164,10 +162,7 @@ const props = defineProps({
 const route = useRoute();
 const pageTableRef: Ref<any> = ref(null);
 
-const searchItems = [
-    SearchItem.input('keyword', 'common.keyword').withPlaceholder('redis.keywordPlaceholder'),
-    getTagPathSearchItem(TagResourceTypeEnum.Redis.value),
-];
+const searchItems = [SearchItem.input('keyword', 'common.keyword').withPlaceholder('redis.keywordPlaceholder')];
 
 const columns = ref([
     TableColumn.new('name', 'common.name').isSlot('name').setAddWidth(15),
